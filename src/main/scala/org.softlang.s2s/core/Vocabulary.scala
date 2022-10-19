@@ -1,6 +1,6 @@
-package org.softlang.shass.core
+package org.softlang.s2s.core
 
-import org.softlang.shass.core.Var
+import org.softlang.s2s.core.Var
 import de.pseifer.shar.dl.{NamedConcept, NamedRole}
 import de.pseifer.shar.core.{Showable, BackendState, Iri}
 

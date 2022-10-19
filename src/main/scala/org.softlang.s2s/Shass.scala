@@ -1,21 +1,21 @@
-package org.softlang.shass
+package org.softlang.s2s
 
-import org.softlang.shass.core.{Util, Log, ShassTry, SimpleSHACLShape}
-import org.softlang.shass.infer._
-import org.softlang.shass.query.{SCCQ, vocabulary}
-import org.softlang.shass.generate.CandidateGenerator
-import org.softlang.shass.parser.SCCQParser
-import org.softlang.shass.parser.ShapeParser
+import org.softlang.s2s.core.{Util, Log, ShassTry, SimpleSHACLShape}
+import org.softlang.s2s.infer._
+import org.softlang.s2s.query.{SCCQ, vocabulary}
+import org.softlang.s2s.generate.CandidateGenerator
+import org.softlang.s2s.parser.SCCQParser
+import org.softlang.s2s.parser.ShapeParser
 
 import de.pseifer.shar.Shar
 import de.pseifer.shar.reasoning.{AxiomSet, HermitReasoner}
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
 import de.pseifer.shar.core.{Prefix, Iri}
 
-class Shass(
+class Shapes2Shapes(
     log: Boolean = true,
     debug: Boolean = false,
-    prefix: String = "shass:",
+    prefix: String = "s2s:",
     hidecolon: Boolean = false
 ):
 
@@ -24,7 +24,7 @@ class Shass(
 
   for
     p <- Prefix.fromString(prefix)
-    i <- Iri.fromString("<https://github.com/softlang/shass/>")
+    i <- Iri.fromString("<https://github.com/softlang/s2s/>")
   do shar.state.prefixes.add(p, i)
 
   val sccqp = SCCQParser(shar)

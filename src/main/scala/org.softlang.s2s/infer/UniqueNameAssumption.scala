@@ -1,6 +1,6 @@
-package org.softlang.shass.infer
+package org.softlang.s2s.infer
 
-import org.softlang.shass.query._
+import org.softlang.s2s.query._
 import de.pseifer.shar.dl._
 
 /** Generate the unique name assumption, given a set of atomic patterns. */

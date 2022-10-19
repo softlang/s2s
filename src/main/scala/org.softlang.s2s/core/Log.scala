@@ -1,4 +1,4 @@
-package org.softlang.shass.core
+package org.softlang.s2s.core
 
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.
@@ -12,7 +12,7 @@ class Log(info: Boolean = true, debugging: Boolean = false):
   private var DEBUGGING: Boolean = debugging
 
   /** Print log to stdout. */
-  def print(hidecolon: Boolean = false): Unit = 
+  def print(hidecolon: Boolean = false): Unit =
     if hidecolon then
       println(LOG.replaceAllLiterally(":", "").replaceAllLiterally("shar", "?"))
     else println(LOG)

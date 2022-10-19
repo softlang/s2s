@@ -1,8 +1,8 @@
-package org.softlang.shass.query
+package org.softlang.s2s.query
 
 import de.pseifer.shar.core.{Showable, BackendState, Iri}
 import de.pseifer.shar.dl.{NamedConcept, NamedRole}
-import org.softlang.shass.core.Var
+import org.softlang.s2s.core.Var
 import de.pseifer.shar.dl.NominalConcept
 
 /** An atomic pattern of a SCCQ.

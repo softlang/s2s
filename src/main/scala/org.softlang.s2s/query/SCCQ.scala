@@ -1,11 +1,6 @@
-package org.softlang.shass.query
+package org.softlang.s2s.query
 
-import org.softlang.shass.core.{
-  Var,
-  Vocabulary,
-  ShassTry,
-  UnsupportedQueryError
-}
+import org.softlang.s2s.core.{Var, Vocabulary, ShassTry, UnsupportedQueryError}
 import de.pseifer.shar.core.{Showable, BackendState, Iri}
 import de.pseifer.shar.dl.{NamedConcept, NamedRole}
 

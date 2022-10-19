@@ -1,4 +1,4 @@
-package org.softlang.shass.core
+package org.softlang.s2s.core
 
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.core.BackendState

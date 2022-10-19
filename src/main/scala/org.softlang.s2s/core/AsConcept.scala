@@ -1,9 +1,8 @@
-package org.softlang.shass.core
+package org.softlang.s2s.core
 
 import de.pseifer.shar.dl.Concept
 
-/**
-  * Convertable to a DL Concept.
+/** Convertable to a DL Concept.
   */
 trait AsConcept:
 

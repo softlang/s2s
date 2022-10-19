@@ -1,6 +1,6 @@
-package org.softlang.shass.infer
+package org.softlang.s2s.infer
 
-import org.softlang.shass.query._
+import org.softlang.s2s.query._
 import de.pseifer.shar.dl._
 
 /** Generate the closed world assumption for a set of atomic patterns. */
@@ -20,7 +20,7 @@ class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
   }
 
   // Closure for properties.
-  private val propertyClosure: Set[Axiom] = 
+  private val propertyClosure: Set[Axiom] =
     a.properties.flatMap { p =>
       val rhs = a.flatMap { ap =>
         ap match
@@ -58,7 +58,7 @@ class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
       else Set(Equality(Existential(p, Top), Concept.unionOf(rhs)))
     }
 
-  private val inversePropertyClosure: Set[Axiom] = 
+  private val inversePropertyClosure: Set[Axiom] =
     a.properties.flatMap { p =>
       val rhs = a.flatMap { ap =>
         ap match
@@ -97,13 +97,17 @@ class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
     }
 
   // General closure T ⊑ X ⊔ ... ⊔ {a} ... ⊔ A ⊔ ...
-  private val generalClosure = 
-    Subsumption(Top, Concept.unionOf(
-      a.concepts.toList.union(
-        a.nominals.toList.map(NominalConcept(_))).union(
-          a.variables.toList.map(_.asConcept))))
+  private val generalClosure =
+    Subsumption(
+      Top,
+      Concept.unionOf(
+        a.concepts.toList
+          .union(a.nominals.toList.map(NominalConcept(_)))
+          .union(a.variables.toList.map(_.asConcept))
+      )
+    )
 
-  def axioms: Set[Axiom] = 
+  def axioms: Set[Axiom] =
     conceptClosure
       .union(propertyClosure)
       .union(inversePropertyClosure)

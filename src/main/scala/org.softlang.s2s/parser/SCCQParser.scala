@@ -1,7 +1,7 @@
-package org.softlang.shass.parser
+package org.softlang.s2s.parser
 
-import org.softlang.shass.core._
-import org.softlang.shass.query.SCCQ
+import org.softlang.s2s.core._
+import org.softlang.s2s.query.SCCQ
 
 import de.pseifer.shar.Shar
 

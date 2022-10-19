@@ -1,7 +1,7 @@
-package org.softlang.shass.parser
+package org.softlang.s2s.parser
 
-import org.softlang.shass.core.{Var, ShassTry}
-import org.softlang.shass.query.GeneralAtomicPattern
+import org.softlang.s2s.core.{Var, ShassTry}
+import org.softlang.s2s.query.GeneralAtomicPattern
 import GeneralAtomicPattern._
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.{Prefix, Iri}

@@ -1,4 +1,4 @@
-package org.softlang.shass.test
+package org.softlang.s2s.test
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package org.softlang.shass
+package org.softlang.s2s
 
 def q: String =
   """
@@ -13,11 +13,11 @@ def sin: Set[String] = Set()
 
 @main def main: Unit =
 
-  val shass = Shass(
+  val s2s = Shapes2Shapes(
     log = true,
     debug = true,
     prefix = ":",
     hidecolon = true
   )
 
-  shass.run(q, Set())
+  s2s.run(q, Set())

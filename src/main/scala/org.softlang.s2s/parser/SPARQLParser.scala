@@ -1,4 +1,4 @@
-package org.softlang.shass.parser
+package org.softlang.s2s.parser
 
 import java.io.FileReader
 import scala.util.parsing.combinator._

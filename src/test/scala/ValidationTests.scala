@@ -1,16 +1,17 @@
-package org.softlang.shass.test
+package org.softlang.s2s.test
 
 import org.junit.Assert.*
 
 import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
 
-import org.softlang.shass.Shass
-import org.softlang.shass.core.SimpleSHACLShape
+import org.softlang.s2s.Shapes2Shapes
+import org.softlang.s2s.core.SimpleSHACLShape
 
 abstract class ValidationTests:
 
-  val shass = Shass(log=true, debug=true, prefix=":", hidecolon = true)
+  val s2s =
+    Shapes2Shapes(log = true, debug = true, prefix = ":", hidecolon = true)
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()
@@ -36,8 +37,7 @@ abstract class ValidationTests:
     """
 
   private def formatResults(s: Set[SimpleSHACLShape]): String =
-    s.map("  " ++ _.show(shass.shar.state)).mkString("\n")
-
+    s.map("  " ++ _.show(s2s.shar.state)).mkString("\n")
 
   /** Defines a test case. */
   def test(
@@ -47,19 +47,20 @@ abstract class ValidationTests:
       debug: Boolean = false
   ): Unit =
 
-    val (actuallSout, log) = shass.validate(q, sin)
-    val testSout = shass.parseShapes(sout)
+    val (actuallSout, log) = s2s.validate(q, sin)
+    val testSout = s2s.parseShapes(sout)
 
     // Print full log if failure.
     for
       tout <- testSout
       aout <- actuallSout
       b = tout != aout
-    do if debug || b then 
-      log.print(hidecolon=true)
-      if b then
-        println("Obtained, in addition:\n" ++ formatResults(aout.diff(tout)))
-        println("Expected, in addition:\n" ++ formatResults(tout.diff(aout)))
+    do
+      if debug || b then
+        log.print(hidecolon = true)
+        if b then
+          println("Obtained, in addition:\n" ++ formatResults(aout.diff(tout)))
+          println("Expected, in addition:\n" ++ formatResults(tout.diff(aout)))
 
     // Parse error assertion.
     assert(testSout.isRight)
@@ -70,6 +71,5 @@ abstract class ValidationTests:
       tout <- testSout
       aout <- actuallSout
     do assert(tout == aout)
-
 
 end ValidationTests

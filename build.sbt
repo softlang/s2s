@@ -5,7 +5,7 @@ lazy val root = project
   // Release
   // .dependsOn(RootProject(uri("https://github.com/pseifer/shar.git")))
   .settings(
-    name := "shass",
+    name := "shapes2shapes",
     javaOptions += "-Dfile.encoding=UTF-8",
     organization := "org.softlang",
     version := "0.1.0-SNAPSHOT",

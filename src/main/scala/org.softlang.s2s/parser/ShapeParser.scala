@@ -1,6 +1,6 @@
-package org.softlang.shass.parser
+package org.softlang.s2s.parser
 
-import org.softlang.shass.core._
+import org.softlang.s2s.core._
 
 import de.pseifer.shar.Shar
 import de.pseifer.shar.dl.{Concept, Subsumption}

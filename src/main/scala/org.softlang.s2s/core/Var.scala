@@ -1,4 +1,4 @@
-package org.softlang.shass.core
+package org.softlang.s2s.core
 
 import de.pseifer.shar.dl.{Concept, NamedConcept}
 import de.pseifer.shar.core.{Showable, Iri, BackendState}
