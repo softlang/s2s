@@ -1,23 +1,36 @@
 package org.softlang.s2s
 
+import org.softlang.s2s.core.Configuration
+
+// Input SCCQ q.
 def q: String =
   """
   CONSTRUCT {
-    ?x a :B . ?z a :C
+    ?x a :C . ?x :q ?y . ?y a :D
   } WHERE {
-    ?x :p ?y . ?z :p ?u . ?x a :A . ?z a :A . ?y a :D . ?u a :D
+    ?x a :A . ?x :r ?y . ?y a :B
   }
   """
 
-def sin: Set[String] = Set()
+// Input set of Simple SHACL shapes S_in.
+def sin: Set[String] = Set(
+  ":A ⊑ ∃:r.:B",
+  ":B ⊑ :A"
+)
 
 @main def main: Unit =
 
+  // Configure Shapes2Shapes...
   val s2s = Shapes2Shapes(
-    log = true,
-    debug = true,
-    prefix = ":",
-    hidecolon = true
+    Configuration.join(
+      // Using method [assumptionMethod,steffensMethod,philippsMethod]
+      Configuration.philippsMethod,
+      // detailed results will be printed
+      Configuration.debug,
+      // in (more) formal notation.
+      Configuration.formalOutput
+    )
   )
 
-  s2s.run(q, Set())
+  // ...and run validation on the example.
+  s2s.run(q, sin)

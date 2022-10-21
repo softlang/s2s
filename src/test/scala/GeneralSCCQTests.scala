@@ -2,7 +2,9 @@ package org.softlang.s2s.test
 
 import org.junit.Test
 
-class ConnectedPropertyTests extends ValidationTests:
+// Test cases for general SCCQ.
+
+class GeneralSCCQTests extends ValidationTests:
 
   val q0 = query("?x :q ?y . ?x a :B", "?x :r ?y . ?x a :A")
 

@@ -6,12 +6,19 @@ import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
 
 import org.softlang.s2s.Shapes2Shapes
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.{SimpleSHACLShape, Configuration}
+import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
 abstract class ValidationTests:
 
   val s2s =
-    Shapes2Shapes(log = true, debug = true, prefix = ":", hidecolon = true)
+    Shapes2Shapes(
+      Configuration.join(
+        Configuration.philippsMethod,
+        Configuration.debug,
+        Configuration.formalOutput
+      )
+    )
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()
@@ -43,33 +50,54 @@ abstract class ValidationTests:
   def test(
       sin: Set[String],
       q: String,
-      sout: Set[String],
+      exactly: Set[String] = Set(),
+      atleast: Set[String] = Set(),
+      not: Set[String] = Set(),
       debug: Boolean = false
   ): Unit =
 
     val (actuallSout, log) = s2s.validate(q, sin)
-    val testSout = s2s.parseShapes(sout)
+
+    val exactlyOut = s2s.parseShapes(exactly)
+    val atleastOut = s2s.parseShapes(atleast)
+    val notOut = s2s.parseShapes(not)
+
+    val success = for
+      e <- exactlyOut
+      a <- atleastOut
+      n <- notOut
+      aout <- actuallSout
+    yield
+      if a.isEmpty && n.isEmpty then aout == e
+      else aout.intersect(n).isEmpty && a.diff(aout).isEmpty
 
     // Print full log if failure.
     for
-      tout <- testSout
+      e <- exactlyOut
+      a <- atleastOut
+      n <- notOut
       aout <- actuallSout
-      b = tout != aout
+      b <- success
     do
-      if debug || b then
+      if debug || !b then
         log.print(hidecolon = true)
-        if b then
-          println("Obtained, in addition:\n" ++ formatResults(aout.diff(tout)))
-          println("Expected, in addition:\n" ++ formatResults(tout.diff(aout)))
+        val ob = aout.diff(e.union(a))
+        if ob.nonEmpty then
+          println("Obtained unexpectedly:\n" ++ formatResults(ob))
+        val fo = n.intersect(aout)
+        if fo.nonEmpty then
+          println("Obtained, even though forbidden:\n" ++ formatResults(fo))
+        val mi = e.union(a).diff(aout)
+        if mi.nonEmpty then
+          println("Missing from output:\n" ++ formatResults(mi))
 
-    // Parse error assertion.
-    assert(testSout.isRight)
+    // Parsing and input error assertions.
+    assert(exactlyOut.isRight)
+    assert(atleastOut.isRight)
+    assert(notOut.isRight)
     assert(actuallSout.isRight)
 
     // Test Assertion.
-    for
-      tout <- testSout
-      aout <- actuallSout
-    do assert(tout == aout)
+    for b <- success do assert(b == true)
 
 end ValidationTests

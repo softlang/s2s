@@ -12,10 +12,19 @@ class Log(info: Boolean = true, debugging: Boolean = false):
   private var DEBUGGING: Boolean = debugging
 
   /** Print log to stdout. */
-  def print(hidecolon: Boolean = false): Unit =
-    if hidecolon then
-      println(LOG.replaceAllLiterally(":", "").replaceAllLiterally("shar", "?"))
-    else println(LOG)
+  def print(
+      hidecolon: Boolean = false,
+      prettyVariableConcepts: Boolean = true
+  ): Unit =
+    val t1 =
+      if prettyVariableConcepts then LOG.replaceAll("shar", "?")
+      else LOG
+
+    val t2 =
+      if hidecolon then t1.replaceAll(":", "")
+      else t1
+
+    println(t2)
 
   /** Get log as a string. */
   override def toString: String = LOG

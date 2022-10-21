@@ -11,8 +11,8 @@ class UniqueNameAssumption(a: AtomicPatterns) extends Assumption(a):
     for
       o1 <- a.nominals
       o2 <- a.nominals
-    // Generate axiom {𝑎} ⊓ {𝑏} ⊑ ⊥
-    yield Subsumption(
+    // Generate axiom {𝑎} ⊓ {𝑏} = ⊥
+    yield Equality(
       Intersection(NominalConcept(o1), NominalConcept(o2)),
       Bottom
     )

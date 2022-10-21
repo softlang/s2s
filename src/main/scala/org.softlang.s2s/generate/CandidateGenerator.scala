@@ -4,7 +4,7 @@ import org.softlang.s2s.core.Vocabulary
 import org.softlang.s2s.core.SimpleSHACLShape
 import de.pseifer.shar.dl._
 
-class CandidateGenerator(voc: Vocabulary):
+class CandidateGenerator(voc: Vocabulary, optimize: Boolean):
 
   /** Generate all target queries (Concepts). */
   private def generateTargets: Set[Concept] =
@@ -67,7 +67,7 @@ class CandidateGenerator(voc: Vocabulary):
       || (isE(target) && hasR(target) && isU(constraint) && hasR(constraint))
       || (isE(target) && hasIR(target) && isU(constraint) && hasIR(constraint))
 
-  def axioms(optimize: Boolean = true): Set[SimpleSHACLShape] = for
+  def axioms: Set[SimpleSHACLShape] = for
     t <- generateTargets
     c <- generateConstraints
     if !optimize || !entailed(t, c)
