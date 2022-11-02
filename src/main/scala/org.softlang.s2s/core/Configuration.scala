@@ -2,9 +2,9 @@ package org.softlang.s2s.core
 
 /** A set of configurations for S2S. */
 case class Configuration(
-    // *****************
-    // *** Algorithm ***
-    // *****************
+    // ***********
+    // *** DCA ***
+    // ***********
 
     // In the DCA of pattern P, replace variables with T
     erasePvariables: Boolean = false,
@@ -20,8 +20,43 @@ case class Configuration(
     // Overriden by eraseHvariables.
     approximateHvariables: Boolean = false,
 
+    // ***********
+    // *** CWA ***
+    // ***********
+
+    // Closure for concepts.
+    closeConcepts: Boolean = false,
+
+    // Closure for properties.
+    closeProperties: Boolean = false,
+
+    // Closure for T.
+    closeTop: Boolean = false,
+
+    // *****************
+    // *** Algorithm ***
+    // *****************
+
+    // Generate DCA for pattern P.
+    dcaForPattern: Boolean = false,
+
+    // Generate DCA for template H.
+    dcaForTemplate: Boolean = false,
+
+    // Generate CWA for pattern P.
+    cwaForPattern: Boolean = false,
+
+    // Generate CWA for template H.
+    cwaForTemplate: Boolean = false,
+
+    // Generate UNA for pattern P.
+    unaForPattern: Boolean = false,
+
+    // Generate UNA for template H.
+    unaForTemplate: Boolean = false,
+
     // Optimize candidate generation.
-    optimizeCandidates: Boolean = true,
+    optimizeCandidates: Boolean = false,
 
     // *************
     // *** Other ***
@@ -36,7 +71,7 @@ case class Configuration(
     // **************************
 
     // Print log to stdout when calling Shapes2Shapes.run.
-    log: Boolean = true,
+    log: Boolean = false,
 
     // Generate more detailed, debugging output.
     debug: Boolean = false,
@@ -57,8 +92,17 @@ case class Configuration(
         this.approximatePvariables || cfg.approximatePvariables,
       approximateHvariables =
         this.approximateHvariables || cfg.approximateHvariables,
+      closeConcepts = this.closeConcepts || cfg.closeConcepts,
+      closeProperties = this.closeProperties || cfg.closeProperties,
+      closeTop = this.closeTop || cfg.closeTop,
+      dcaForPattern = this.dcaForPattern || cfg.dcaForPattern,
+      dcaForTemplate = this.dcaForTemplate || cfg.dcaForTemplate,
+      cwaForPattern = this.cwaForPattern || cfg.cwaForPattern,
+      cwaForTemplate = this.cwaForTemplate || cfg.cwaForTemplate,
+      unaForPattern = this.unaForPattern || cfg.unaForPattern,
+      unaForTemplate = this.unaForTemplate || cfg.unaForTemplate,
       optimizeCandidates = this.optimizeCandidates || cfg.optimizeCandidates,
-      prefix = this.prefix, // Left-biased
+      prefix = this.prefix, // Left-biased!
       log = this.log || cfg.log,
       debug = this.debug || cfg.debug,
       hidecolon = this.hidecolon || cfg.hidecolon,
@@ -76,37 +120,25 @@ object Configuration:
   def join(cfgs: Configuration*): Configuration =
     cfgs.foldLeft(default)(djoin)
 
-  /** Default configuration. */
-  def default: Configuration = Configuration()
+  /** Default configuration for Shapes2Shapes. */
+  def default: Configuration = Configuration(
+    erasePvariables = false,
+    eraseHvariables = false,
+    approximatePvariables = false,
+    approximateHvariables = false,
+    closeConcepts = true,
+    closeProperties = true,
+    closeTop = false,
+    dcaForPattern = true,
+    dcaForTemplate = true,
+    cwaForPattern = false,
+    cwaForTemplate = true,
+    unaForPattern = false,
+    unaForTemplate = true,
+    optimizeCandidates = true
+  )
 
-  /** A configuration that only produces CWA/DCA/CWA. */
-  def assumptionMethod: Configuration =
-    Configuration(
-      erasePvariables = false,
-      eraseHvariables = false,
-      approximatePvariables = false,
-      approximateHvariables = false
-    )
-
-  /** A configuration that approximates variable concepts. */
-  def philippsMethod: Configuration =
-    Configuration(
-      erasePvariables = false,
-      eraseHvariables = false,
-      approximatePvariables = true,
-      approximateHvariables = true
-    )
-
-  /** A configuration that radically approximates variable concepts (via T). */
-  def steffensMethod: Configuration =
-    Configuration(
-      erasePvariables = true,
-      eraseHvariables = true,
-      approximatePvariables = false,
-      approximateHvariables = false
-    )
-
-  /** A configuration for more formal output. */
+  /** A configuration adding formal output. */
   def formalOutput: Configuration =
     Configuration(
       log = true,
@@ -115,7 +147,7 @@ object Configuration:
       prettyVariableConcepts = true
     )
 
-  /** A configuration for debugging. */
+  /** A configuration adding debugging. */
   def debug: Configuration =
     Configuration(
       log = true,

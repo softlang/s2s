@@ -4,7 +4,15 @@ import org.softlang.s2s.query._
 import de.pseifer.shar.dl._
 
 /** Generate the closed world assumption for a set of atomic patterns. */
-class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
+class ClosedWorldAssumption(
+    a: AtomicPatterns,
+    // Closure for concepts.
+    closeConcepts: Boolean,
+    // Closure for properties.
+    closeProperties: Boolean,
+    // Closure for T.
+    closeTop: Boolean
+) extends Assumption(a):
 
   import AtomicPattern._
 
@@ -56,6 +64,7 @@ class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
       else Set(Equality(Existential(p, Top), Concept.unionOf(rhs)))
     }
 
+  // Closure for inverse properties.
   private val inversePropertyClosure: Set[Axiom] =
     a.properties.flatMap { p =>
       val rhs = a.flatMap {
@@ -105,7 +114,7 @@ class ClosedWorldAssumption(a: AtomicPatterns) extends Assumption(a):
     )
 
   def axioms: Set[Axiom] =
-    conceptClosure
-      .union(propertyClosure)
-      .union(inversePropertyClosure)
-      .union(Set(generalClosure))
+    (if closeConcepts then conceptClosure else Set())
+      .union(if closeProperties then propertyClosure else Set())
+      .union(if closeProperties then inversePropertyClosure else Set())
+      .union(if closeTop then Set(generalClosure) else Set())

@@ -19,39 +19,87 @@ def sin: Set[String] = Set(
 )
 
 @main def main: Unit =
-
+  /*
   ConfigurationComparison(
+    // Configuration 1...
     Configuration.join(
-      // Using method [assumptionMethod,steffensMethod,philippsMethod]
-      Configuration.assumptionMethod,
-      // detailed results will be printed
       Configuration.debug,
-      // in (more) formal notation.
-      Configuration.formalOutput
+      Configuration.formalOutput,
+      Configuration(
+        erasePvariables = false,
+        eraseHvariables = false,
+        approximatePvariables = false,
+        approximateHvariables = false,
+        closeConcepts = true,
+        closeProperties = true,
+        closeTop = true,
+        dcaForPattern = true,
+        dcaForTemplate = true,
+        cwaForPattern = false,
+        cwaForTemplate = true,
+        unaForPattern = false,
+        unaForTemplate = true,
+        optimizeCandidates = true
+      )
     ),
+    // ...compared vs. configuration 2.
     Configuration.join(
-      // Using method [assumptionMethod,steffensMethod,philippsMethod]
-      Configuration.philippsMethod,
-      // detailed results will be printed
       Configuration.debug,
-      // in (more) formal notation.
-      Configuration.formalOutput
+      Configuration.formalOutput,
+      Configuration(
+        erasePvariables = false,
+        eraseHvariables = false,
+        approximatePvariables = false,
+        approximateHvariables = false,
+        closeConcepts = true,
+        closeProperties = true,
+        closeTop = true,
+        dcaForPattern = true,
+        dcaForTemplate = true,
+        cwaForPattern = false,
+        cwaForTemplate = true,
+        unaForPattern = false,
+        unaForTemplate = true,
+        optimizeCandidates = true
+      )
     )
   ).structured
+   */
 
-  /*
-  // Configure Shapes2Shapes...
   val s2s = Shapes2Shapes(
     Configuration.join(
-      // Using method [assumptionMethod,steffensMethod,philippsMethod]
-      Configuration.philippsMethod,
-      // detailed results will be printed
       Configuration.debug,
-      // in (more) formal notation.
-      Configuration.formalOutput
+      Configuration.formalOutput,
+      Configuration(
+        erasePvariables = false,
+        eraseHvariables = false,
+        approximatePvariables = false,
+        approximateHvariables = false,
+        closeConcepts = true,
+        closeProperties = true,
+        closeTop = false,
+        dcaForPattern = true,
+        dcaForTemplate = true,
+        cwaForPattern = false,
+        cwaForTemplate = true,
+        unaForPattern = false,
+        unaForTemplate = true,
+        optimizeCandidates = true
+      )
     )
   )
 
+  //// Configure Shapes2Shapes...
+  // val s2s = Shapes2Shapes(
+  //  Configuration.join(
+  //    // Using method [assumptionMethod,steffensMethod,philippsMethod]
+  //    Configuration.assumptionMethod,
+  //    // detailed results will be printed
+  //    Configuration.debug,
+  //    // in (more) formal notation.
+  //    Configuration.formalOutput
+  //  )
+  // )
+
   // ...and run validation on the example.
   s2s.run(q, sin)
-  */
