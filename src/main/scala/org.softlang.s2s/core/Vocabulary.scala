@@ -43,3 +43,11 @@ case class Vocabulary(
     properties.diff(voc.properties),
     nominals.diff(voc.nominals)
   )
+
+  /** Appends ' to name. */
+  def triviallyRenamed: Vocabulary = Vocabulary(
+    variables,
+    concepts.map(_.renameIris("'").asInstanceOf[NamedConcept]),
+    properties.map(_.renameIris("'").asInstanceOf[NamedRole]),
+    nominals.map(_.rename("'"))
+  )

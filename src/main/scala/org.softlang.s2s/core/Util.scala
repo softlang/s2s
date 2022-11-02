@@ -4,9 +4,9 @@ import de.pseifer.shar.core.{BackendState, Showable, Iri}
 import de.pseifer.shar.dl._
 
 extension (i: Iri)
-  def rename: Iri =
+  def rename(s: String): Iri =
     Iri
-      .makeFromRawIri(i.getRaw ++ "__" ++ "renamed")
+      .makeFromRawIri(i.getRaw ++ s)
       .toOption
       .get
 
@@ -15,8 +15,8 @@ extension (c: Concept)
     c match
       case Top               => Top
       case Bottom            => Bottom
-      case NominalConcept(i) => NominalConcept(i.rename)
-      case NamedConcept(i)   => NamedConcept(i.rename)
+      case NominalConcept(i) => NominalConcept(i.rename(s))
+      case NamedConcept(i)   => NamedConcept(i.rename(s))
       case Existential(r, c) => Existential(r.renameIris(s), c.renameIris(s))
       case Universal(r, c)   => Universal(r.renameIris(s), c.renameIris(s))
       case Union(c1, c2)     => Union(c1.renameIris(s), c2.renameIris(s))
@@ -30,7 +30,7 @@ extension (c: Concept)
 extension (r: Role)
   def renameIris(s: String): Role =
     r match
-      case NamedRole(i) => NamedRole(i.rename)
+      case NamedRole(i) => NamedRole(i.rename(s))
       case Inverse(r)   => Inverse(r.renameIris(s))
 
 /** Basic utility functions. */

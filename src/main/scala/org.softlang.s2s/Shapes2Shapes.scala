@@ -58,57 +58,87 @@ class Shapes2Shapes(config: Configuration = Configuration()):
   ): (ShassTry[Set[SimpleSHACLShape]], Log) =
     val log: Log = Log(debugging = config.debug)
 
-    // Algorithm
     val sout = for
       // Parse and validate query.
       q <- parseQuery(query)
-      _ = log.info("q", q.show)
-      _ = log.debug("Σ(q)", q.vocabulary.show)
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
-      _ = log.info("S_in", s.map(_.show).toList)
-      // Generate axioms.
-      dcaP = DomainClosureAssumption(
-        q.pattern,
-        eraseVariables = config.erasePvariables,
-        approximateVariables = config.approximatePvariables
-      ).axioms
-      _ = log.debug("DCA(q.P)", dcaP.map(_.show).toList)
-      dcaH = DomainClosureAssumption(
-        q.template,
-        eraseVariables = config.eraseHvariables,
-        approximateVariables = config.approximateHvariables
-      ).axioms
-      _ = log.debug("DCA(q.H)", dcaH.map(_.show).toList)
-      cwa = ClosedWorldAssumption(q.template).axioms
-      _ = log.debug("CWA(q)", cwa.map(_.show).toList)
-      una = UniqueNameAssumption(q.template).axioms
-      _ = log.debug("UNA(q)", una.map(_.show).toList)
-      // Generate candidate shapes.
-      cand = CandidateGenerator(
-        q.template.vocabulary,
-        optimize = config.optimizeCandidates
-      ).axioms
-      _ = log.debug("S_can", cand.map(_.show).toList)
-      // Initialize the reasoner.
-      hermit = HermitReasoner.default
-      _ = hermit.addAxioms(
-        AxiomSet(
-          s.map(_.axiom)
-            .union(dcaP)
-            .union(dcaH)
-            .union(cwa)
-            .union(una)
-        )
-      )
-    // Yield the validated subset of candidates.
-    yield cand.filter(si => hermit.prove(si.axiom))
+    // Run the algorithm.
+    yield algorithm(q, s, log)
 
-    // Output (first) error, or...
+    // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
 
-    // Output the results, if no error occurred.
-    for shapes <- sout
-    do log.info("S_out", shapes.map(_.show).toList)
-
     (sout, log)
+
+  /** Run algorithm with a Log. */
+  def algorithm(
+      q: SCCQ,
+      s: Set[SimpleSHACLShape],
+      log: Log
+  ): Set[SimpleSHACLShape] =
+
+    // Log input query and shapes.
+    log.info("q", q.show)
+    log.debug("Σ(q)", q.vocabulary.show)
+    log.info("S_in", s.map(_.show).toList)
+
+    // Initialize the reasoner.
+    val hermit = buildKB(q, s, log)
+
+    // Generate candidate shapes.
+    val cand = CandidateGenerator(
+      q.template.vocabulary,
+      optimize = config.optimizeCandidates
+    ).axioms
+
+    log.debug("S_can", cand.map(_.show).toList)
+
+    // Yield the validated subset of candidates.
+    val out = cand.filter(si => hermit.prove(si.axiom))
+    log.info("S_out", out.map(_.show).toList)
+
+    out
+
+  def buildKB(
+      q: SCCQ,
+      s: Set[SimpleSHACLShape],
+      log: Log
+  ): HermitReasoner =
+    // Generate axioms.
+    val dcaP = DomainClosureAssumption(
+      q.pattern,
+      eraseVariables = config.erasePvariables,
+      approximateVariables = config.approximatePvariables
+    ).axioms
+
+    log.debug("DCA(q.P)", dcaP.map(_.show).toList)
+
+    val dcaH = DomainClosureAssumption(
+      q.template,
+      eraseVariables = config.eraseHvariables,
+      approximateVariables = config.approximateHvariables
+    ).axioms
+
+    log.debug("DCA(q.H)", dcaH.map(_.show).toList)
+
+    val cwa = ClosedWorldAssumption(q.template).axioms
+
+    log.debug("CWA(q)", cwa.map(_.show).toList)
+
+    val una = UniqueNameAssumption(q.template).axioms
+
+    log.debug("UNA(q)", una.map(_.show).toList)
+
+    // Initialize the reasoner.
+    val hermit = HermitReasoner.default
+    hermit.addAxioms(
+      AxiomSet(
+        s.map(_.axiom)
+          .union(dcaP)
+          .union(dcaH)
+          .union(cwa)
+          .union(una)
+      )
+    )
+    hermit

@@ -20,6 +20,26 @@ def sin: Set[String] = Set(
 
 @main def main: Unit =
 
+  ConfigurationComparison(
+    Configuration.join(
+      // Using method [assumptionMethod,steffensMethod,philippsMethod]
+      Configuration.assumptionMethod,
+      // detailed results will be printed
+      Configuration.debug,
+      // in (more) formal notation.
+      Configuration.formalOutput
+    ),
+    Configuration.join(
+      // Using method [assumptionMethod,steffensMethod,philippsMethod]
+      Configuration.philippsMethod,
+      // detailed results will be printed
+      Configuration.debug,
+      // in (more) formal notation.
+      Configuration.formalOutput
+    )
+  ).structured
+
+  /*
   // Configure Shapes2Shapes...
   val s2s = Shapes2Shapes(
     Configuration.join(
@@ -34,3 +54,4 @@ def sin: Set[String] = Set(
 
   // ...and run validation on the example.
   s2s.run(q, sin)
+  */
