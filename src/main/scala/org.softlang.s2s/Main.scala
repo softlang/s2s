@@ -1,105 +1,75 @@
 package org.softlang.s2s
 
-import org.softlang.s2s.core.Configuration
-
-// Input SCCQ q.
-def q: String =
-  """
-  CONSTRUCT {
-    ?x a :C . ?x :q ?y . ?y a :D
-  } WHERE {
-    ?x a :A . ?x :r ?y . ?y a :B
-  }
-  """
-
-// Input set of Simple SHACL shapes S_in.
-def sin: Set[String] = Set(
-  ":A ⊑ ∃:r.:B",
-  ":B ⊑ :A"
-)
+import org.softlang.s2s.core.{Configuration, Log}
 
 @main def main: Unit =
-  /*
-  ConfigurationComparison(
+
+  val common = Configuration.join(
+    Configuration.debug,
+    Configuration.formalOutput,
+    Configuration(
+      erasePvariables = false,
+      eraseHvariables = false,
+      approximatePvariables = false,
+      approximateHvariables = false,
+      closeConcepts = true,
+      closeProperties = true,
+      closeTop = true,
+      dcaForPattern = true,
+      dcaForTemplate = true,
+      // cwaForPattern = false,
+      cwaForTemplate = true,
+      unaForPattern = false,
+      unaForTemplate = true,
+      optimizeCandidates = true
+    )
+  )
+
+  // Compare two configurations of the algorithm.
+
+  val compare = ConfigurationComparison(
     // Configuration 1...
     Configuration.join(
-      Configuration.debug,
-      Configuration.formalOutput,
+      common,
       Configuration(
-        erasePvariables = false,
-        eraseHvariables = false,
-        approximatePvariables = false,
-        approximateHvariables = false,
-        closeConcepts = true,
-        closeProperties = true,
-        closeTop = true,
-        dcaForPattern = true,
-        dcaForTemplate = true,
-        cwaForPattern = false,
-        cwaForTemplate = true,
-        unaForPattern = false,
-        unaForTemplate = true,
-        optimizeCandidates = true
+        cwaForPattern = false
       )
     ),
     // ...compared vs. configuration 2.
     Configuration.join(
-      Configuration.debug,
-      Configuration.formalOutput,
+      common,
       Configuration(
-        erasePvariables = false,
-        eraseHvariables = false,
-        approximatePvariables = false,
-        approximateHvariables = false,
-        closeConcepts = true,
-        closeProperties = true,
-        closeTop = true,
-        dcaForPattern = true,
-        dcaForTemplate = true,
-        cwaForPattern = false,
-        cwaForTemplate = true,
-        unaForPattern = false,
-        unaForTemplate = true,
-        optimizeCandidates = true
+        cwaForPattern = true
       )
-    )
-  ).structured
-   */
-
-  val s2s = Shapes2Shapes(
-    Configuration.join(
-      Configuration.debug,
-      Configuration.formalOutput,
-      Configuration(
-        erasePvariables = false,
-        eraseHvariables = false,
-        approximatePvariables = false,
-        approximateHvariables = false,
-        closeConcepts = true,
-        closeProperties = true,
-        closeTop = false,
-        dcaForPattern = true,
-        dcaForTemplate = true,
-        cwaForPattern = false,
-        cwaForTemplate = true,
-        unaForPattern = false,
-        unaForTemplate = true,
-        optimizeCandidates = true
-      )
-    )
+    ),
+    compareVariableSubsumptions = true,
+    compareResults = false
   )
 
-  //// Configure Shapes2Shapes...
-  // val s2s = Shapes2Shapes(
-  //  Configuration.join(
-  //    // Using method [assumptionMethod,steffensMethod,philippsMethod]
-  //    Configuration.assumptionMethod,
-  //    // detailed results will be printed
-  //    Configuration.debug,
-  //    // in (more) formal notation.
-  //    Configuration.formalOutput
-  //  )
-  // )
+  val q =
+    """
+    CONSTRUCT {
+      ?y a :B . ?x :r ?y . ?x :r ?y
+    } WHERE {
+      ?y :p ?y . ?x :q ?x . ?x a :A
+    }
+    """
 
-  // ...and run validation on the example.
-  s2s.run(q, sin)
+  val sin = Set(
+    "∃-:p.⊤ ⊑ ∃-:q.:B"
+  )
+
+  // compare.structured
+
+  val s2s = Shapes2Shapes()
+
+  val qu = s2s.parseQuery(q).toOption.get
+  val sh = s2s.parseShapes(sin).toOption.get
+
+  val l1 = Log()
+  val l2 = Log()
+
+  compare.compare(qu, sh, l1, l2)
+
+  l1.print(true, true)
+  l2.print(true, true)

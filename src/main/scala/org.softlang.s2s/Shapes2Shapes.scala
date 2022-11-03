@@ -83,15 +83,29 @@ class Shapes2Shapes(config: Configuration = Configuration()):
       log: Log
   ): Set[SimpleSHACLShape] =
 
-    // Log input query and shapes.
+    // Log input.
+    logInput(q, s, log)
+
+    // Infer axioms from query and shapes.
+    val hermit = buildKB(q, s, log)
+
+    // Generate candidates.
+    val cand = generateCandidates(q, log)
+
+    // Filter candidates.
+    filter(cand, hermit, log)
+
+  /** Add input query and shapes to log. */
+  def logInput(q: SCCQ, s: Set[SimpleSHACLShape], log: Log): Unit =
     log.info("q", q.show)
     log.debug("Σ(q)", q.vocabulary.show)
     log.info("S_in", s.map(_.show).toList)
 
-    // Initialize the reasoner.
-    val hermit = buildKB(q, s, log)
-
-    // Generate candidate shapes.
+  /** Perform the candidate generation step of the algorithm. */
+  def generateCandidates(
+      q: SCCQ,
+      log: Log
+  ): Set[SimpleSHACLShape] =
     val cand = CandidateGenerator(
       q.template.vocabulary,
       optimize = config.optimizeCandidates
@@ -99,10 +113,16 @@ class Shapes2Shapes(config: Configuration = Configuration()):
 
     log.debug("S_can", cand.map(_.show).toList)
 
-    // Yield the validated subset of candidates.
-    val out = cand.filter(si => hermit.prove(si.axiom))
-    log.info("S_out", out.map(_.show).toList)
+    cand
 
+  /** Perform the filtering step of the algorithm. */
+  def filter(
+      canditates: Set[SimpleSHACLShape],
+      hermit: HermitReasoner,
+      log: Log
+  ): Set[SimpleSHACLShape] =
+    val out = canditates.filter(si => hermit.prove(si.axiom))
+    log.info("S_out", out.map(_.show).toList)
     out
 
   /** Perform the KB construction set of the algorithm. */
@@ -183,6 +203,7 @@ class Shapes2Shapes(config: Configuration = Configuration()):
     if config.unaForTemplate then log.debug("UNA(q.H)", unaH.map(_.show).toList)
 
     // Initialize the reasoner.
+
     val hermit = HermitReasoner.default
     hermit.addAxioms(
       AxiomSet(
