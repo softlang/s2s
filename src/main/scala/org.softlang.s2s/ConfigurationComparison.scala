@@ -3,11 +3,12 @@ package org.softlang.s2s
 import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
-import org.softlang.s2s.query.SCCQ
+import org.softlang.s2s.query.{SCCQ, vocabulary}
 
 import de.pseifer.shar.dl.{Axiom, Subsumption}
 
 import scala.util.Random
+import scala.collection.BitSet
 
 class ConfigurationComparison(
     c1: Configuration,
@@ -15,15 +16,16 @@ class ConfigurationComparison(
     compareVariableSubsumptions: Boolean = false,
     compareResults: Boolean = true,
     stepTrials: Int = 1000,
-    randomSets: Int = 0
+    randomSets: Int = 0,
+    stopAfterFirstResult: Boolean = true
 ):
 
   // Test Instances.
-  val s1 = Shapes2Shapes(c1)
-  val s2 = Shapes2Shapes(c2)
+  private val s1 = Shapes2Shapes(c1)
+  private val s2 = Shapes2Shapes(c2)
 
   /** Compare one set of query and shapes. */
-  def compare(
+  private def compare(
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log1: Log,
@@ -81,15 +83,15 @@ class ConfigurationComparison(
   private def search(
       n: Int,
       qg: QueryGenerator,
-      sg: ShapeGenerator
-  ): Either[(SCCQ, Set[SimpleSHACLShape]), Int] =
-    def doSearch(trial: Int): Either[(SCCQ, Set[SimpleSHACLShape]), Int] =
+      shapes: Int
+  ): List[(SCCQ, Set[SimpleSHACLShape])] =
+    def doSearch(trial: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
       print(".")
-      if trial <= 0 then Right(n)
+      if trial <= 0 then Nil
       else
         // Sample query and shapes.
         val q = qg.draw
-        val s = sg.draw
+        val s = ShapeGenerator(q.pattern.vocabulary, shapes, true).draw
 
         // Initialize logs.
         val log1 = Log(debugging = true)
@@ -103,7 +105,11 @@ class ConfigurationComparison(
           println()
           log1.print(true, true)
           log2.print(true, true)
-          Left(q, s)
+          if stopAfterFirstResult then
+            List((q, s))
+          else 
+            println(List.fill(80)("-").mkString(""))
+            (q, s) :: doSearch(trial - 1)
         else doSearch(trial - 1)
     doSearch(n)
 
@@ -117,7 +123,7 @@ class ConfigurationComparison(
       maxPatterns: Int,
       shapes: Int,
       trials: Int = stepTrials
-  ): Either[(SCCQ, Set[SimpleSHACLShape]), Int] =
+  ): List[(SCCQ, Set[SimpleSHACLShape])] =
     print(
       List(
         minNumberOfVariables,
@@ -142,18 +148,16 @@ class ConfigurationComparison(
     search(
       trials,
       QueryGenerator(voc, minPatterns, maxPatterns),
-      ShapeGenerator(voc, shapes, true)
+      shapes
     )
 
   // Generate set sets of random trials (with stepTrials each).
-  private def random(set: Int): Either[(SCCQ, Set[SimpleSHACLShape]), Int] =
-    if set <= 0 then Right(0)
+  private def random(set: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
+    if set <= 0 then Nil
     else
-      for
-        r <- random(set - 1)
-        p1 = Random.between(1, 3)
-        p2 = Random.between(1, 3)
-        n <- step(
+        val p1 = Random.between(1, 3)
+        val p2 = Random.between(1, 3)
+        val n = step(
           Random.between(1, 3),
           Random.between(1, 3),
           Random.between(1, 3),
@@ -162,38 +166,66 @@ class ConfigurationComparison(
           p1.max(p2) + 1,
           Random.between(1, 3)
         )
-      yield n + r
+        n ++ random(set - 1)
 
   /** Run randomSets * stepTrials random trials. */
-  def randomized: Unit =
+  def randomized(): Unit =
     for r <- random(randomSets)
     do println("\nExecuted " ++ r.toString ++ " trials without differences.")
 
   /** Widen search space in 10 steps * stepTrials, then finish with randomSets *
     * stepTrials random trials.
     */
-  def structured: Unit =
+  def structured(): Unit =
     // Widen search space with each step.
-    for
-      // Only patterns x : A
-      n0 <- step(1, 2, 0, 0, 2, 4, 0)
-      n1 <- step(1, 2, 0, 0, 2, 4, 1)
-      n2 <- step(1, 2, 0, 0, 2, 4, 2)
-      n3 <- step(2, 2, 0, 0, 2, 4, 1)
-      n4 <- step(2, 2, 0, 0, 2, 4, 2)
 
-      // Arbitrary patterns
-      n5 <- step(1, 2, 2, 0, 2, 4, 0)
-      n6 <- step(1, 2, 2, 0, 2, 4, 1)
-      n7 <- step(1, 2, 2, 0, 2, 4, 2)
-      n8 <- step(2, 2, 2, 0, 2, 4, 1)
-      n9 <- step(2, 2, 2, 0, 2, 4, 2)
+    // Only patterns x : A
+    step(1, 2, 0, 0, 2, 4, 0)
+    step(1, 2, 0, 0, 2, 4, 1)
+    step(1, 2, 0, 0, 2, 4, 2)
+    step(2, 2, 0, 0, 2, 4, 1)
+    step(2, 2, 0, 0, 2, 4, 2)
 
-      // Random trials
-      r <- random(randomSets)
-    do
-      println(
-        "\nExecuted "
-          ++ (n0 + n1 + n2 + n3 + n4 + n5 + n6 + n7 + n8 + n9 + r).toString
-          ++ " trials without differences."
-      )
+    // Arbitrary patterns
+    step(1, 2, 2, 0, 2, 4, 0)
+    step(1, 2, 2, 0, 2, 4, 1)
+    step(1, 2, 2, 0, 2, 4, 2)
+    step(2, 2, 2, 0, 2, 4, 1)
+    step(2, 2, 2, 0, 2, 4, 2)
+
+    // Random trials
+    random(randomSets)
+
+  /** Compare one set of query and shapes. */
+  def standalone(
+      q: String,
+      s: Set[String]
+  ): Unit = 
+    // Parse & setup logging.
+    val qu = s1.parseQuery(q).toOption.get
+    val sh = s1.parseShapes(s).toOption.get
+    val log1 = Log(debugging = true)
+    val log2 = Log(debugging = true)
+    s1.logInput(qu, sh, log1)
+    s2.logInput(qu, sh, log2)
+
+    // Run single comparison.
+    compare(qu, sh, log1, log2)
+
+    // Format output.
+    log1.print(true, true)
+    log2.print(true, true)
+
+
+object ConfigurationComparison:
+
+    def full(q: String, s: Set[String]): Map[Set[SimpleSHACLShape], List[Configuration]] =
+        (for 
+            i <- 0 to 8192
+            c = Configuration.fromBitset(i)
+            s2s = Shapes2Shapes(c)
+            qu = s2s.parseQuery(q).toOption.get
+            sh = s2s.parseShapes(s).toOption.get
+            l = Log(true, true)
+            out = s2s.algorithm(qu, sh, l)
+        yield (c, out)).groupBy(x => x._2).mapValues(_.map(_._1).toList).toMap

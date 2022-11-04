@@ -5,8 +5,11 @@ import org.softlang.s2s.core.{Configuration, Log}
 @main def main: Unit =
 
   val common = Configuration.join(
+    // Enable debugging.
     Configuration.debug,
+    // Enable more formal output.
     Configuration.formalOutput,
+    // Standard settings.
     Configuration(
       erasePvariables = false,
       eraseHvariables = false,
@@ -14,10 +17,10 @@ import org.softlang.s2s.core.{Configuration, Log}
       approximateHvariables = false,
       closeConcepts = true,
       closeProperties = true,
-      closeTop = true,
+      closeTop = false,
       dcaForPattern = true,
-      dcaForTemplate = true,
-      // cwaForPattern = false,
+      dcaForTemplate = false,
+      //cwaForPattern = false,
       cwaForTemplate = true,
       unaForPattern = false,
       unaForTemplate = true,
@@ -30,46 +33,49 @@ import org.softlang.s2s.core.{Configuration, Log}
   val compare = ConfigurationComparison(
     // Configuration 1...
     Configuration.join(
+      // Common settings.
       common,
+      // Custom settings for Configuration 1.
       Configuration(
         cwaForPattern = false
       )
     ),
     // ...compared vs. configuration 2.
     Configuration.join(
+      // Common settings.
       common,
+      // Custom settings for Configuration 2.
       Configuration(
         cwaForPattern = true
       )
     ),
+    // Compare S_out for any differences.
+    compareResults = true,
+    // Compare all subsumptions between query variables as well.
     compareVariableSubsumptions = true,
-    compareResults = false
+    // 1000 steps per trial.
+    stepTrials = 1000,
+    // No random trials.
+    randomSets = 0,
+    // Generate multiple results.
+    stopAfterFirstResult = false
   )
 
-  val q =
+  // Run structured comparison test.
+  //compare.structured()
+
+  // Single test case.
+  val example1 = (
     """
-    CONSTRUCT {
-      ?y a :B . ?x :r ?y . ?x :r ?y
-    } WHERE {
-      ?y :p ?y . ?x :q ?x . ?x a :A
-    }
-    """
+      CONSTRUCT {
+        ?x a :B . ?y a :C
+      } WHERE {
+        ?x :p ?x . ?y a :A
+      }
+      """,
+      Set(
+        ":A ⊑ ∃:p.:A"
+      ))
 
-  val sin = Set(
-    "∃-:p.⊤ ⊑ ∃-:q.:B"
-  )
-
-  // compare.structured
-
-  val s2s = Shapes2Shapes()
-
-  val qu = s2s.parseQuery(q).toOption.get
-  val sh = s2s.parseShapes(sin).toOption.get
-
-  val l1 = Log()
-  val l2 = Log()
-
-  compare.compare(qu, sh, l1, l2)
-
-  l1.print(true, true)
-  l2.print(true, true)
+  // Run comparison for a single case.
+  compare.standalone(example1._1, example1._2)
