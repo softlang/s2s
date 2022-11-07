@@ -2,20 +2,7 @@
 
 ### Requirements
 
-Running Shapes2Shapes requires [SBT](https://www.scala-sbt.org/), the Scala build tool.
-
-### Setup (During Development)
-
-During development, the build is set up to use a local version of the required library [Shar](https://github.com/pseifer/shar), due to incompatibility of certain development tools with SBT's git install of libraries.
-To setup Shapes2Shapes without manually installing this library (which also works: To this end, simply clone Shar and run `sbt publishLocal`), update the file `build.sbt` by commenting *in* (removing `//`) the line
-
-```// .dependsOn(RootProject(uri("https://github.com/pseifer/shar.git")))```
-
-and commenting *out* (adding `//` in front of) the line
-
-```libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",```
-
-Then, simply run `sbt` and tasks `run` or `test` as usual.
+Running Shapes2Shapes requires [SBT](https://www.scala-sbt.org/), the Scala build tool (and Java).
 
 ### Usage
 
@@ -29,3 +16,5 @@ The default prefix `:` is configured for examples, and required for queries and 
 Any additional prefix can be defined via SPARQL prefix declarations.
 Currently, automatic renaming between Template and Pattern is not supported.
 To this end, the implementation rejects queries, where common concept and property names are used.
+
+Execute examples via `sbt` and then `run`.
