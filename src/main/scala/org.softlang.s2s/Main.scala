@@ -2,8 +2,61 @@ package org.softlang.s2s
 
 import org.softlang.s2s.core.{Configuration, Log}
 
-@main def main: Unit =
+@main def main: Unit = run()
 
+// Run Shapes 2 Shapes with one example.
+def run(): Unit =
+
+  // Input SCCQ q and set of Simple SHACL shapes S_in.
+  val example1 = (
+    """
+      CONSTRUCT {
+        ?x a :B . ?y a :C
+      } WHERE {
+        ?x :p ?x . ?y a :A
+      }
+      """,
+    Set(
+      ":A ⊑ ∃:p.:A"
+    )
+  )
+
+  // Configured Shapes 2 Shapes.
+  val s2s = Shapes2Shapes(
+    Configuration.join(
+      // Enable debugging.
+      Configuration.debug,
+      // Enable more formal output.
+      Configuration.formalOutput,
+      // Standard settings.
+      Configuration(
+        erasePvariables = false,
+        eraseHvariables = false,
+        approximatePvariables = false,
+        approximateHvariables = false,
+        useSubsumptionInPatternDCA = false,
+        useSubsumptionInTemplateDCA = true,
+        closeConcepts = true,
+        closeProperties = true,
+        closeTop = false,
+        dcaForPattern = true,
+        dcaForTemplate = true,
+        cwaForPattern = true,
+        cwaForTemplate = true,
+        unaForPattern = false,
+        unaForTemplate = true,
+        optimizeCandidates = true
+      )
+    )
+  )
+
+  // Run with the example.
+  s2s.run(example1._1, example1._2)
+
+// Compare two configurations of the algorithm.
+def compare(): Unit =
+
+  // Common settings for both Configurations.
   val common = Configuration.join(
     // Enable debugging.
     Configuration.debug,
@@ -15,20 +68,20 @@ import org.softlang.s2s.core.{Configuration, Log}
       eraseHvariables = false,
       approximatePvariables = false,
       approximateHvariables = false,
+      useSubsumptionInPatternDCA = false,
+      useSubsumptionInTemplateDCA = true,
       closeConcepts = true,
       closeProperties = true,
       closeTop = false,
       dcaForPattern = true,
-      dcaForTemplate = false,
-      //cwaForPattern = false,
+      dcaForTemplate = true,
+      // cwaForPattern = false,
       cwaForTemplate = true,
       unaForPattern = false,
       unaForTemplate = true,
       optimizeCandidates = true
     )
   )
-
-  // Compare two configurations of the algorithm.
 
   val compare = ConfigurationComparison(
     // Configuration 1...
@@ -61,21 +114,22 @@ import org.softlang.s2s.core.{Configuration, Log}
     stopAfterFirstResult = false
   )
 
-  // Run structured comparison test.
-  //compare.structured()
+  // (Option 1) Run structured comparison test.
+  compare.structured()
 
-  // Single test case.
-  val example1 = (
-    """
-      CONSTRUCT {
-        ?x a :B . ?y a :C
-      } WHERE {
-        ?x :p ?x . ?y a :A
-      }
-      """,
-      Set(
-        ":A ⊑ ∃:p.:A"
-      ))
+  // (Option 2) Run comparison for a single case.
 
-  // Run comparison for a single case.
-  compare.standalone(example1._1, example1._2)
+  // val example1 = (
+  //  """
+  //    CONSTRUCT {
+  //      ?x a :B . ?y a :C
+  //    } WHERE {
+  //      ?x :p ?x . ?y a :A
+  //    }
+  //    """,
+  //  Set(
+  //    ":A ⊑ ∃:p.:A"
+  //  )
+  // )
+
+  // compare.standalone(example1._1, example1._2)

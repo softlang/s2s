@@ -5,7 +5,7 @@ import org.junit.Test
 // Test cases for a sublanguage of SCCQ (Concept SCCQ), where there are only
 // atomic patterns of the form (x : A) or (o : A) in pattern and template.
 
-class ConceptualTests extends ValidationTests:
+class ConceptSCCQTests extends ValidationTests:
 
   val q0 = query("?x a :B", "?x a :A")
 

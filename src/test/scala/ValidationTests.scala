@@ -14,10 +14,9 @@ abstract class ValidationTests:
   val s2s =
     Shapes2Shapes(
       Configuration.join(
-        Configuration.default,
-        Configuration(erasePvariables = true, eraseHvariables = true),
         Configuration.debug,
-        Configuration.formalOutput
+        Configuration.formalOutput,
+        Configuration.default
       )
     )
 

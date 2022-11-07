@@ -9,7 +9,9 @@ class DomainClosureAssumption(
     // Replace concept variables with T
     eraseVariables: Boolean,
     // Replace concept variables with an approximation.
-    approximateVariables: Boolean
+    approximateVariables: Boolean,
+    // Use subsumption instead of equality.
+    useSubsumption: Boolean
 ) extends Assumption(a):
 
   import AtomicPattern._
@@ -63,4 +65,6 @@ class DomainClosureAssumption(
     (if eraseVariables then updateVariables(variablesToTop, variableClosure)
      else if approximateVariables then
        updateVariables(variablesToApproximation, variableClosure)
-     else variableClosure) .map(Equality.apply).toSet
+     else variableClosure) .map(
+      if useSubsumption then Subsumption.apply else Equality.apply
+    ).toSet

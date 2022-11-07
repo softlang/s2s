@@ -20,12 +20,12 @@ Then, simply run `sbt` and tasks `run` or `test` as usual.
 ### Usage
 
 Consider the file [Main.scala](src/main/scala/org.softlang.s2s/Main.scala).
-It demonstrates a basic example of using S2S for inferring result shapes and printing a full debug log to stdout.
-The `Configuration` provides various settings and presets; in particular, the presets `assumptionsMethod`, `philippsMethod` and `steffensMethod` are of interest for adapting the algorithm.
+It demonstrates a basic example of using S2S for inferring result shapes and printing a full debug log to standard output.
+The `Configuration` provides various settings (see constructor for documentation).
 
 Input are a SCCQ query using standard SPARQL syntax, shapes use standard DL syntax.
 The default prefix `:` is configured for examples, and required for queries and shapes.
-(This prefix is removed in output, as well as the interal prefix used for variables).
+(The prefix is removed in (formal) output, as well as the internal prefix used for variables; there is a setting for disabling that).
 Any additional prefix can be defined via SPARQL prefix declarations.
-Currently, renaming between Template and Pattern is not supported.
+Currently, automatic renaming between Template and Pattern is not supported.
 To this end, the implementation rejects queries, where common concept and property names are used.

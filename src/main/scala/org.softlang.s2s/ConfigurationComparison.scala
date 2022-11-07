@@ -105,9 +105,8 @@ class ConfigurationComparison(
           println()
           log1.print(true, true)
           log2.print(true, true)
-          if stopAfterFirstResult then
-            List((q, s))
-          else 
+          if stopAfterFirstResult then List((q, s))
+          else
             println(List.fill(80)("-").mkString(""))
             (q, s) :: doSearch(trial - 1)
         else doSearch(trial - 1)
@@ -155,18 +154,18 @@ class ConfigurationComparison(
   private def random(set: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
     if set <= 0 then Nil
     else
-        val p1 = Random.between(1, 3)
-        val p2 = Random.between(1, 3)
-        val n = step(
-          Random.between(1, 3),
-          Random.between(1, 3),
-          Random.between(1, 3),
-          Random.between(0, 1), // TODO
-          p1.min(p2),
-          p1.max(p2) + 1,
-          Random.between(1, 3)
-        )
-        n ++ random(set - 1)
+      val p1 = Random.between(1, 3)
+      val p2 = Random.between(1, 3)
+      val n = step(
+        Random.between(1, 3),
+        Random.between(1, 3),
+        Random.between(1, 3),
+        Random.between(0, 1), // TODO
+        p1.min(p2),
+        p1.max(p2) + 1,
+        Random.between(1, 3)
+      )
+      n ++ random(set - 1)
 
   /** Run randomSets * stepTrials random trials. */
   def randomized(): Unit =
@@ -200,7 +199,7 @@ class ConfigurationComparison(
   def standalone(
       q: String,
       s: Set[String]
-  ): Unit = 
+  ): Unit =
     // Parse & setup logging.
     val qu = s1.parseQuery(q).toOption.get
     val sh = s1.parseShapes(s).toOption.get
@@ -216,16 +215,18 @@ class ConfigurationComparison(
     log1.print(true, true)
     log2.print(true, true)
 
-
 object ConfigurationComparison:
 
-    def full(q: String, s: Set[String]): Map[Set[SimpleSHACLShape], List[Configuration]] =
-        (for 
-            i <- 0 to 8192
-            c = Configuration.fromBitset(i)
-            s2s = Shapes2Shapes(c)
-            qu = s2s.parseQuery(q).toOption.get
-            sh = s2s.parseShapes(s).toOption.get
-            l = Log(true, true)
-            out = s2s.algorithm(qu, sh, l)
-        yield (c, out)).groupBy(x => x._2).mapValues(_.map(_._1).toList).toMap
+  def full(
+      q: String,
+      s: Set[String]
+  ): Map[Set[SimpleSHACLShape], List[Configuration]] =
+    (for
+      i <- 0 to 32768
+      c = Configuration.fromBitset(i)
+      s2s = Shapes2Shapes(c)
+      qu = s2s.parseQuery(q).toOption.get
+      sh = s2s.parseShapes(s).toOption.get
+      l = Log(true, true)
+      out = s2s.algorithm(qu, sh, l)
+    yield (c, out)).groupBy(x => x._2).mapValues(_.map(_._1).toList).toMap

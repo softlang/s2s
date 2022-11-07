@@ -5,7 +5,6 @@ import java.io.ObjectInputFilter.Config
 
 /** A set of configurations for S2S. */
 case class Configuration(
-
     // *****************
     // *** Algorithm ***
     // *****************
@@ -39,12 +38,22 @@ case class Configuration(
     eraseHvariables: Boolean = false,
 
     /** In the DCA of pattern P, replace variables with an approximation.
-        Overriden by erasePvariables. */
+      * Overriden by erasePvariables.
+      */
     approximatePvariables: Boolean = false,
 
     /** In the DCA of tempalte H, replace variables with an approximation.
-        Overriden by eraseHvariables. */
+      * Overriden by eraseHvariables.
+      */
     approximateHvariables: Boolean = false,
+
+    /** Use subsumption instead of equality for the pattern. */
+
+    useSubsumptionInPatternDCA: Boolean = false,
+
+    /** Use subsumption instead of equality for the template. */
+
+    useSubsumptionInTemplateDCA: Boolean = false,
 
     // ***********
     // *** CWA ***
@@ -66,8 +75,9 @@ case class Configuration(
     /** Optimize candidate generation. */
     optimizeCandidates: Boolean = true,
 
-    /** Standard prefix (for examples).
-        Otherwise, supply prefix definitions in query. */
+    /** Standard prefix (for examples). Otherwise, supply prefix definitions in
+      * query.
+      */
     prefix: String = ":",
 
     // **************************
@@ -96,6 +106,10 @@ case class Configuration(
         this.approximatePvariables || cfg.approximatePvariables,
       approximateHvariables =
         this.approximateHvariables || cfg.approximateHvariables,
+      useSubsumptionInPatternDCA =
+        this.useSubsumptionInPatternDCA || cfg.useSubsumptionInPatternDCA,
+      useSubsumptionInTemplateDCA =
+        this.useSubsumptionInTemplateDCA || cfg.useSubsumptionInTemplateDCA,
       closeConcepts = this.closeConcepts || cfg.closeConcepts,
       closeProperties = this.closeProperties || cfg.closeProperties,
       closeTop = this.closeTop || cfg.closeTop,
@@ -130,11 +144,13 @@ object Configuration:
     eraseHvariables = false,
     approximatePvariables = false,
     approximateHvariables = false,
+    useSubsumptionInPatternDCA = false,
+    useSubsumptionInTemplateDCA = true,
     closeConcepts = true,
     closeProperties = true,
     closeTop = false,
     dcaForPattern = true,
-    dcaForTemplate = false,
+    dcaForTemplate = true,
     cwaForPattern = true,
     cwaForTemplate = true,
     unaForPattern = false,
@@ -158,11 +174,16 @@ object Configuration:
       debug = true
     )
 
+  /** The default configuration with Debugging. */
+  def defaultDebug: Configuration =
+    Configuration.join(formalOutput, debug, default)
+
   /** Create from BitSet; unsafe, internal use only. */
-  def fromBitset(bits: Int): Configuration = 
-    def get(index: Int): Boolean = 
+  def fromBitset(bits: Int): Configuration =
+    def get(index: Int): Boolean =
       if index >= bits.toBinaryString.size then false
-      else if bits.toBinaryString(index) == '0' then false else true
+      else if bits.toBinaryString(index) == '0' then false
+      else true
 
     Configuration(
       dcaForPattern = get(0),
@@ -175,7 +196,9 @@ object Configuration:
       eraseHvariables = get(7),
       approximatePvariables = get(8),
       approximateHvariables = get(9),
-      closeConcepts = get(10),
-      closeProperties = get(11),
-      closeTop = get(12)
+      useSubsumptionInPatternDCA = get(10),
+      useSubsumptionInTemplateDCA = get(11),
+      closeConcepts = get(12),
+      closeProperties = get(13),
+      closeTop = get(14)
     )

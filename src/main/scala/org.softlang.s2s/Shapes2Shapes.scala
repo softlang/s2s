@@ -139,7 +139,8 @@ class Shapes2Shapes(config: Configuration = Configuration()):
         DomainClosureAssumption(
           q.pattern,
           eraseVariables = config.erasePvariables,
-          approximateVariables = config.approximatePvariables
+          approximateVariables = config.approximatePvariables,
+          useSubsumption = config.useSubsumptionInPatternDCA
         ).axioms
       else Set()
 
@@ -152,7 +153,8 @@ class Shapes2Shapes(config: Configuration = Configuration()):
         DomainClosureAssumption(
           q.template,
           eraseVariables = config.eraseHvariables,
-          approximateVariables = config.approximateHvariables
+          approximateVariables = config.approximateHvariables,
+          useSubsumption = config.useSubsumptionInTemplateDCA
         ).axioms
       else Set()
 
