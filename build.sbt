@@ -13,6 +13,5 @@ lazy val root = project
     // Development
     // libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.4" % Test,
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0"
   )
