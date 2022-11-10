@@ -11,7 +11,9 @@ class ClosedWorldAssumption(
     // Closure for properties.
     closeProperties: Boolean,
     // Closure for T.
-    closeTop: Boolean
+    closeTop: Boolean,
+    // Use Subsumption instead of Equality.
+    useSubsumption: Boolean
 ) extends Assumption(a):
 
   import AtomicPattern._
@@ -23,7 +25,9 @@ class ClosedWorldAssumption(
       case VAC(vs, d) if c == NamedConcept(d) => Set(vs.asConcept)
       case _                                  => Set()
     }
-    if rhs.isEmpty then Set() else Set(Equality(c, Concept.unionOf(rhs)))
+    if rhs.isEmpty then Set()
+    else if useSubsumption then Set(Subsumption(c, Concept.unionOf(rhs)))
+    else Set(Equality(c, Concept.unionOf(rhs)))
   }
 
   // Closure for properties.
@@ -61,6 +65,8 @@ class ClosedWorldAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
+      else if useSubsumption then
+        Set(Subsumption(Existential(p, Top), Concept.unionOf(rhs)))
       else Set(Equality(Existential(p, Top), Concept.unionOf(rhs)))
     }
 
@@ -99,6 +105,8 @@ class ClosedWorldAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
+      else if useSubsumption then
+        Set(Subsumption(Existential(Inverse(p), Top), Concept.unionOf(rhs)))
       else Set(Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs)))
     }
 

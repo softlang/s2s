@@ -68,6 +68,14 @@ case class Configuration(
     /** Closure for T. */
     closeTop: Boolean = false,
 
+    /** Use subsumption instead of equality for the pattern. */
+
+    useSubsumptionInPatternCWA: Boolean = false,
+
+    /** Use subsumption instead of equality for the template. */
+
+    useSubsumptionInTemplateCWA: Boolean = false,
+
     // *************
     // *** Other ***
     // *************
@@ -113,6 +121,10 @@ case class Configuration(
       closeConcepts = this.closeConcepts || cfg.closeConcepts,
       closeProperties = this.closeProperties || cfg.closeProperties,
       closeTop = this.closeTop || cfg.closeTop,
+      useSubsumptionInPatternCWA =
+        this.useSubsumptionInPatternCWA || cfg.useSubsumptionInPatternCWA,
+      useSubsumptionInTemplateCWA =
+        this.useSubsumptionInTemplateCWA || cfg.useSubsumptionInTemplateCWA,
       dcaForPattern = this.dcaForPattern || cfg.dcaForPattern,
       dcaForTemplate = this.dcaForTemplate || cfg.dcaForTemplate,
       cwaForPattern = this.cwaForPattern || cfg.cwaForPattern,
@@ -149,6 +161,8 @@ object Configuration:
     closeConcepts = true,
     closeProperties = true,
     closeTop = false,
+    useSubsumptionInPatternCWA = true,
+    useSubsumptionInTemplateCWA = false,
     dcaForPattern = true,
     dcaForTemplate = true,
     cwaForPattern = true,
@@ -198,7 +212,9 @@ object Configuration:
       approximateHvariables = get(9),
       useSubsumptionInPatternDCA = get(10),
       useSubsumptionInTemplateDCA = get(11),
-      closeConcepts = get(12),
-      closeProperties = get(13),
-      closeTop = get(14)
+      useSubsumptionInPatternCWA = get(12),
+      useSubsumptionInTemplateCWA = get(13),
+      closeConcepts = get(14),
+      closeProperties = get(15),
+      closeTop = get(16)
     )

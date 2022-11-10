@@ -222,7 +222,7 @@ object ConfigurationComparison:
       s: Set[String]
   ): Map[Set[SimpleSHACLShape], List[Configuration]] =
     (for
-      i <- 0 to 32768
+      i <- 0 to 65536
       c = Configuration.fromBitset(i)
       s2s = Shapes2Shapes(c)
       qu = s2s.parseQuery(q).toOption.get
