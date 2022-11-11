@@ -12,6 +12,8 @@ class ClosedWorldAssumption(
     closeProperties: Boolean,
     // Closure for T.
     closeTop: Boolean,
+    // Closure for literals {a}.
+    closeLiterals: Boolean,
     // Use Subsumption instead of Equality.
     useSubsumption: Boolean
 ) extends Assumption(a):
@@ -121,8 +123,25 @@ class ClosedWorldAssumption(
       )
     )
 
+  private val literalsClosure: Set[Axiom] =
+    a.nominals.flatMap { o1 =>
+      val rhs = a.flatMap {
+        case LAC(o2, c) if o1 == o2 => Set(NamedConcept(c))
+        case LPV(o2, ip, vo) if o1 == o2 =>
+          Set(Existential(NamedRole(ip), vo.asConcept))
+        case LPL(o2, ip, o3) if o1 == o2 =>
+          Set(Existential(NamedRole(ip), NominalConcept(o3)))
+        case LPL(o2, ip, o3) if o1 == o3 =>
+          Set(Existential(Inverse(NamedRole(ip)), NominalConcept(o3)))
+        case _ => Set()
+      }
+      if rhs.isEmpty then Set()
+      else Set(Subsumption(NominalConcept(o1), Concept.unionOf(rhs)))
+    }
+
   def axioms: Set[Axiom] =
     (if closeConcepts then conceptClosure else Set())
       .union(if closeProperties then propertyClosure else Set())
       .union(if closeProperties then inversePropertyClosure else Set())
       .union(if closeTop then Set(generalClosure) else Set())
+      .union(if closeLiterals then literalsClosure else Set())

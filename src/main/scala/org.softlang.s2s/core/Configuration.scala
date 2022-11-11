@@ -68,6 +68,9 @@ case class Configuration(
     /** Closure for T. */
     closeTop: Boolean = false,
 
+    /** Closure for literals {a}. */
+    closeLiterals: Boolean = false,
+
     /** Use subsumption instead of equality for the pattern. */
 
     useSubsumptionInPatternCWA: Boolean = false,
@@ -121,6 +124,7 @@ case class Configuration(
       closeConcepts = this.closeConcepts || cfg.closeConcepts,
       closeProperties = this.closeProperties || cfg.closeProperties,
       closeTop = this.closeTop || cfg.closeTop,
+      closeLiterals = this.closeLiterals || cfg.closeLiterals,
       useSubsumptionInPatternCWA =
         this.useSubsumptionInPatternCWA || cfg.useSubsumptionInPatternCWA,
       useSubsumptionInTemplateCWA =
@@ -161,6 +165,7 @@ object Configuration:
     closeConcepts = true,
     closeProperties = true,
     closeTop = false,
+    closeLiterals = false,
     useSubsumptionInPatternCWA = true,
     useSubsumptionInTemplateCWA = false,
     dcaForPattern = true,
@@ -216,5 +221,6 @@ object Configuration:
       useSubsumptionInTemplateCWA = get(13),
       closeConcepts = get(14),
       closeProperties = get(15),
-      closeTop = get(16)
+      closeTop = get(16),
+      closeLiterals = get(17)
     )

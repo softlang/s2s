@@ -169,6 +169,7 @@ class Shapes2Shapes(config: Configuration = Configuration()):
           config.closeConcepts,
           config.closeProperties,
           config.closeTop,
+          config.closeLiterals,
           config.useSubsumptionInPatternCWA
         ).axioms
       else Set()
@@ -184,6 +185,7 @@ class Shapes2Shapes(config: Configuration = Configuration()):
           config.closeConcepts,
           config.closeProperties,
           config.closeTop,
+          config.closeLiterals,
           config.useSubsumptionInTemplateCWA
         ).axioms
       else Set()
