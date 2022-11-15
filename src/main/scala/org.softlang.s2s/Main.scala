@@ -1,47 +1,28 @@
 package org.softlang.s2s
 
 import org.softlang.s2s.core.{Configuration, Log}
+import scala.util.{Try, Failure}
+
+/** Print reason, if a file can not be read. */
+def handle[T](t: Try[T]): Unit =
+  t match
+    case Failure(e) => println("FAILURE " + e.getLocalizedMessage)
+    case _          => ()
 
 @main def run(queryFile: String, shapesFile: String): Unit =
 
-  // Load query and shapes from source.
-  val qf = scala.io.Source.fromFile(queryFile)
-  val sf = scala.io.Source.fromFile(shapesFile)
+  // Create buffered sources and check for errors.
+  val qft = Try(io.Source.fromFile(queryFile))
+  val sft = Try(io.Source.fromFile(shapesFile))
 
-  // Configure Shapes 2 Shapes.
-  val s2s = Shapes2Shapes(
-    Configuration.join(
-      // Enable debugging.
-      Configuration.debug,
-      // Enable more formal output.
-      Configuration.formalOutput,
-      // Standard settings.
-      Configuration(
-        erasePvariables = false,
-        eraseHvariables = false,
-        approximatePvariables = false,
-        approximateHvariables = false,
-        useSubsumptionInPatternDCA = false,
-        useSubsumptionInTemplateDCA = true,
-        closeConcepts = true,
-        closeProperties = true,
-        closeTop = false,
-        closeLiterals = false,
-        useSubsumptionInPatternCWA = true,
-        useSubsumptionInTemplateCWA = false,
-        dcaForPattern = true,
-        dcaForTemplate = true,
-        cwaForPattern = true,
-        cwaForTemplate = true,
-        unaForPattern = false,
-        unaForTemplate = true,
-        optimizeCandidates = true
-      )
-    )
-  )
+  handle(qft)
+  handle(sft)
 
-  // Run with the example.
-  s2s.run(qf.getLines.mkString("\n"), sf.getLines.toSet)
+  // Run Shapes2Shapes with default config and input query/shapes.
+  for
+    q <- qft.map(_.getLines.mkString("\n"))
+    s <- sft.map(_.getLines.toSet)
+  do Shapes2Shapes(Configuration.defaultDebug).run(q, s)
 
 // Compare two configurations of the algorithm.
 def compare(): Unit =
