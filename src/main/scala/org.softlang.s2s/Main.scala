@@ -2,26 +2,13 @@ package org.softlang.s2s
 
 import org.softlang.s2s.core.{Configuration, Log}
 
-@main def main: Unit = run()
+@main def run(queryFile: String, shapesFile: String): Unit =
 
-// Run Shapes 2 Shapes with one example.
-def run(): Unit =
+  // Load query and shapes from source.
+  val qf = scala.io.Source.fromFile(queryFile)
+  val sf = scala.io.Source.fromFile(shapesFile)
 
-  // Input SCCQ q and set of Simple SHACL shapes S_in.
-  val example1 = (
-    """
-      CONSTRUCT {
-        ?x a :B . ?y a :C
-      } WHERE {
-        ?x :p ?x . ?y a :A
-      }
-      """,
-    Set(
-      ":A ⊑ ∃:p.:A"
-    )
-  )
-
-  // Configured Shapes 2 Shapes.
+  // Configure Shapes 2 Shapes.
   val s2s = Shapes2Shapes(
     Configuration.join(
       // Enable debugging.
@@ -39,6 +26,7 @@ def run(): Unit =
         closeConcepts = true,
         closeProperties = true,
         closeTop = false,
+        closeLiterals = false,
         useSubsumptionInPatternCWA = true,
         useSubsumptionInTemplateCWA = false,
         dcaForPattern = true,
@@ -53,7 +41,7 @@ def run(): Unit =
   )
 
   // Run with the example.
-  s2s.run(example1._1, example1._2)
+  s2s.run(qf.getLines.mkString("\n"), sf.getLines.toSet)
 
 // Compare two configurations of the algorithm.
 def compare(): Unit =
