@@ -6,12 +6,12 @@ Building Shapes2Shapes requires [SBT](https://www.scala-sbt.org/), the Scala bui
 
 ### Running Shapes2Shapes from SBT
 
-In order to run Shapes2Shapes from SBT, launch SBT via `sbt` and execute `run queryfile shapesfile` where `queryfile` contains a single, valid SCCQ and `shapesfile` contains a set of Simple SHACL shapes, with one shape per line. Alternatively, run `sbt "run queryfile shapesfile"` directly from the command line. Note, however, that his is rather slow due to SBT's startup time. 
+In order to run Shapes2Shapes from SBT, launch SBT via `sbt` and execute `run queryfile shapesfile` where `queryfile` contains a single, valid SCCQ and `shapesfile` contains a set of Simple SHACL shapes, with one shape per line. Examples are available in the `examples` folder. Alternatively, run, e.g., `sbt "run examples/q1.sparql examples/s1.shacl"` directly from the command line. Note, however, that this is rather slow due to the startup time of SBT. 
 
 
 ### Building (and running) a fat jar
 
-In order to compile the project to a (fat) jar, run `sbt assembly`. Then, Shapes2Shapes can be executed like a normal jar file, taking both the query file and shapes file defined in the previous section as its arguments (e.g., `java -jar target/s2s.jar queryfile shapesfile`).
+In order to compile the project to a (fat) jar, run `sbt assembly`. Then, Shapes2Shapes can be executed like a normal jar file, taking both the query file and shapes file defined in the previous section as its arguments (e.g., `java -jar target/s2s.jar examples/q1.sparql examples/s1.shacl`).
 
 ### Usage
 
