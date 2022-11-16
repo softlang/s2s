@@ -1,14 +1,19 @@
 package org.softlang.s2s.test
 
 import org.junit.Test
+import org.junit.Rule
+import org.junit.rules.TestName
 
 // Test cases for general SCCQ.
+class GeneralSCCQTests extends ValidationTests("General"):
 
-class GeneralSCCQTests extends ValidationTests:
+  @Rule
+  def name = _name
+  val _name = TestName()
 
   val q0 = query("?x :q ?y . ?x a :B", "?x :r ?y . ?x a :A")
 
-  @Test def p_0_0(): Unit =
+  @Test def general_0_0(): Unit =
     test(
       noshapes,
       q0,
@@ -21,7 +26,7 @@ class GeneralSCCQTests extends ValidationTests:
 
   val q1 = query("?x :q ?y . ?y a :B", "?x :r ?y . ?y a :A")
 
-  @Test def p_1_0(): Unit =
+  @Test def general_1_0(): Unit =
     test(
       noshapes,
       q1,
@@ -37,7 +42,7 @@ class GeneralSCCQTests extends ValidationTests:
     "?x a :A . ?x :r ?y . ?y a :A"
   )
 
-  @Test def p_2_0(): Unit =
+  @Test def general_2_0(): Unit =
     test(
       noshapes,
       q2,
@@ -56,7 +61,7 @@ class GeneralSCCQTests extends ValidationTests:
     "?x a :A . ?x :r ?y . ?y a :B"
   )
 
-  @Test def p_3_0(): Unit =
+  @Test def general_3_0(): Unit =
     test(
       noshapes,
       q3,
@@ -72,7 +77,7 @@ class GeneralSCCQTests extends ValidationTests:
       )
     )
 
-  // @Test def p_3_1(): Unit =
+  // @Test def general_3_1(): Unit =
   //  test(
   //    Set(
   //      ":A ⊑ :B",
@@ -93,7 +98,7 @@ class GeneralSCCQTests extends ValidationTests:
 
   val q4 = query("?x :q ?x . ?x a :B", "?x :r ?x . ?x a :A")
 
-  @Test def p_4_0(): Unit =
+  @Test def general_4_0(): Unit =
     test(
       noshapes,
       q4,
@@ -110,3 +115,34 @@ class GeneralSCCQTests extends ValidationTests:
         ":B ⊑ ∃:q.:B"
       )
     )
+
+  val q5 = query("?x :q ?y . ?z a :B", "?x :r ?y . ?z a :A")
+
+  @Test def general_5_0(): Unit =
+    test(noshapes, q5, noshapes)
+
+  @Test def general_5_1(): Unit =
+    test(
+      Set("∃:r.⊤ ⊑ :A"),
+      q5,
+      Set(
+        "∃:q.⊤ ⊑ :B",
+        "∃:q.⊤ ⊑ ∀-:q.:B",
+        "∃-:q.⊤ ⊑ ∃-:q.:B"
+      )
+    )
+
+  val q6 = query("?x a :B . ?y a :C", "?x :p ?x . ?y a :A")
+
+  @Test def general_6_0(): Unit =
+    test(Set(":A ⊑ ∃:p.:A"), q6, Set(":C ⊑ :B"))
+
+  val q7 = query("?x a :B . ?y a :C", "?y :q ?x . ?x a :A")
+
+  @Test def general_7_0(): Unit =
+    test(Set("∃:q.⊤ ⊑ :A"), q7, Set(":C ⊑ :B"))
+
+  val q8 = query("?x a :B . ?y a :C", "?y :q ?x . ?x :p ?y . ?y a :A")
+
+  @Test def general_8_0(): Unit =
+    test(Set("∃:q.⊤ ⊑ ∃:p.:A"), q8, Set(":C ⊑ :B"))

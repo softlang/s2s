@@ -1,15 +1,20 @@
 package org.softlang.s2s.test
 
 import org.junit.Assert.*
+import org.junit.rules.TestName
 
 import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
+
+import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
 
 import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core.{SimpleSHACLShape, Configuration}
 import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
-abstract class ValidationTests:
+abstract class ValidationTests(suite: String):
+
+  def name: TestName
 
   val s2s =
     Shapes2Shapes(
@@ -46,6 +51,27 @@ abstract class ValidationTests:
   private def formatResults(s: Set[SimpleSHACLShape]): String =
     s.map("  " ++ _.show(s2s.shar.state)).mkString("\n")
 
+  private def leading(s: String, width: Int): String =
+    val i = s.size
+    List.fill(width - i)(" ").mkString("") ++ s
+
+  private def trailing(s: String, width: Int): String =
+    val i = s.size
+    s ++ List.fill(width - i)(" ").mkString("")
+
+  private def formatName(success: Boolean, info: Boolean): String =
+    val ss = name.getMethodName().split("_")
+    val nn = suite.take(2)
+    val c = leading(ss(1), 2)
+    val sc = trailing(ss(2), 1)
+    val color = if success then GREEN else WHITE ++ RED_B
+    val msg =
+      if !success then s"${RED}failed${RESET}:"
+      else if info then
+        s"${GREEN}passed${RESET},${YELLOW} debugging info${RESET}:"
+      else s"${GREEN}passed${RESET}."
+    s"Test case |${color} $c.$sc.$nn ${RESET}| in suite $suite ${msg}"
+
   /** Defines a test case. */
   def test(
       sin: Set[String],
@@ -79,7 +105,14 @@ abstract class ValidationTests:
       aout <- actuallSout
       b <- success
     do
+      // If failure or debugging enabled...
       if debug || !b then
+        // The test failed, print error info:
+        if !b then println(formatName(false, false))
+        // No failure, just debugging:
+        else println(formatName(true, true))
+
+        // Now, print info about this test case / results.
         log.print(hidecolon = true)
         val ob = aout.diff(e.union(a))
         if ob.nonEmpty then
@@ -88,8 +121,10 @@ abstract class ValidationTests:
         if fo.nonEmpty then
           println("Obtained, even though forbidden:\n" ++ formatResults(fo))
         val mi = e.union(a).diff(aout)
-        if mi.nonEmpty then
-          println("Missing from output:\n" ++ formatResults(mi))
+        if mi.nonEmpty then println("Missing results:\n" ++ formatResults(mi))
+      else
+        // Successfull test:
+        println(formatName(true, false))
 
     // Parsing and input error assertions.
     assert(exactlyOut.isRight)
