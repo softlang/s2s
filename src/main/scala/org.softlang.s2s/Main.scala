@@ -9,20 +9,26 @@ def handle[T](t: Try[T]): Unit =
     case Failure(e) => println("FAILURE " + e.getLocalizedMessage)
     case _          => ()
 
-@main def run(queryFile: String, shapesFile: String): Unit =
+@main def run(queryFile: String, shapesFiles: String*): Unit =
+  if shapesFiles.size > 1 then
+    println("Illegal command line: fewer arguments expected")
+  else
 
-  // Create buffered sources and check for errors.
-  val qft = Try(io.Source.fromFile(queryFile))
-  val sft = Try(io.Source.fromFile(shapesFile))
+    // Create buffered sources and check for errors.
+    val qft = Try(io.Source.fromFile(queryFile).getLines.mkString("\n"))
+    val sft = Try(
+      if shapesFiles.isEmpty then Set()
+      else io.Source.fromFile(shapesFiles(0)).getLines.filter(_.nonEmpty).toSet
+    )
 
-  handle(qft)
-  handle(sft)
+    handle(qft)
+    handle(sft)
 
-  // Run Shapes2Shapes with default config and input query/shapes.
-  for
-    q <- qft.map(_.getLines.mkString("\n"))
-    s <- sft.map(_.getLines.toSet)
-  do Shapes2Shapes(Configuration.defaultDebug).run(q, s)
+    // Run Shapes2Shapes with default config and input query/shapes.
+    for
+      q <- qft
+      s <- sft
+    do Shapes2Shapes(Configuration.defaultDebug).run(q, s)
 
 // Compare two configurations of the algorithm.
 def compare(): Unit =
