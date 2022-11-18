@@ -44,13 +44,22 @@ class Shapes2Shapes(config: Configuration = Configuration()):
   /** Run validation and format results (if enabled). */
   def run(
       query: String,
-      shapes: Set[String]
+      shapes: Set[String],
+      print: Boolean = false
   ): ShassTry[Set[SimpleSHACLShape]] =
+
     // Run validation with query and shapes.
     val res = validate(query, shapes)
+
     // Print log (if enabled).
     if config.log || config.debug then
       res._2.print(config.hidecolon, config.prettyVariableConcepts)
+
+    // Print results (if enabled).
+    if print then for 
+      result <- res._1
+    do result.map(_.show).foreach(println)
+
     // Return output shapes.
     res._1
 

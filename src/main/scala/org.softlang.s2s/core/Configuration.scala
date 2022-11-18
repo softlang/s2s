@@ -152,7 +152,7 @@ object Configuration:
 
   /** (Left-biased for non-boolean) join for multiple configurations. */
   def join(cfgs: Configuration*): Configuration =
-    cfgs.foldLeft(Configuration())(djoin)
+    cfgs.foldRight(Configuration())(djoin)
 
   /** Default configuration for Shapes2Shapes. */
   def default: Configuration = Configuration(

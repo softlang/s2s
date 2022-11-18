@@ -1,34 +1,101 @@
 package org.softlang.s2s
 
 import org.softlang.s2s.core.{Configuration, Log}
+
+import org.rogach.scallop._
+
 import scala.util.{Try, Failure}
 
-/** Print reason, if a file can not be read. */
-def handle[T](t: Try[T]): Unit =
-  t match
-    case Failure(e) => println("FAILURE " + e.getLocalizedMessage)
-    case _          => ()
+/** Command line interface definition. */
+class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
+  version("Shapes2Shapes 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz")
+  banner("""Usage: s2s [OPTION]... [query-file] [shapes-file?]
+           |Options:
+           |""".stripMargin)
+  footer("\n" + 
+    """For more information about the algorithm, read the full paper
+      |    Philipp Seifer, Daniel Hernandez, Ralf Lämmel and Steffen Staab:
+      |    FromFrom Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines
+      |    ...TBD...
+      |""".stripMargin)
 
-@main def run(queryFile: String, shapesFiles: String*): Unit =
-  if shapesFiles.size > 1 then
-    println("Illegal command line: fewer arguments expected")
-  else
+  val optimizeCandidates = 
+    toggle(default = Some(true),
+           descrYes = "Remove some output shapes entailed by others")
 
-    // Create buffered sources and check for errors.
-    val qft = Try(io.Source.fromFile(queryFile).getLines.mkString("\n"))
-    val sft = Try(
-      if shapesFiles.isEmpty then Set()
-      else io.Source.fromFile(shapesFiles(0)).getLines.filter(_.nonEmpty).toSet
-    )
+  val log = 
+    toggle(default = Some(true), 
+           descrYes = "Print input and output")
 
-    handle(qft)
-    handle(sft)
+  val hidecolon = 
+    toggle(default = Some(true), 
+           descrYes = "Hide (prefix) colon in log")
 
-    // Run Shapes2Shapes with default config and input query/shapes.
-    for
-      q <- qft
-      s <- sft
-    do Shapes2Shapes(Configuration.defaultDebug).run(q, s)
+  val debug = 
+    toggle(default = Some(false), 
+           descrYes = "Print internal state")
+
+  val prettyVariableConcepts = 
+    toggle(default = Some(true), 
+           descrYes = "Prettier debug log")
+
+  val output = 
+    toggle(default = Some(false), 
+           descrYes = "Print output shapes")
+
+  val prefix = 
+    opt[String](required = false, default = Some(":"),
+                descr = "The standard prefix")
+
+  val queryFile = trailArg[String](descr = "The input query")
+
+  val shapesFile = trailArg[String](required = false, 
+    descr = "The set of input shapes", 
+    default = Some(""))
+
+  verify()
+
+  /** Convert to a S2S configuration. */
+  def toConfiguration: Configuration = Configuration.join(
+    Configuration(
+      optimizeCandidates = optimizeCandidates(),
+      log = log(),
+      hidecolon = hidecolon(),
+      prettyVariableConcepts =  prettyVariableConcepts(),
+      debug = debug(),
+      prefix = prefix()
+    ),
+    Configuration.default)
+
+
+@main def s2s(args: String*): Unit =
+
+  // Initialize CLI configuration.
+  val conf = Conf(args)
+
+  // Create buffered sources and check for errors.
+  val qft = Try(io.Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
+  val sft = Try(
+    if conf.shapesFile().isEmpty then Set()
+    else io.Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
+  )
+
+  // Output (system) errors, if files can not be opened. 
+  def handle[T](t: Try[T]): Unit =
+    t match
+      case Failure(e) => println("FAILURE " + e.getLocalizedMessage)
+      case _          => ()
+
+  handle(qft)
+  handle(sft)
+
+  // Run Shapes2Shapes with default config and input query/shapes.
+  for
+    q <- qft
+    s <- sft
+  do Shapes2Shapes(conf.toConfiguration).run(q, s, print = conf.output())
+
+
 
 // Compare two configurations of the algorithm.
 def compare(): Unit =
