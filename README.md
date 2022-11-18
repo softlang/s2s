@@ -2,18 +2,25 @@
 
 ### Requirements
 
-Building Shapes2Shapes requires [SBT](https://www.scala-sbt.org/), the Scala build tool (and Java). To compile the project, simply run `sbt compile`. 
+Building Shapes2Shapes requires the Scala build tool [SBT](https://www.scala-sbt.org/) and Java.
 
-### Running Shapes2Shapes from SBT
+### Building, Setup and Execution
 
-In order to run Shapes2Shapes from SBT, launch SBT via `sbt` and execute `run queryfile shapesfile` where `queryfile` contains a single, valid SCCQ and `shapesfile` contains a set of Simple SHACL shapes, with one shape per line. Examples are available in the `examples` folder. Alternatively, run, e.g., `sbt "run examples/q1.sparql examples/s1.shacl"` directly from the command line. Note, however, that this is rather slow due to the startup time of SBT. 
+Essentially, building and running Shapes2Shapes can be handled via `sbt` directly, or by building a fat jar.
 
+##### Running Shapes2Shapes via SBT
 
-### Building (and running) a fat jar
+To Be Updated!
 
-In order to compile the project to a (fat) jar, run `sbt assembly`. Then, Shapes2Shapes can be executed like a normal jar file, taking both the query file and shapes file defined in the previous section as its arguments (e.g., `java -jar target/s2s.jar examples/q1.sparql examples/s1.shacl`).
+In order to run Shapes2Shapes from SBT, launch SBT via `sbt` and execute `run queryfile shapesfile` where `queryfile` contains a single, valid SCCQ and `shapesfile` contains a set of Simple SHACL shapes, with one shape per line. Examples are available in the `examples` folder. Alternatively, run, e.g., `sbt "run examples/q1.sparql examples/s1.shacl"` directly from the command line. Note, however, that this is rather slow due to the startup time of SBT.
+
+##### Building (and running) Shapes2Shapes as a fat JAR
+
+In order to compile the project to a (fat) JAR, run `sbt assembly` (or `make`). Then, Shapes2Shapes can be executed like a normal JAR file (executed via `java -jar target/s2s.jar <arguments>`) or via the `s2s` script on UNIX systems or `s2s.bat` on Windows.
 
 ### Usage
+
+To Be Updated!
 
 Consider the file [Main.scala](src/main/scala/org.softlang.s2s/Main.scala).
 It demonstrates a basic example of using S2S for inferring result shapes and printing a full debug log to standard output.
