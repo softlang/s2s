@@ -43,7 +43,17 @@ Simple SHACL shapes are encoded as description logic axioms (one per line), wher
 
 More examples are available in the [examples](examples/) folder.
 
-Further relevant command-line options are `--debug` for extended output, `--nolog` for no output (also in combination with `--output` to print only the output shapes) and `--help` for full documentation.
+Further relevant command-line options are `--debug` for extended output, `--nolog` for no output (also in combination with `--output` to print only the output shapes) and `--help` for full documentation. Example for executing Shapes2Shapes with the example query and shapes above, while obtaining a full, formal output log with internal debugging information:
+
+`sbt --debug examples/q1.sparql examples/s1.shacl`
+
+Usage example, for running the above example while only obtaining the list of output shapes:
+
+`sbt --nolog --output examples/q1.sparql examples/s1.shacl`
+
+Finally, in standard mode, the formal input and output are printed as follows:
+
+`sbt examples/q1.sparql examples/s1.shacl`
 
 ### Further Reading
 
