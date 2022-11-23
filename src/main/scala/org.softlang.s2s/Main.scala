@@ -24,11 +24,11 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
 
   val optimize = 
     toggle(default = Some(true),
-           descrYes = "Remove output shapes trivially entailed by others (Default: On)")
+           descrYes = "Remove output shapes entailed by others (Default: On)")
 
   val log = 
     toggle(default = Some(true), 
-           descrYes = "Print the problem input and output as a log (Default: On)")
+           descrYes = "Print input and output as a log (Default: On)")
 
   val hidecolon = 
     toggle(default = Some(true), 
@@ -40,7 +40,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
 
   val prettyVars = 
     toggle(default = Some(true), 
-           descrYes = "Print prettier variable concepts in the log (Default: On)")
+           descrYes = "Pretty variable concepts in log (Default: On)")
 
   val output = 
     toggle(default = Some(false), 
