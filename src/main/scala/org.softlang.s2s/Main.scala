@@ -9,48 +9,51 @@ import scala.util.{Try, Failure}
 /** Command line interface definition. */
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
   version("Shapes2Shapes 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz")
-  banner("""Usage: s2s [OPTION]... [query-file] [shapes-file?]
-           |Options:
+  banner("\n" + """Usage: s2s [OPTIONS] <query-file> <shapes-file?>
+           |
+           | where OPTIONS include:
            |""".stripMargin)
   footer("\n" + 
-    """For more information about the algorithm, read the full paper
-      |    Philipp Seifer, Daniel Hernandez, Ralf Lämmel and Steffen Staab:
-      |    FromFrom Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines
-      |    ...TBD...
+    """For more information about the algorithm, see the full paper:
+      |  Philipp Seifer, Daniel Hernandez, Ralf Lämmel and Steffen Staab:
+      |  FromFrom Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines
+      |  ...TBD...
+      |and the repository at
+      |  ...URL...
       |""".stripMargin)
 
-  val optimizeCandidates = 
+  val optimize = 
     toggle(default = Some(true),
-           descrYes = "Remove some output shapes entailed by others")
+           descrYes = "Remove output shapes trivially entailed by others (Default: On)")
 
   val log = 
     toggle(default = Some(true), 
-           descrYes = "Print input and output")
+           descrYes = "Print the problem input and output as a log (Default: On)")
 
   val hidecolon = 
     toggle(default = Some(true), 
-           descrYes = "Hide (prefix) colon in log")
+           descrYes = "Hide colon in prefixes in log (Default: On)")
 
   val debug = 
     toggle(default = Some(false), 
-           descrYes = "Print internal state")
+           descrYes = "Print inferred axioms as part of the log (Default: Off)")
 
-  val prettyVariableConcepts = 
+  val prettyVars = 
     toggle(default = Some(true), 
-           descrYes = "Prettier debug log")
+           descrYes = "Print prettier variable concepts in the log (Default: On)")
 
   val output = 
     toggle(default = Some(false), 
-           descrYes = "Print output shapes")
+           descrYes = "Print shapes as output (Default: Off)")
 
   val prefix = 
     opt[String](required = false, default = Some(":"),
-                descr = "The standard prefix")
+                descr = "Standard prefix to use (Default ':')")
 
-  val queryFile = trailArg[String](descr = "The input query")
+  val queryFile = trailArg[String](descr = "File containing input query")
 
   val shapesFile = trailArg[String](required = false, 
-    descr = "The set of input shapes", 
+    descr = "File containing the input set of shapes", 
     default = Some(""))
 
   verify()
@@ -58,10 +61,10 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
   /** Convert to a S2S configuration. */
   def toConfiguration: Configuration = Configuration.join(
     Configuration(
-      optimizeCandidates = optimizeCandidates(),
+      optimizeCandidates = optimize(),
       log = log(),
       hidecolon = hidecolon(),
-      prettyVariableConcepts =  prettyVariableConcepts(),
+      prettyVariableConcepts =  prettyVars(),
       debug = debug(),
       prefix = prefix()
     ),
