@@ -10,105 +10,105 @@ case class Configuration(
     // *****************
 
     // Generate DCA for pattern P.
-    dcaForPattern: Boolean = false,
+    dcaForPattern: Boolean,
 
     // Generate DCA for template H.
-    dcaForTemplate: Boolean = false,
+    dcaForTemplate: Boolean,
 
     // Generate CWA for pattern P.
-    cwaForPattern: Boolean = false,
+    cwaForPattern: Boolean,
 
     // Generate CWA for template H.
-    cwaForTemplate: Boolean = false,
+    cwaForTemplate: Boolean,
 
     // Generate UNA for pattern P.
-    unaForPattern: Boolean = false,
+    unaForPattern: Boolean,
 
     // Generate UNA for template H.
-    unaForTemplate: Boolean = false,
+    unaForTemplate: Boolean,
 
     // Use the mapping method.
-    useMappingMethod: Boolean = false, //                 TODO - NOT IMPLEMENTED
+    useMappingMethod: Boolean, // TODO - NOT IMPLEMENTED
 
     // Rename internal pattern concepts.
-    renamePatternInternal: Boolean = false,
+    renamePatternInternal: Boolean,
 
     // ***********
     // *** DCA ***
     // ***********
 
     // In the DCA of pattern P, replace variables with T.
-    erasePvariables: Boolean = false,
+    erasePvariables: Boolean,
 
     // In the DCA of tempalte H, replace variables with T.
-    eraseHvariables: Boolean = false,
+    eraseHvariables: Boolean,
 
     // In the DCA of pattern P, replace variables with an approximation.
     // Overriden by erasePvariables.
-    approximatePvariables: Boolean = false,
+    approximatePvariables: Boolean,
 
     // In the DCA of tempalte H, replace variables with an approximation.
     // Overriden by eraseHvariables.
-    approximateHvariables: Boolean = false,
+    approximateHvariables: Boolean,
 
     // Use subsumption instead of equality for the pattern.
-    useSubsumptionInPatternDCA: Boolean = false,
+    useSubsumptionInPatternDCA: Boolean,
 
     // Use subsumption instead of equality for the template.
-    useSubsumptionInTemplateDCA: Boolean = false,
+    useSubsumptionInTemplateDCA: Boolean,
 
     // ***********
     // *** CWA ***
     // ***********
 
     // Closure for concepts.
-    closeConcepts: Boolean = false,
+    closeConcepts: Boolean,
 
     // Closure for properties.
-    closeProperties: Boolean = false,
+    closeProperties: Boolean,
 
     // Closure for T.
-    closeTop: Boolean = false,
+    closeTop: Boolean,
 
     // Closure for literals {a}.
-    closeLiterals: Boolean = false,
+    closeLiterals: Boolean,
 
     // Use subsumption instead of equality for the pattern.
-    useSubsumptionInPatternCWA: Boolean = false,
+    useSubsumptionInPatternCWA: Boolean,
 
     // Use subsumption instead of equality for the template.
-    useSubsumptionInTemplateCWA: Boolean = false,
+    useSubsumptionInTemplateCWA: Boolean,
 
     // ********************
     // *** User Options ***
     // ********************
 
     // Optimize candidate generation.
-    optimizeCandidates: Boolean = false,
+    optimizeCandidates: Boolean,
 
     // Automatically rename input concepts and properties.
-    autoRename: Boolean = false,
+    autoRename: Boolean,
 
     // Token to append (if autoRename is set).
-    renameToken: String = "'",
+    renameToken: String,
 
     // Standard predefined prefix.
-    prefix: String = ":",
+    prefix: String,
 
     // Print log to stdout when calling Shapes2Shapes.run.
-    log: Boolean = false,
+    log: Boolean,
 
     // Generate more detailed, debugging output.
-    debug: Boolean = false,
+    debug: Boolean,
 
     // More formal notation in output when using ':' as a prefix.
-    hidecolon: Boolean = false,
+    hidecolon: Boolean,
 
     // Replace the shar: prefix (variable concepts) with '?'.
-    prettyVariableConcepts: Boolean = false,
+    prettyVariableConcepts: Boolean,
 
     // Print output shapes (outside of log) to output.
-    printOutput: Boolean = false
+    printOutput: Boolean
 )
 
 /** Some preset configurations. */

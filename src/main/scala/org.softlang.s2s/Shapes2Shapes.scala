@@ -16,7 +16,7 @@ import org.softlang.s2s.query.vocabulary
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
 
 /** Customizable implementation of the S2S algorithm. */
-class Shapes2Shapes(config: Configuration = Configuration()):
+class Shapes2Shapes(config: Configuration = Configuration.default):
 
   val shar = Shar()
   import shar._
