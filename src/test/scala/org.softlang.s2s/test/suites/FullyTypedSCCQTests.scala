@@ -1,15 +1,16 @@
-package org.softlang.s2s.test
+package org.softlang.s2s.test.suites
 
-import org.junit.Test
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TestName
+import org.softlang.s2s.test.ValidationTestSuite
 
 // Test cases for a sublanguage of SCCQ (fully-typed SCCQ).
 // A fully-typed SCCQ is a concept SCCQ where also for each
 // pattern (x,y) : p there exists a pattern (x : A) and (y : B)
 // in q.
 
-class FullyTypedSCCQTests extends ValidationTests("Fully-Typed"):
+class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
 
   @Rule
   def name = _name

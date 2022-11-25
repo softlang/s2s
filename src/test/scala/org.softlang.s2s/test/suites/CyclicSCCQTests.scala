@@ -1,11 +1,12 @@
-package org.softlang.s2s.test
+package org.softlang.s2s.test.suites
 
-import org.junit.Test
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TestName
+import org.softlang.s2s.test.ValidationTestSuite
 
 // Test cases for SCCQ with cycles such as (x,x):p.
-class CyclicSCCQTests extends ValidationTests("Cyclic"):
+class CyclicSCCQTests extends ValidationTestSuite("Cyclic"):
 
   @Rule
   def name = _name

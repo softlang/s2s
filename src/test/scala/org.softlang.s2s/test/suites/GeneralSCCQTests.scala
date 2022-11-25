@@ -1,11 +1,12 @@
-package org.softlang.s2s.test
+package org.softlang.s2s.test.suites
 
-import org.junit.Test
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TestName
+import org.softlang.s2s.test.ValidationTestSuite
 
 // Test cases for general SCCQ.
-class GeneralSCCQTests extends ValidationTests("General"):
+class GeneralSCCQTests extends ValidationTestSuite("General"):
 
   @Rule
   def name = _name

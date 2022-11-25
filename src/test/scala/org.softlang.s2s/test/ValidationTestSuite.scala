@@ -13,7 +13,7 @@ import java.nio.file.Paths
 
 import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
 
-abstract class ValidationTests(
+abstract class ValidationTestSuite(
     /** Name of the test suite. */
     suite: String,
     /** Do not run this test siute. */
@@ -140,4 +140,4 @@ abstract class ValidationTests(
     // Test Assertion.
     for b <- success do assert(b == true)
 
-end ValidationTests
+end ValidationTestSuite

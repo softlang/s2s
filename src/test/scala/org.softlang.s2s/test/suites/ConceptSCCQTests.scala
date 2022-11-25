@@ -1,13 +1,14 @@
-package org.softlang.s2s.test
+package org.softlang.s2s.test.suites
 
-import org.junit.Test
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TestName
+import org.softlang.s2s.test.ValidationTestSuite
 
 // Test cases for a sublanguage of SCCQ (Concept SCCQ), where there are only
 // atomic patterns of the form (x : A) in pattern and template.
 
-class ConceptSCCQTests extends ValidationTests("Concept"):
+class ConceptSCCQTests extends ValidationTestSuite("Concept"):
 
   @Rule
   def name = _name
