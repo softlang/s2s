@@ -13,7 +13,14 @@ import java.nio.file.Paths
 
 import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
 
-abstract class ValidationTests(suite: String):
+abstract class ValidationTests(
+    /** Name of the test suite. */
+    suite: String,
+    /** Do not run this test siute. */
+    disabled: Boolean = false,
+    /** Allways print full debugging for failures. */
+    verbose: Boolean = false
+):
 
   def name: TestName
 
@@ -76,6 +83,9 @@ abstract class ValidationTests(suite: String):
       debug: Boolean = false
   ): Unit =
 
+    // Do not run test, if the suite is disabled.
+    if disabled then return
+
     val (actuallSout, log) = s2s.validate(q, sin)
 
     val exactlyOut = s2s.parseShapes(exactly)
@@ -107,15 +117,16 @@ abstract class ValidationTests(suite: String):
         else println(formatName(true, true))
 
         // Now, print info about this test case / results.
-        log.print(hidecolon = true)
-        val ob = aout.diff(e.union(a))
-        if ob.nonEmpty then
-          println("Obtained unexpectedly:\n" ++ formatResults(ob))
-        val fo = n.intersect(aout)
-        if fo.nonEmpty then
-          println("Obtained, even though forbidden:\n" ++ formatResults(fo))
-        val mi = e.union(a).diff(aout)
-        if mi.nonEmpty then println("Missing results:\n" ++ formatResults(mi))
+        if verbose || debug then
+          log.print(hidecolon = true)
+          val ob = aout.diff(e.union(a))
+          if ob.nonEmpty then
+            println("Obtained unexpectedly:\n" ++ formatResults(ob))
+          val fo = n.intersect(aout)
+          if fo.nonEmpty then
+            println("Obtained, even though forbidden:\n" ++ formatResults(fo))
+          val mi = e.union(a).diff(aout)
+          if mi.nonEmpty then println("Missing results:\n" ++ formatResults(mi))
       else
         // Successfull test:
         println(formatName(true, false))
