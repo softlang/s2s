@@ -214,19 +214,3 @@ class ConfigurationComparison(
     // Format output.
     log1.print(true, true)
     log2.print(true, true)
-
-object ConfigurationComparison:
-
-  def full(
-      q: String,
-      s: Set[String]
-  ): Map[Set[SimpleSHACLShape], List[Configuration]] =
-    (for
-      i <- 0 to 65536
-      c = Configuration.fromBitset(i)
-      s2s = Shapes2Shapes(c)
-      qu = s2s.parseQuery(q).toOption.get
-      sh = s2s.parseShapes(s).toOption.get
-      l = Log(true, true)
-      out = s2s.algorithm(qu, sh, l)
-    yield (c, out)).groupBy(x => x._2).mapValues(_.map(_._1).toList).toMap

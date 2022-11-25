@@ -27,6 +27,12 @@ case class Configuration(
     /** Generate UNA for template H. */
     unaForTemplate: Boolean = false,
 
+    /** Use the mapping method. */
+    useMappingMethod: Boolean = false, //                 TODO - NOT IMPLEMENTED
+
+    /** Rename internal pattern concepts. */
+    renamePatternInternal: Boolean = false, //            TODO - NOT IMPLEMENTED
+
     // ***********
     // *** DCA ***
     // ***********
@@ -48,11 +54,9 @@ case class Configuration(
     approximateHvariables: Boolean = false,
 
     /** Use subsumption instead of equality for the pattern. */
-
     useSubsumptionInPatternDCA: Boolean = false,
 
     /** Use subsumption instead of equality for the template. */
-
     useSubsumptionInTemplateDCA: Boolean = false,
 
     // ***********
@@ -72,28 +76,28 @@ case class Configuration(
     closeLiterals: Boolean = false,
 
     /** Use subsumption instead of equality for the pattern. */
-
     useSubsumptionInPatternCWA: Boolean = false,
 
     /** Use subsumption instead of equality for the template. */
-
     useSubsumptionInTemplateCWA: Boolean = false,
 
-    // *************
-    // *** Other ***
-    // *************
+    // ********************
+    // *** User Options ***
+    // ********************
 
     /** Optimize candidate generation. */
-    optimizeCandidates: Boolean = true,
+    optimizeCandidates: Boolean = false,
+
+    /** Automatically rename input concepts and properties. */
+    autoRename: Boolean = false, //                       TODO - NOT IMPLEMENTED
+
+    /** Token to append (if autoRename is set). */
+    renameToken: String = "'", //                         TODO - NOT IMPLEMENTED
 
     /** Standard prefix (for examples). Otherwise, supply prefix definitions in
       * query.
       */
     prefix: String = ":",
-
-    // **************************
-    // *** Logging and Output ***
-    // **************************
 
     /** Print log to stdout when calling Shapes2Shapes.run. */
     log: Boolean = false,
@@ -105,122 +109,52 @@ case class Configuration(
     hidecolon: Boolean = false,
 
     /** Replace the shar: prefix (variable concepts) with '?'. */
-    prettyVariableConcepts: Boolean = false
-):
+    prettyVariableConcepts: Boolean = false,
 
-  /** Left biased for non-boolean options, join for boolean options. */
-  def join(cfg: Configuration): Configuration =
-    Configuration(
-      erasePvariables = this.erasePvariables || cfg.erasePvariables,
-      eraseHvariables = this.eraseHvariables || cfg.eraseHvariables,
-      approximatePvariables =
-        this.approximatePvariables || cfg.approximatePvariables,
-      approximateHvariables =
-        this.approximateHvariables || cfg.approximateHvariables,
-      useSubsumptionInPatternDCA =
-        this.useSubsumptionInPatternDCA || cfg.useSubsumptionInPatternDCA,
-      useSubsumptionInTemplateDCA =
-        this.useSubsumptionInTemplateDCA || cfg.useSubsumptionInTemplateDCA,
-      closeConcepts = this.closeConcepts || cfg.closeConcepts,
-      closeProperties = this.closeProperties || cfg.closeProperties,
-      closeTop = this.closeTop || cfg.closeTop,
-      closeLiterals = this.closeLiterals || cfg.closeLiterals,
-      useSubsumptionInPatternCWA =
-        this.useSubsumptionInPatternCWA || cfg.useSubsumptionInPatternCWA,
-      useSubsumptionInTemplateCWA =
-        this.useSubsumptionInTemplateCWA || cfg.useSubsumptionInTemplateCWA,
-      dcaForPattern = this.dcaForPattern || cfg.dcaForPattern,
-      dcaForTemplate = this.dcaForTemplate || cfg.dcaForTemplate,
-      cwaForPattern = this.cwaForPattern || cfg.cwaForPattern,
-      cwaForTemplate = this.cwaForTemplate || cfg.cwaForTemplate,
-      unaForPattern = this.unaForPattern || cfg.unaForPattern,
-      unaForTemplate = this.unaForTemplate || cfg.unaForTemplate,
-      optimizeCandidates = this.optimizeCandidates || cfg.optimizeCandidates,
-      prefix = this.prefix, // Left-biased!
-      log = this.log || cfg.log,
-      debug = this.debug || cfg.debug,
-      hidecolon = this.hidecolon || cfg.hidecolon,
-      prettyVariableConcepts =
-        this.prettyVariableConcepts || cfg.prettyVariableConcepts
-    )
+    /** Print output shapes (outside of log) to output. */
+    printOutput: Boolean = false
+)
 
-/** Some preset configurations; can be combined using Configuratiion.join. */
+/** Some preset configurations. */
 object Configuration:
-
-  private def djoin(left: Configuration, right: Configuration): Configuration =
-    left.join(right)
-
-  /** (Left-biased for non-boolean) join for multiple configurations. */
-  def join(cfgs: Configuration*): Configuration =
-    cfgs.foldRight(Configuration())(djoin)
 
   /** Default configuration for Shapes2Shapes. */
   def default: Configuration = Configuration(
-    erasePvariables = false,
-    eraseHvariables = false,
-    approximatePvariables = false,
-    approximateHvariables = false,
-    useSubsumptionInPatternDCA = false,
-    useSubsumptionInTemplateDCA = true,
-    closeConcepts = true,
-    closeProperties = true,
-    closeTop = false,
-    closeLiterals = false,
-    useSubsumptionInPatternCWA = true,
-    useSubsumptionInTemplateCWA = false,
+    // Algorithm
     dcaForPattern = true,
     dcaForTemplate = true,
     cwaForPattern = true,
     cwaForTemplate = true,
     unaForPattern = false,
     unaForTemplate = true,
-    optimizeCandidates = true
+    useMappingMethod = false,
+    renamePatternInternal = false,
+    // DCA
+    erasePvariables = false,
+    eraseHvariables = false,
+    approximatePvariables = false,
+    approximateHvariables = false,
+    useSubsumptionInPatternDCA = false,
+    useSubsumptionInTemplateDCA = true,
+    // CWA
+    closeConcepts = true,
+    closeProperties = true,
+    closeTop = false,
+    closeLiterals = false,
+    useSubsumptionInPatternCWA = true,
+    useSubsumptionInTemplateCWA = false,
+    // The following can be set by users via CLI
+    // and are overwritten by standard settings of
+    // the CLI framework!
+    // Therefore, the following defaults are only relevant
+    // for development work:
+    optimizeCandidates = true,
+    autoRename = false,
+    renameToken = "'",
+    prefix = ":",
+    log = true,
+    debug = true,
+    hidecolon = true,
+    prettyVariableConcepts = true,
+    printOutput = false
   )
-
-  /** A configuration adding formal output. */
-  def formalOutput: Configuration =
-    Configuration(
-      log = true,
-      hidecolon = true,
-      prefix = ":",
-      prettyVariableConcepts = true
-    )
-
-  /** A configuration adding debugging. */
-  def debug: Configuration =
-    Configuration(
-      log = true,
-      debug = true
-    )
-
-  /** The default configuration with Debugging. */
-  def defaultDebug: Configuration =
-    Configuration.join(formalOutput, debug, default)
-
-  /** Create from BitSet; unsafe, internal use only. */
-  def fromBitset(bits: Int): Configuration =
-    def get(index: Int): Boolean =
-      if index >= bits.toBinaryString.size then false
-      else if bits.toBinaryString(index) == '0' then false
-      else true
-
-    Configuration(
-      dcaForPattern = get(0),
-      dcaForTemplate = get(1),
-      cwaForPattern = get(2),
-      cwaForTemplate = get(3),
-      unaForPattern = get(4),
-      unaForTemplate = get(5),
-      erasePvariables = get(6),
-      eraseHvariables = get(7),
-      approximatePvariables = get(8),
-      approximateHvariables = get(9),
-      useSubsumptionInPatternDCA = get(10),
-      useSubsumptionInTemplateDCA = get(11),
-      useSubsumptionInPatternCWA = get(12),
-      useSubsumptionInTemplateCWA = get(13),
-      closeConcepts = get(14),
-      closeProperties = get(15),
-      closeTop = get(16),
-      closeLiterals = get(17)
-    )
