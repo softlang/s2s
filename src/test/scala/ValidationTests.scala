@@ -2,28 +2,22 @@ package org.softlang.s2s.test
 
 import org.junit.Assert.*
 import org.junit.rules.TestName
+import org.softlang.s2s.Shapes2Shapes
+import org.softlang.s2s.core.Configuration
+import org.softlang.s2s.core.SimpleSHACLShape
+import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
-import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 
 import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
-
-import org.softlang.s2s.Shapes2Shapes
-import org.softlang.s2s.core.{SimpleSHACLShape, Configuration}
-import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
 abstract class ValidationTests(suite: String):
 
   def name: TestName
 
-  val s2s =
-    Shapes2Shapes(
-      Configuration.join(
-        Configuration.debug,
-        Configuration.formalOutput,
-        Configuration.default
-      )
-    )
+  val s2s = Shapes2Shapes(Configuration.default)
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()

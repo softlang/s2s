@@ -1,10 +1,11 @@
 package org.softlang.s2s
 
-import org.softlang.s2s.core.{Configuration, Log}
-
 import org.rogach.scallop._
+import org.softlang.s2s.core.Configuration
+import org.softlang.s2s.core.Log
 
-import scala.util.{Try, Failure}
+import scala.util.Failure
+import scala.util.Try
 
 /** Command line interface definition. */
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
@@ -29,44 +30,57 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
   val optimize =
     toggle(
       default = Some(true),
-      descrYes = "Remove output shapes entailed by others (Default: On)"
+      descrYes = "Remove output shapes entailed by others (def: On)"
+    )
+
+  val rename =
+    toggle(
+      default = Some(false),
+      descrYes = "Create namespace for input shapes (def: Off)"
     )
 
   val log =
     toggle(
       default = Some(true),
-      descrYes = "Print input and output as a log (Default: On)"
+      descrYes = "Print input and output as a log (def: On)"
     )
 
   val hidecolon =
     toggle(
       default = Some(true),
-      descrYes = "Hide colon in prefixes in log (Default: On)"
+      descrYes = "Hide colon in prefixes in log (def: On)"
     )
 
   val debug =
     toggle(
       default = Some(false),
-      descrYes = "Print inferred axioms as part of the log (Default: Off)"
+      descrYes = "Print inferred axioms in the log (def: Off)"
     )
 
   val prettyVars =
     toggle(
       default = Some(true),
-      descrYes = "Pretty variable concepts in log (Default: On)"
+      descrYes = "Pretty variable concepts in log (def: On)"
     )
 
   val output =
     toggle(
       default = Some(false),
-      descrYes = "Print shapes as output (Default: Off)"
+      descrYes = "Print shapes as output (def: Off)"
     )
 
   val prefix =
     opt[String](
       required = false,
       default = Some(":"),
-      descr = "Standard prefix to use (Default ':')"
+      descr = "Standard prefix to use (def ':')"
+    )
+
+  val renameToken =
+    opt[String](
+      required = false,
+      default = Some("'"),
+      descr = "For auto-rename, use this string (def: ')"
     )
 
   val queryFile = trailArg[String](descr = "File containing input query")
@@ -82,6 +96,8 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
   /** Convert to a S2S configuration. */
   def toConfiguration: Configuration = Configuration.default.copy(
     optimizeCandidates = optimize(),
+    autoRename = rename(),
+    renameToken = renameToken(),
     prefix = prefix(),
     log = log(),
     debug = debug(),
@@ -90,6 +106,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
     printOutput = output()
   )
 
+/** Shapes2Shapes application entry point. */
 @main def s2s(args: String*): Unit =
 
   // Initialize CLI configuration.
@@ -117,55 +134,22 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
     s <- sft
   do Shapes2Shapes(conf.toConfiguration).run(q, s)
 
-/*
-// Compare two configurations of the algorithm.
-def compare(): Unit =
+/** Compare two configurations of the algorithm on structured test cases. */
+@main def compare(): Unit =
 
   // Common settings for both Configurations.
-  val common = Configuration.join(
-    // Enable debugging.
-    Configuration.debug,
-    // Enable more formal output.
-    Configuration.formalOutput,
-    // Standard settings.
-    Configuration(
-      erasePvariables = false,
-      eraseHvariables = false,
-      approximatePvariables = false,
-      approximateHvariables = false,
-      useSubsumptionInPatternDCA = false,
-      useSubsumptionInTemplateDCA = true,
-      closeConcepts = true,
-      closeProperties = true,
-      closeTop = false,
-      dcaForPattern = true,
-      dcaForTemplate = true,
-      // cwaForPattern = false,
-      cwaForTemplate = true,
-      unaForPattern = false,
-      unaForTemplate = true,
-      optimizeCandidates = true
-    )
+  val common = Configuration.default.copy(
+    // ...
   )
 
   val compare = ConfigurationComparison(
-    // Configuration 1...
-    Configuration.join(
-      // Common settings.
-      common,
-      // Custom settings for Configuration 1.
-      Configuration(
-        cwaForPattern = false
-      )
+    // Configuration 1:
+    common.copy(
+      cwaForPattern = false
     ),
-    // ...compared vs. configuration 2.
-    Configuration.join(
-      // Common settings.
-      common,
-      // Custom settings for Configuration 2.
-      Configuration(
-        cwaForPattern = true
-      )
+    // Configuration 2:
+    common.copy(
+      cwaForPattern = true
     ),
     // Compare S_out for any differences.
     compareResults = true,
@@ -179,23 +163,4 @@ def compare(): Unit =
     stopAfterFirstResult = false
   )
 
-  // (Option 1) Run structured comparison test.
   compare.structured()
-
-  // (Option 2) Run comparison for a single case.
-
-  // val example1 = (
-  //  """
-  //    CONSTRUCT {
-  //      ?x a :B . ?y a :C
-  //    } WHERE {
-  //      ?x :p ?x . ?y a :A
-  //    }
-  //    """,
-  //  Set(
-  //    ":A ⊑ ∃:p.:A"
-  //  )
-  // )
-
-  // compare.standalone(example1._1, example1._2)
- */

@@ -1,7 +1,8 @@
 package org.softlang.s2s.infer
 
-import org.softlang.s2s.query._
 import de.pseifer.shar.dl._
+import org.softlang.s2s.core.rename
+import org.softlang.s2s.query._
 
 /** Generate the closed world assumption for a set of atomic patterns. */
 class ClosedWorldAssumption(
@@ -15,10 +16,17 @@ class ClosedWorldAssumption(
     // Closure for literals {a}.
     closeLiterals: Boolean,
     // Use Subsumption instead of Equality.
-    useSubsumption: Boolean
+    useSubsumption: Boolean,
+    // Rename internal concepts.
+    renameInternal: Boolean = false,
+    renameToken: String = "'"
 ) extends Assumption(a):
 
   import AtomicPattern._
+
+  /** Rename a named concept, if enabled. */
+  private def renamePerhaps(nc: NamedConcept): NamedConcept =
+    if renameInternal then NamedConcept(nc.c.rename(renameToken)) else nc
 
   // Closure for concepts.
   private val conceptClosure: Set[Axiom] = a.concepts.flatMap { c =>
@@ -28,8 +36,9 @@ class ClosedWorldAssumption(
       case _                                  => Set()
     }
     if rhs.isEmpty then Set()
-    else if useSubsumption then Set(Subsumption(c, Concept.unionOf(rhs)))
-    else Set(Equality(c, Concept.unionOf(rhs)))
+    else if useSubsumption then
+      Set(Subsumption(renamePerhaps(c), Concept.unionOf(rhs)))
+    else Set(Equality(renamePerhaps(c), Concept.unionOf(rhs)))
   }
 
   // Closure for properties.

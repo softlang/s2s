@@ -1,7 +1,7 @@
 package org.softlang.s2s.core
 
-import scala.collection.BitSet
 import java.io.ObjectInputFilter.Config
+import scala.collection.BitSet
 
 /** A set of configurations for S2S. */
 case class Configuration(
@@ -31,7 +31,7 @@ case class Configuration(
     useMappingMethod: Boolean = false, //                 TODO - NOT IMPLEMENTED
 
     /** Rename internal pattern concepts. */
-    renamePatternInternal: Boolean = false, //            TODO - NOT IMPLEMENTED
+    renamePatternInternal: Boolean = false,
 
     // ***********
     // *** DCA ***
@@ -89,10 +89,10 @@ case class Configuration(
     optimizeCandidates: Boolean = false,
 
     /** Automatically rename input concepts and properties. */
-    autoRename: Boolean = false, //                       TODO - NOT IMPLEMENTED
+    autoRename: Boolean = false,
 
     /** Token to append (if autoRename is set). */
-    renameToken: String = "'", //                         TODO - NOT IMPLEMENTED
+    renameToken: String = "'",
 
     /** Standard prefix (for examples). Otherwise, supply prefix definitions in
       * query.
@@ -128,7 +128,7 @@ object Configuration:
     unaForPattern = false,
     unaForTemplate = true,
     useMappingMethod = false,
-    renamePatternInternal = false,
+    renamePatternInternal = true,
     // DCA
     erasePvariables = false,
     eraseHvariables = false,
@@ -141,13 +141,13 @@ object Configuration:
     closeProperties = true,
     closeTop = false,
     closeLiterals = false,
-    useSubsumptionInPatternCWA = true,
+    useSubsumptionInPatternCWA = false,
     useSubsumptionInTemplateCWA = false,
     // The following can be set by users via CLI
     // and are overwritten by standard settings of
     // the CLI framework!
     // Therefore, the following defaults are only relevant
-    // for development work:
+    // for development work, in particular, testing.
     optimizeCandidates = true,
     autoRename = false,
     renameToken = "'",

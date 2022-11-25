@@ -1,8 +1,14 @@
 package org.softlang.s2s.query
 
-import org.softlang.s2s.core.{Var, Vocabulary, ShassTry, UnsupportedQueryError}
-import de.pseifer.shar.core.{Showable, BackendState, Iri}
-import de.pseifer.shar.dl.{NamedConcept, NamedRole}
+import de.pseifer.shar.core.BackendState
+import de.pseifer.shar.core.Iri
+import de.pseifer.shar.core.Showable
+import de.pseifer.shar.dl.NamedConcept
+import de.pseifer.shar.dl.NamedRole
+import org.softlang.s2s.core.ShassTry
+import org.softlang.s2s.core.UnsupportedQueryError
+import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.Vocabulary
 
 type AtomicPatterns = List[AtomicPattern]
 
@@ -11,6 +17,7 @@ extension (aps: AtomicPatterns)
   def concepts: Set[NamedConcept] = aps.flatMap(_.concepts).toSet
   def properties: Set[NamedRole] = aps.flatMap(_.properties).toSet
   def nominals: Set[Iri] = aps.flatMap(_.nominals).toSet
+  def rename(token: String): AtomicPatterns = aps.map(_.rename(token))
 
   def vocabulary: Vocabulary =
     Vocabulary(aps.variables, aps.concepts, aps.properties, aps.nominals)

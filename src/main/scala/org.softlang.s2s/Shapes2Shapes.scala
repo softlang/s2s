@@ -1,16 +1,19 @@
 package org.softlang.s2s
 
+import de.pseifer.shar.Shar
+import de.pseifer.shar.core.Iri
+import de.pseifer.shar.core.Prefix
+import de.pseifer.shar.reasoning.AxiomSet
+import de.pseifer.shar.reasoning.HermitReasoner
 import org.softlang.s2s.core._
-import org.softlang.s2s.infer._
-import org.softlang.s2s.query.{SCCQ, vocabulary}
 import org.softlang.s2s.generate.CandidateGenerator
+import org.softlang.s2s.infer._
 import org.softlang.s2s.parser.SCCQParser
 import org.softlang.s2s.parser.ShapeParser
-
-import de.pseifer.shar.Shar
-import de.pseifer.shar.reasoning.{AxiomSet, HermitReasoner}
+import org.softlang.s2s.query.SCCQ
+import org.softlang.s2s.query.rename
+import org.softlang.s2s.query.vocabulary
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
-import de.pseifer.shar.core.{Prefix, Iri}
 
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(config: Configuration = Configuration()):
@@ -77,7 +80,14 @@ class Shapes2Shapes(config: Configuration = Configuration()):
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
     // Run the algorithm.
-    yield algorithm(q, s, log)
+    yield algorithm(
+      // Rename the inputs if required.
+      if config.autoRename then
+        SCCQ(q.template, q.pattern.rename(config.renameToken))
+      else q,
+      if config.autoRename then s.map(_.rename(config.renameToken)) else s,
+      log
+    )
 
     // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
@@ -140,6 +150,12 @@ class Shapes2Shapes(config: Configuration = Configuration()):
       log: Log
   ): HermitReasoner =
 
+    // Axioms from mapping method.
+
+    val mappingSubs =
+      if config.useMappingMethod then MappingMethod(q.pattern, s).axioms
+      else Set()
+
     // DCA for query pattern.
 
     val dcaP =
@@ -178,7 +194,9 @@ class Shapes2Shapes(config: Configuration = Configuration()):
           config.closeProperties,
           config.closeTop,
           config.closeLiterals,
-          config.useSubsumptionInPatternCWA
+          config.useSubsumptionInPatternCWA,
+          renameInternal = config.renamePatternInternal,
+          renameToken = config.renameToken
         ).axioms
       else Set()
 
@@ -222,6 +240,7 @@ class Shapes2Shapes(config: Configuration = Configuration()):
     hermit.addAxioms(
       AxiomSet(
         s.map(_.axiom)
+          .union(mappingSubs)
           .union(dcaP)
           .union(dcaH)
           .union(cwaP)

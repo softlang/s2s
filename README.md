@@ -12,9 +12,9 @@ Essentially, building and running Shapes2Shapes can be handled via `sbt` directl
 
 In order to build the project execute `make` (or, manually, `sbt assembly`). Shapes2Shapes can be executed via the included `s2s <args>` script on UNIX systems or `s2s.bat <args>` on Windows. All options for `<args>` are defined in [Command Line Interface](#command-line-interface) below. Alternatively, manual execution is possible via `java -jar target/scala-3.2.0/s2s.jar <args>`. 
 
-##### Running Shapes2Shapes via SBT
+##### Running Shapes2Shapes via SBT (Development)
 
-In order to run Shapes2Shapes directly from SBT, launch SBT via `sbt` and execute `run <args>` . Alternatively, run `sbt "run <args>"` directly from the command line. Note, however, that this is rather slow due to the startup time of SBT and only recommended for development.
+In order to run Shapes2Shapes directly from SBT, launch SBT via `sbt` and execute `run <args>`. Note, that there are multiple main classes. The main class `org.softlang.s2s.s2s` is the same used when assembling the `s2s.jar`. Other main classes are primarily used for development or testing.
 
 ### Usage
 
