@@ -140,7 +140,7 @@ class GeneralSCCQTests extends ValidationTests("General"):
   val q7 = query("?x a :B . ?y a :C", "?y :q ?x . ?x a :A")
 
   @Test def general_7_0(): Unit =
-    test(Set("∃:q.⊤ ⊑ :A"), q7, Set(":C ⊑ :B"))
+    test(Set("∃:q.⊤ ⊑ :A"), q7, noshapes)
 
   val q8 = query("?x a :B . ?y a :C", "?y :q ?x . ?x :p ?y . ?y a :A")
 

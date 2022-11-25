@@ -162,7 +162,7 @@ class ConceptSCCQLiteralTests extends ValidationTests("Literal-Concept"):
     test(noshapes, q12, noshapes)
 
   @Test def concept_12_1(): Unit =
-    test(Set(":A ⊑ :B"), q12, Set(":C ⊑ :D"))
+    test(Set(":A ⊑ :B"), q12, Set(":C ⊑ :D"), debug = true)
 
   // @Test def concept_12_2(): Unit =
   //  test(Set(":B ⊑ :A"), q12, Set(":E ⊑ :C", ":D ⊑ :C"))
