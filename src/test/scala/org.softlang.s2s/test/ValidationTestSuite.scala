@@ -14,11 +14,11 @@ import java.nio.file.Paths
 import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
 
 abstract class ValidationTestSuite(
-    /** Name of the test suite. */
+    // Name of the test suite.
     suite: String,
-    /** Do not run this test siute. */
+    // Do not run this test siute.
     disabled: Boolean = false,
-    /** Allways print full debugging for failures. */
+    // Allways print full debugging for failures.
     verbose: Boolean = false
 ):
 

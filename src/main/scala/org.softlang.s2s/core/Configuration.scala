@@ -9,109 +9,105 @@ case class Configuration(
     // *** Algorithm ***
     // *****************
 
-    /** Generate DCA for pattern P. */
+    // Generate DCA for pattern P.
     dcaForPattern: Boolean = false,
 
-    /** Generate DCA for template H. */
+    // Generate DCA for template H.
     dcaForTemplate: Boolean = false,
 
-    /** Generate CWA for pattern P. */
+    // Generate CWA for pattern P.
     cwaForPattern: Boolean = false,
 
-    /** Generate CWA for template H. */
+    // Generate CWA for template H.
     cwaForTemplate: Boolean = false,
 
-    /** Generate UNA for pattern P. */
+    // Generate UNA for pattern P.
     unaForPattern: Boolean = false,
 
-    /** Generate UNA for template H. */
+    // Generate UNA for template H.
     unaForTemplate: Boolean = false,
 
-    /** Use the mapping method. */
+    // Use the mapping method.
     useMappingMethod: Boolean = false, //                 TODO - NOT IMPLEMENTED
 
-    /** Rename internal pattern concepts. */
+    // Rename internal pattern concepts.
     renamePatternInternal: Boolean = false,
 
     // ***********
     // *** DCA ***
     // ***********
 
-    /** In the DCA of pattern P, replace variables with T */
+    // In the DCA of pattern P, replace variables with T.
     erasePvariables: Boolean = false,
 
-    /** In the DCA of tempalte H, replace variables with T */
+    // In the DCA of tempalte H, replace variables with T.
     eraseHvariables: Boolean = false,
 
-    /** In the DCA of pattern P, replace variables with an approximation.
-      * Overriden by erasePvariables.
-      */
+    // In the DCA of pattern P, replace variables with an approximation.
+    // Overriden by erasePvariables.
     approximatePvariables: Boolean = false,
 
-    /** In the DCA of tempalte H, replace variables with an approximation.
-      * Overriden by eraseHvariables.
-      */
+    // In the DCA of tempalte H, replace variables with an approximation.
+    // Overriden by eraseHvariables.
     approximateHvariables: Boolean = false,
 
-    /** Use subsumption instead of equality for the pattern. */
+    // Use subsumption instead of equality for the pattern.
     useSubsumptionInPatternDCA: Boolean = false,
 
-    /** Use subsumption instead of equality for the template. */
+    // Use subsumption instead of equality for the template.
     useSubsumptionInTemplateDCA: Boolean = false,
 
     // ***********
     // *** CWA ***
     // ***********
 
-    /** Closure for concepts. */
+    // Closure for concepts.
     closeConcepts: Boolean = false,
 
-    /** Closure for properties. */
+    // Closure for properties.
     closeProperties: Boolean = false,
 
-    /** Closure for T. */
+    // Closure for T.
     closeTop: Boolean = false,
 
-    /** Closure for literals {a}. */
+    // Closure for literals {a}.
     closeLiterals: Boolean = false,
 
-    /** Use subsumption instead of equality for the pattern. */
+    // Use subsumption instead of equality for the pattern.
     useSubsumptionInPatternCWA: Boolean = false,
 
-    /** Use subsumption instead of equality for the template. */
+    // Use subsumption instead of equality for the template.
     useSubsumptionInTemplateCWA: Boolean = false,
 
     // ********************
     // *** User Options ***
     // ********************
 
-    /** Optimize candidate generation. */
+    // Optimize candidate generation.
     optimizeCandidates: Boolean = false,
 
-    /** Automatically rename input concepts and properties. */
+    // Automatically rename input concepts and properties.
     autoRename: Boolean = false,
 
-    /** Token to append (if autoRename is set). */
+    // Token to append (if autoRename is set).
     renameToken: String = "'",
 
-    /** Standard prefix (for examples). Otherwise, supply prefix definitions in
-      * query.
-      */
+    // Standard predefined prefix.
     prefix: String = ":",
 
-    /** Print log to stdout when calling Shapes2Shapes.run. */
+    // Print log to stdout when calling Shapes2Shapes.run.
     log: Boolean = false,
 
-    /** Generate more detailed, debugging output. */
+    // Generate more detailed, debugging output.
     debug: Boolean = false,
 
-    /** More formal notation in output when using ':' as a prefix. */
+    // More formal notation in output when using ':' as a prefix.
     hidecolon: Boolean = false,
 
-    /** Replace the shar: prefix (variable concepts) with '?'. */
+    // Replace the shar: prefix (variable concepts) with '?'.
     prettyVariableConcepts: Boolean = false,
 
-    /** Print output shapes (outside of log) to output. */
+    // Print output shapes (outside of log) to output.
     printOutput: Boolean = false
 )
 
