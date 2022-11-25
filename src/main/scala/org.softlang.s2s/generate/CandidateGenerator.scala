@@ -1,8 +1,8 @@
 package org.softlang.s2s.generate
 
-import org.softlang.s2s.core.Vocabulary
-import org.softlang.s2s.core.SimpleSHACLShape
 import de.pseifer.shar.dl._
+import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.Vocabulary
 
 class CandidateGenerator(voc: Vocabulary, optimize: Boolean):
 

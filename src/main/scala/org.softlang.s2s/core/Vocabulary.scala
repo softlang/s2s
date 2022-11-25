@@ -1,8 +1,11 @@
 package org.softlang.s2s.core
 
+import de.pseifer.shar.core.BackendState
+import de.pseifer.shar.core.Iri
+import de.pseifer.shar.core.Showable
+import de.pseifer.shar.dl.NamedConcept
+import de.pseifer.shar.dl.NamedRole
 import org.softlang.s2s.core.Var
-import de.pseifer.shar.dl.{NamedConcept, NamedRole}
-import de.pseifer.shar.core.{Showable, BackendState, Iri}
 
 case class Vocabulary(
     variables: Set[Var],

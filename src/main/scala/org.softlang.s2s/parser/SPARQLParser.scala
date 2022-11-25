@@ -1,11 +1,10 @@
 package org.softlang.s2s.parser
 
 import java.io.FileReader
-import scala.util.parsing.combinator._
-import scala.util.matching.Regex
 import scala.collection.mutable.ListBuffer
-
 import scala.language.postfixOps
+import scala.util.matching.Regex
+import scala.util.parsing.combinator._
 
 // Builds upon https://gist.github.com/datagraph/353854
 

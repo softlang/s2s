@@ -1,12 +1,15 @@
 package org.softlang.s2s.parser
 
-import org.softlang.s2s.core.{Var, ShassTry}
-import org.softlang.s2s.query.GeneralAtomicPattern
-import GeneralAtomicPattern._
 import de.pseifer.shar.Shar
-import de.pseifer.shar.core.{Prefix, Iri}
+import de.pseifer.shar.core.Iri
+import de.pseifer.shar.core.Prefix
 import de.pseifer.shar.error.SharTry
+import org.softlang.s2s.core.ShassTry
+import org.softlang.s2s.core.Var
+import org.softlang.s2s.query.GeneralAtomicPattern
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
+
+import GeneralAtomicPattern._
 
 sealed trait TripleType
 

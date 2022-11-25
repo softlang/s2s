@@ -1,10 +1,10 @@
 package org.softlang.s2s.parser
 
-import org.softlang.s2s.core._
-
 import de.pseifer.shar.Shar
-import de.pseifer.shar.dl.{Concept, Subsumption}
+import de.pseifer.shar.dl.Concept
+import de.pseifer.shar.dl.Subsumption
 import de.pseifer.shar.parsing.ConceptParser
+import org.softlang.s2s.core._
 
 class ShapeParser(shar: Shar):
 

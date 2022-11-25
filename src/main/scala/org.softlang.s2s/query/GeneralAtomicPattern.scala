@@ -1,7 +1,11 @@
 package org.softlang.s2s.query
 
-import de.pseifer.shar.core.{BackendState, Iri, Showable}
-import org.softlang.s2s.core.{Var, ShassTry, NotAtomicError}
+import de.pseifer.shar.core.BackendState
+import de.pseifer.shar.core.Iri
+import de.pseifer.shar.core.Showable
+import org.softlang.s2s.core.NotAtomicError
+import org.softlang.s2s.core.ShassTry
+import org.softlang.s2s.core.Var
 
 enum GeneralAtomicPattern extends Showable:
   def show(implicit state: BackendState): String =

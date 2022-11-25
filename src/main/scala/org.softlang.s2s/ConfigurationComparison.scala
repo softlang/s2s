@@ -1,14 +1,15 @@
 package org.softlang.s2s
 
+import de.pseifer.shar.dl.Axiom
+import de.pseifer.shar.dl.Subsumption
 import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
-import org.softlang.s2s.query.{SCCQ, vocabulary}
+import org.softlang.s2s.query.SCCQ
+import org.softlang.s2s.query.vocabulary
 
-import de.pseifer.shar.dl.{Axiom, Subsumption}
-
-import scala.util.Random
 import scala.collection.BitSet
+import scala.util.Random
 
 class ConfigurationComparison(
     c1: Configuration,

@@ -1,7 +1,7 @@
 package org.softlang.s2s.infer
 
-import org.softlang.s2s.query._
 import de.pseifer.shar.dl._
+import org.softlang.s2s.query._
 
 /** Generate the domain closure assumption, given a set of atomic patterns. */
 class DomainClosureAssumption(
