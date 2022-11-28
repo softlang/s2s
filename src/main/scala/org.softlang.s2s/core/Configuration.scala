@@ -28,7 +28,7 @@ case class Configuration(
     unaForTemplate: Boolean,
 
     // Use the mapping method.
-    useMappingMethod: Boolean, // TODO - NOT IMPLEMENTED
+    useMappingMethod: Boolean,
 
     // Rename internal pattern concepts.
     renamePatternInternal: Boolean,

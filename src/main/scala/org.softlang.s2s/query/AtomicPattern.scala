@@ -75,3 +75,13 @@ enum AtomicPattern extends Showable:
       case LAC(_, io) => Set(NamedConcept(io))
       case VAC(_, io) => Set(NamedConcept(io))
       case _          => Set()
+
+  /** Apply a variable mapping to a atomic pattern. */
+  def mappedWith(mapping: Map[Var, Var]): AtomicPattern =
+    this match
+      case LAC(is, io)     => LAC(is, io)
+      case VAC(vs, io)     => VAC(mapping(vs), io)
+      case LPL(is, ip, io) => LPL(is, ip, io)
+      case VPL(vs, ip, io) => VPL(mapping(vs), ip, io)
+      case LPV(is, ip, vo) => LPV(is, ip, mapping(vo))
+      case VPV(vs, ip, vo) => VPV(mapping(vs), ip, mapping(vo))

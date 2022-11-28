@@ -14,7 +14,7 @@ In order to build the project execute `make` (or, manually, `sbt assembly`). Sha
 
 ##### Running Shapes2Shapes via SBT (Development)
 
-In order to run Shapes2Shapes directly from SBT, launch SBT via `sbt` and execute `run <args>`. Note, that there are multiple main classes. The main class `org.softlang.s2s.s2s` is the same used when assembling the `s2s.jar`. Other main classes are primarily used for development or testing.
+In order to run Shapes2Shapes directly from SBT, launch SBT via `sbt` and execute `run <args>`. Note, that there are multiple main classes. The main class `org.softlang.s2s.s2s` is the same used when assembling the `s2s.jar`. In order to run it directly, `runMain org.softlang.s2s.s2s <args>` can be used. Other main classes are primarily used for development or testing.
 
 ### Usage
 

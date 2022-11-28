@@ -156,6 +156,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       if config.useMappingMethod then MappingMethod(q.pattern, s).axioms
       else Set()
 
+    if config.useMappingMethod then
+      log.debug("Map(q.P)", mappingSubs.map(_.show).toList)
+
     // DCA for query pattern.
 
     val dcaP =

@@ -12,3 +12,13 @@ final case class Var(v: String) extends Showable with AsConcept:
 
   def asConcept: Concept =
     NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get)
+
+object Var:
+
+  private def freshToken = "_"
+  private var freshCounter = -1
+
+  /** A fresh variable. */
+  def fresh(): Var =
+    freshCounter += 1
+    Var(freshToken ++ freshCounter.toString)
