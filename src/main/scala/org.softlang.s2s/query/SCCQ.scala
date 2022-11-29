@@ -44,16 +44,20 @@ extension (aps: AtomicPatterns)
     ): Map[Set[Var], Set[AtomicPattern]] = p match
       // A next pattern remains.
       case head :: next =>
-        // Build this entry, by...
-        val thiss = partial.find(_._1.intersect(head.variables).nonEmpty) match
-          // ...creating new component for new variables.
-          case None =>
+        println("-" ++ partial.toString)
+        // Build this entry by finding all matches
+        val ex = partial.filter(_._1.intersect(head.variables).nonEmpty)
+        val thiss = 
+          // if there are none, create a new entry.
+          if ex.isEmpty then
             partial + (head.variables -> Set(head))
-          // ...or extending existing component.
-          case Some(x) =>
-            partial
-              .removed(x._1) + (head.variables
-              .union(x._1) -> (Set(head) ++ x._2))
+          // otherwise, join existing ones.
+          else
+            // Get the unchanged rest of the components
+            partial.filter(_._1.intersect(head.variables).isEmpty) + 
+            // and join the extended component(s) together.
+            (ex.keySet.flatten.union(head.variables) 
+              -> (Set(head) ++ ex.values.flatten.toSet))
         doComponents(next, thiss)
       // Processed all patterns.
       case Nil => partial
@@ -65,7 +69,14 @@ extension (aps: AtomicPatterns)
 
   /** Test, whether one pattern is subsumed by another. */
   def subsumedBy(other: AtomicPatterns): Boolean =
-    aps.toSet.subsetOf(other.toSet)
+    print("------  this ")
+    println(aps.toSet)
+    print("------ sub by ")
+    println(other.toSet)
+    val r =aps.toSet.subsetOf(other.toSet)
+    println(r)
+    println("\n")
+    r
 
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
