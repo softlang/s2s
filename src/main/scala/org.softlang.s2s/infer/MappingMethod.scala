@@ -5,24 +5,21 @@ import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.query._
 
-// - variable mapping
-// - component equality modulo mapping
-// - extraction of subsumptions
-
 class MappingMethod(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape]
 ) extends Assumption(a):
 
   def axioms: Set[Axiom] =
-    // (1) Find all components.
-    val comp = a.components
-    println("\n\nCOMP")
-    comp.foreach(println) // DEBUG
 
-    // (2) For each shape & component->variable, test if target.
-    // If so, extend the pattern by translating the constraint.
-    val t = comp.map((k, v) =>
+    // (1)
+    // Detect all components.
+    val comps = a.components
+
+    // (2) 
+    // For each shape & component->variable, test if it is a target.
+    // If so, extend the pattern by translating the shape to a constraint.
+    val extendedComps = comps.map((k, v) =>
       (
         k,
         k.flatMap(ki =>
@@ -38,38 +35,64 @@ class MappingMethod(
         )
       )
     )
-    println("\n\nT")
-    t.foreach(println) // DEBUG
 
-    // (3) Generate variable mappings.
-    // (3.1) Test subsumption for all combinations of two components.
+    // (3) 
+    // Generate variable mappings and find subsumption.
     val ttt = for
-      sub <- comp
-      sup <- comp
+      sub <- extendedComps
+      sup <- extendedComps
     yield
+      // The complete (including temporary) variables in sub and sup.
       val subv = sub._2.toList.variables
       val supv = sup._2.toList.variables
 
-      val mapping: Map[Var, Var] = Map() // TODO: generate all
+      // If the subsumption candidate has more variables,
+      // it can not be subsumed by the other component.
+      if subv.size > supv.size then Nil
+      else
+        val diff = supv.size - subv.size
 
-      sub._2.toList.mappedWith(mapping).subsumedBy(sup._2.toList)
+        // C1 - C3: Generation of all possible mappings, such that
+        // all variables in sup are mapped to variables in sub,
+        // with the additional constraint, that each variable
+        // in sub must occur at least once.
+        // (Otherwise, it can not be subsumed by sup.)
 
-      (sub, sup)
+        // C1 - All numbers of occurrences for variables.
+        val c1 = for 
+          v <- subv
+          i <- 1 to (1 + diff)
+        yield List.fill(i)(v)
 
-    // Ultimately, only subset relationship.
-    // def subsumedBy(other: AtomicPatterns, mapping: Map[Var, Var]): Boolean = false
+        // C2 - Restricted ocurrences to size of mapping (at least once).
+        val c2 = c1.toList
+          .combinations(subv.size)
+          .map(_.flatten)
+          .filter(_.size == supv.size)
+          .filter(x => subv.forall(x.contains))
+          .toList
+        
+        // C3 - Finally, all permutations for the RHS of the mapping.
+        val c3 = c2.flatMap(_.permutations).toList
 
-    // (A) all variables of sub must be mapped to one element in sup
-    // (B) elements in sup may be image of multiple elements in sub
+        val axioms = for
+          ci <- c3
+        yield
+          // Mappings from sup variables to sub variables.
+          val mapping = supv.zip(ci).toMap
+          // If Sub is subsumed by sup while using the current mapping
+          if sub._2.toList.subsumedBy(sup._2.toList.mappedWith(mapping)) then
+            mapping
+              // we can filter vacously satisfied subsumptions (i.e., x -> x)
+              .filter(_ != _)
+              // filter out any temporary variables
+              .filter((x,y) => sup._1.contains(x) && sub._1.contains(y))
+              // then generate the subsumption axioms (reverse of mapping).
+              .map((x,y) => Subsumption(y.asConcept, x.asConcept))
+          else
+            Set()
 
-    // sub.mappedWith(mapping).subsumedBy(sup)
+        // Return all subsumption axioms.
+        axioms.flatten
 
-    println("\n\nTTT")
-    ttt.foreach(println) // DEBUG
-
-    val l1 = List(1, 2)
-    val l2 = List(3, 4)
-
-    // (4) Find subsumption between components.
-
-    Set()
+    ttt.toList.flatten.toSet

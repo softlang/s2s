@@ -117,13 +117,21 @@ object Configuration:
   /** Default configuration for Shapes2Shapes. */
   def default: Configuration = Configuration(
     // Algorithm
-    dcaForPattern = true,
+    //dcaForPattern = true,
+    //dcaForTemplate = true,
+    //cwaForPattern = true,
+    //cwaForTemplate = true,
+    //unaForPattern = false,
+    //unaForTemplate = true,
+    //useMappingMethod = false,
+    //renamePatternInternal = true,
+    dcaForPattern = false,
     dcaForTemplate = true,
-    cwaForPattern = true,
+    cwaForPattern = false,
     cwaForTemplate = true,
     unaForPattern = false,
     unaForTemplate = true,
-    useMappingMethod = false,
+    useMappingMethod = true,
     renamePatternInternal = true,
     // DCA
     erasePvariables = false,

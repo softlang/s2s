@@ -44,7 +44,6 @@ extension (aps: AtomicPatterns)
     ): Map[Set[Var], Set[AtomicPattern]] = p match
       // A next pattern remains.
       case head :: next =>
-        println("-" ++ partial.toString)
         // Build this entry by finding all matches
         val ex = partial.filter(_._1.intersect(head.variables).nonEmpty)
         val thiss = 
@@ -69,14 +68,7 @@ extension (aps: AtomicPatterns)
 
   /** Test, whether one pattern is subsumed by another. */
   def subsumedBy(other: AtomicPatterns): Boolean =
-    print("------  this ")
-    println(aps.toSet)
-    print("------ sub by ")
-    println(other.toSet)
-    val r =aps.toSet.subsetOf(other.toSet)
-    println(r)
-    println("\n")
-    r
+    aps.toSet.subsetOf(other.toSet)
 
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
