@@ -114,24 +114,29 @@ case class Configuration(
 /** Some preset configurations. */
 object Configuration:
 
+  // Use the mapping instead of DCA,CWA (, and UNA).
+  def mappingOnly: Configuration = default.copy(
+    dcaForPattern = false,
+    cwaForPattern = false,
+    unaForPattern = false,
+    useMappingMethod = true,
+  )
+
+  // Use the mapping in addition. 
+  def mappingAlso: Configuration = default.copy(
+    useMappingMethod = true
+  )
+
   /** Default configuration for Shapes2Shapes. */
   def default: Configuration = Configuration(
     // Algorithm
-    //dcaForPattern = true,
-    //dcaForTemplate = true,
-    //cwaForPattern = true,
-    //cwaForTemplate = true,
-    //unaForPattern = false,
-    //unaForTemplate = true,
-    //useMappingMethod = false,
-    //renamePatternInternal = true,
-    dcaForPattern = false,
+    dcaForPattern = true,
     dcaForTemplate = true,
-    cwaForPattern = false,
+    cwaForPattern = true,
     cwaForTemplate = true,
     unaForPattern = false,
     unaForTemplate = true,
-    useMappingMethod = true,
+    useMappingMethod = false,
     renamePatternInternal = true,
     // DCA
     erasePvariables = false,

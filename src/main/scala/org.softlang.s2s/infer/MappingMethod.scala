@@ -39,60 +39,51 @@ class MappingMethod(
     // (3) 
     // Generate variable mappings and find subsumption.
     val ttt = for
+      // The sub-query-component (note: will be the super-pattern!)
       sub <- extendedComps
-      sup <- extendedComps
+      // The super-query-component (note: will be the sub-pattern!)
+      sup <- comps
     yield
       // The complete (including temporary) variables in sub and sup.
       val subv = sub._2.toList.variables
       val supv = sup._2.toList.variables
 
-      // If the subsumption candidate has more variables,
-      // it can not be subsumed by the other component.
-      if subv.size > supv.size then Nil
-      else
-        val diff = supv.size - subv.size
+      // C1 - All numbers of occurrences for variables.
+      val c1 = for 
+        v <- subv
+        i <- 0 to subv.size
+      yield List.fill(i)(v)
 
-        // C1 - C3: Generation of all possible mappings, such that
-        // all variables in sup are mapped to variables in sub,
-        // with the additional constraint, that each variable
-        // in sub must occur at least once.
-        // (Otherwise, it can not be subsumed by sup.)
+      // C2 - All possible RHS (in terms of occurring variables).
+      val c2 = c1.toList
+        .flatten.toSet
+        // All subsets
+        .subsets
+        // of the required size.
+        .filter(_.size == supv.size)
+      
+      // C3 - Finally, all permutations for the RHS of the mapping.
+      val c3 = c2
+        .flatMap(_.toList.permutations)
 
-        // C1 - All numbers of occurrences for variables.
-        val c1 = for 
-          v <- subv
-          i <- 1 to (1 + diff)
-        yield List.fill(i)(v)
+      val axioms = for
+        ci <- c3
+      yield
+        // Mappings from sup variables to sub variables.
+        val mapping = supv.zip(ci).toMap
+        // If sup is subsumed by sub while using the current mapping
+        if sup._2.toList.mappedWith(mapping).subsumedBy(sub._2.toList) then
+          mapping
+            // we can filter vacously satisfied subsumptions (i.e., x -> x)
+            .filter(_ != _)
+            // filter out any temporary variables
+            .filter((x,y) => sup._1.contains(x) && sub._1.contains(y))
+            // then generate the subsumption axioms (reverse of mapping).
+            .map((x,y) => Subsumption(y.asConcept, x.asConcept))
+        else
+          Set()
 
-        // C2 - Restricted ocurrences to size of mapping (at least once).
-        val c2 = c1.toList
-          .combinations(subv.size)
-          .map(_.flatten)
-          .filter(_.size == supv.size)
-          .filter(x => subv.forall(x.contains))
-          .toList
-        
-        // C3 - Finally, all permutations for the RHS of the mapping.
-        val c3 = c2.flatMap(_.permutations).toList
-
-        val axioms = for
-          ci <- c3
-        yield
-          // Mappings from sup variables to sub variables.
-          val mapping = supv.zip(ci).toMap
-          // If Sub is subsumed by sup while using the current mapping
-          if sup._2.toList.mappedWith(mapping).subsumedBy(sub._2.toList) then
-            mapping
-              // we can filter vacously satisfied subsumptions (i.e., x -> x)
-              .filter(_ != _)
-              // filter out any temporary variables
-              .filter((x,y) => sup._1.contains(x) && sub._1.contains(y))
-              // then generate the subsumption axioms (reverse of mapping).
-              .map((x,y) => Subsumption(y.asConcept, x.asConcept))
-          else
-            Set()
-
-        // Return all subsumption axioms.
-        axioms.flatten
+      // Return all subsumption axioms.
+      axioms.flatten
 
     ttt.toList.flatten.toSet

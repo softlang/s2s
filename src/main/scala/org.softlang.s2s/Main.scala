@@ -8,7 +8,8 @@ import scala.util.Failure
 import scala.util.Try
 
 /** Command line interface definition. */
-class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
+class Conf(baseConfiguration: Configuration, 
+           arguments: Seq[String]) extends ScallopConf(arguments):
   version(
     "Shapes2Shapes 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz"
   )
@@ -94,7 +95,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
   verify()
 
   /** Convert to a S2S configuration. */
-  def toConfiguration: Configuration = Configuration.default.copy(
+  def toConfiguration: Configuration = baseConfiguration.copy(
     optimizeCandidates = optimize(),
     autoRename = rename(),
     renameToken = renameToken(),
@@ -110,7 +111,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments):
 @main def s2s(args: String*): Unit =
 
   // Initialize CLI configuration.
-  val conf = Conf(args)
+  val conf = Conf(Configuration.mappingOnly, args)
 
   // Create buffered sources and check for errors.
   val qft = Try(io.Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
