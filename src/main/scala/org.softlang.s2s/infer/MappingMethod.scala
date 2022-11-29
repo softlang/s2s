@@ -81,7 +81,7 @@ class MappingMethod(
           // Mappings from sup variables to sub variables.
           val mapping = supv.zip(ci).toMap
           // If Sub is subsumed by sup while using the current mapping
-          if sub._2.toList.subsumedBy(sup._2.toList.mappedWith(mapping)) then
+          if sup._2.toList.mappedWith(mapping).subsumedBy(sub._2.toList) then
             mapping
               // we can filter vacously satisfied subsumptions (i.e., x -> x)
               .filter(_ != _)
