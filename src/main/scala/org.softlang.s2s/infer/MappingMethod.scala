@@ -10,6 +10,25 @@ class MappingMethod(
     shapes: Set[SimpleSHACLShape]
 ) extends Assumption(a):
 
+  type Components = Map[Set[Var], Set[AtomicPattern]]
+
+  /** Extend components utilizing shapes. */
+  private def extendComponents(com: Components): Components = 
+    com.map((k, v) => (
+      k,
+      k.flatMap(ki =>
+        v ++ shapes.flatMap(s =>
+          // For each variable/shape combination (ki, s) test if is target
+          if s.isTarget(ki, v) then
+            // and extend the pattern if so.
+            s.constraintToAtomicPatterns(ki)
+          else
+            // Otherwise, do not add anything.
+            Set()
+        )
+      )
+    ))
+
   def axioms: Set[Axiom] =
 
     // (1)
@@ -19,22 +38,7 @@ class MappingMethod(
     // (2) 
     // For each shape & component->variable, test if it is a target.
     // If so, extend the pattern by translating the shape to a constraint.
-    val extendedComps = comps.map((k, v) =>
-      (
-        k,
-        k.flatMap(ki =>
-          v ++ shapes.flatMap(s =>
-            // For each variable/shape combination (ki, s) test if is target
-            if s.isTarget(ki, v) then
-              // and extend the pattern if so.
-              s.constraintToAtomicPatterns(ki)
-            else
-              // Otherwise, do not add anything.
-              Set()
-          )
-        )
-      )
-    )
+    val extendedComps = extendComponents(comps)
 
     // (3) 
     // Generate variable mappings and find subsumption.
@@ -47,6 +51,9 @@ class MappingMethod(
       // The complete (including temporary) variables in sub and sup.
       val subv = sub._2.toList.variables
       val supv = sup._2.toList.variables
+
+      println(sup._1.mkString(",") ++ "\n | " ++ sup._2.mkString(" "))
+      println(sub._1.mkString(",") ++ "\n | " ++ sub._2.mkString(" ") ++ "\n")
 
       // C1 - All numbers of occurrences for variables.
       val c1 = for 

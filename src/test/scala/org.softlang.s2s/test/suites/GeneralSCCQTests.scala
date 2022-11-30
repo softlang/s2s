@@ -136,7 +136,7 @@ class GeneralSCCQTests extends ValidationTestSuite("General"):
   val q6 = query("?x a :B . ?y a :C", "?x :p ?x . ?y a :A")
 
   @Test def general_6_0(): Unit =
-    test(Set(":A ⊑ ∃:p.:A"), q6, Set(":C ⊑ :B"))
+    test(Set(":A ⊑ ∃:p.:A"), q6, Set(":C ⊑ :B"), debug = true)
 
   val q7 = query("?x a :B . ?y a :C", "?y :q ?x . ?x a :A")
 

@@ -24,7 +24,7 @@ abstract class ValidationTestSuite(
 
   def name: TestName
 
-  val s2s = Shapes2Shapes(Configuration.default)
+  val s2s = Shapes2Shapes(Configuration.mappingOnly)
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()

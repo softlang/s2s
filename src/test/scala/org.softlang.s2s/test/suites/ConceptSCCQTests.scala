@@ -25,7 +25,7 @@ class ConceptSCCQTests extends ValidationTestSuite("Concept"):
     test(noshapes, q1, noshapes)
 
   @Test def concept_1_1(): Unit =
-    test(Set(":A ⊑ :B"), q1, Set(":C ⊑ :D"))
+    test(Set(":A ⊑ :B"), q1, Set(":C ⊑ :D"), debug = true)
 
   @Test def concept_1_2(): Unit =
     test(Set(":B ⊑ :A"), q1, Set(":D ⊑ :C"))

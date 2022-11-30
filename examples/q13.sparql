@@ -1,0 +1,5 @@
+CONSTRUCT {
+  ?x a :C . ?y a :D
+} WHERE { 
+  ?x a :A . ?y a :A . ?x :r ?y . ?z a :A . ?z :r ?z
+}
