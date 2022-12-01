@@ -4,7 +4,6 @@ import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 import org.softlang.s2s.query.AtomicPattern
-import org.softlang.s2s.query.depth
 import scala.util.control.NonLocalReturns.*
 
 case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
@@ -59,7 +58,8 @@ object SimpleSHACLShape:
   /** Extend components with a set of shapes. */
   def extendComponentsWithShapes(
       components: Map[Set[Var], Set[AtomicPattern]],
-      shapes: Set[SimpleSHACLShape]
+      shapes: Set[SimpleSHACLShape],
+      maxDepth: Int
   ): Map[Set[Var], Set[AtomicPattern]] =
     components.map((vars, patterns) =>
       (
@@ -72,7 +72,11 @@ object SimpleSHACLShape:
           // The shapes.
           shapes,
           // Maximum depth required (in case of mutually recursive shapes).
-          patterns.toList.depth
+          maxDepth,
+          // Initial chains (empty).
+          Set(),
+          // Initially locked variables (empty).
+          Set()
         )
       )
     )
@@ -83,14 +87,14 @@ object SimpleSHACLShape:
       component: Set[AtomicPattern],
       shapes: Set[SimpleSHACLShape],
       maxDepth: Int,
-      depth: Int = 0,
-      locked: Set[(Var, SimpleSHACLShape)] = Set()
+      chains: Set[List[Var]],
+      locked: Set[(Var, SimpleSHACLShape)]
   ): Set[AtomicPattern] = returning {
     // For each variable/shape
     variables.flatMap(v =>
       shapes.flatMap(s =>
         // If the variable is a target of the shape (and not already processed).
-        if depth <= maxDepth && !locked.contains((v, s)) && s
+        if maxChain(chains) <= maxDepth && !locked.contains((v, s)) && s
             .isTarget(v, component)
         then
           // Add the shapes constraint as pattern
@@ -105,9 +109,11 @@ object SimpleSHACLShape:
               // The original set of shapes.
               shapes,
               maxDepth,
-              // Increase depth, if chain of two fresh variables occurred.
-              if r._1.isDefined && r._1.get.isFresh && v.isFresh then depth + 1
-              else depth,
+              // Extend tracking of maximum chains.
+              if r._1.isDefined && r._1.get.isFresh then
+                if v.isFresh then extendChain(chains, r._1.get, v)
+                else newChain(chains, r._1.get)
+              else chains,
               // Locked variable/shape combinations, including the current step and fresh variables produced for this shape.
               locked ++ r._1.map((_, s)).toSet.incl((v, s))
             )
@@ -117,6 +123,22 @@ object SimpleSHACLShape:
       )
     )
   }
+
+  /** Greate a new chain for a fresh variable. */
+  private def newChain(chains: Set[List[Var]], elem: Var): Set[List[Var]] =
+    chains ++ Set(List(elem))
+
+  /** Extend the chain w.r.t. to some element. */
+  private def extendChain(
+      chains: Set[List[Var]],
+      elem: Var,
+      head: Var
+  ): Set[List[Var]] =
+    chains.map(chain => if chain.head == head then elem :: chain else chain)
+
+  /** Longest chain of variables. */
+  private def maxChain(chains: Set[List[Var]]): Int =
+    chains.map(_.size).maxOption.getOrElse(0)
 
   /** Generate atomic patterns for this shapes constraint, w.r.t. to a targeted
     * variable.

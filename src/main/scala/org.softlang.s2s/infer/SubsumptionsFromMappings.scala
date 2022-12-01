@@ -8,7 +8,7 @@ import org.softlang.s2s.query._
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape],
-    debug: Boolean = true
+    debug: Boolean = false
 ) extends Assumption(a):
 
   type Components = Map[Set[Var], Set[AtomicPattern]]
@@ -23,7 +23,7 @@ class SubsumptionsFromMappings(
     // For each shape & component->variable, test if it is a target.
     // If so, extend the pattern by translating the shape to a constraint.
     val extendedComps =
-      SimpleSHACLShape.extendComponentsWithShapes(comps, shapes)
+      SimpleSHACLShape.extendComponentsWithShapes(comps, shapes, a.depth)
 
     // (3)
     // Generate variable mappings and find subsumption.

@@ -42,6 +42,13 @@ enum AtomicPattern extends Showable:
     case LPV(is, ip, vo) => LPV(is, ip.rename(token), vo)
     case VPV(vs, ip, vo) => VPV(vs, ip.rename(token), vo)
 
+  /** */
+  def isPropertyPattern: Boolean =
+    this match
+      case LAC(is, io) => false
+      case VAC(vs, io) => false
+      case _           => true
+
   /** Get all nominals in this pattern. */
   def nominals: Set[Iri] =
     this match

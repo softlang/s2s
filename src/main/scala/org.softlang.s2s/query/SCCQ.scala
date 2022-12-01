@@ -70,8 +70,12 @@ extension (aps: AtomicPatterns)
   def subsumedBy(other: AtomicPatterns): Boolean =
     aps.toSet.subsetOf(other.toSet)
 
-  /** Find the maximum depth (connected variables) in this pattern. */
-  def depth: Int = 10 // TODO: Implement!
+  /** Find the maximum depth (connected variables) in this pattern. Currently
+    * Estimate based on number of patterns with props. TODO: Improve
+    * (performance slightly) by finding longest chain of variables.
+    */
+  def depth: Int =
+    aps.filter(_.isPropertyPattern).size
 
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
