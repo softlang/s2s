@@ -13,12 +13,21 @@ final case class Var(v: String) extends Showable with AsConcept:
   def asConcept: Concept =
     NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get)
 
-object Var:
+  /** Is a fresh variable instantiated by Var.fresh(). */
+  def isFresh: Boolean = v.contains(Var.freshToken)
 
-  private def freshToken = "_"
+object Var:
+  private def freshToken = "?"
   private var freshCounter = -1
 
-  /** A fresh variable. */
+  /** Generate a fresh variable. */
   def fresh(): Var =
     freshCounter += 1
+
+    if freshCounter > 999 then
+      throw new RuntimeException(
+        "Requesting exceedingly large number of variables. " +
+          "This is probably not intended."
+      )
+
     Var(freshToken ++ freshCounter.toString)

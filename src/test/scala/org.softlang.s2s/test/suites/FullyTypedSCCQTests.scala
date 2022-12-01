@@ -110,12 +110,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     test(Set(":A ⊑ ∃:r.:B"), q1, q1_basicshapes)
 
   @Test def typed_1_5(): Unit =
-    test(
-      Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"),
-      q1,
-      q1_basicshapes.union(q1_b_sub_a),
-      debug = true
-    )
+    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q1, q1_basicshapes.union(q1_b_sub_a))
 
   @Test def typed_1_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q1, q1_basicshapes)

@@ -7,29 +7,11 @@ import org.softlang.s2s.query._
 
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
-    shapes: Set[SimpleSHACLShape]
+    shapes: Set[SimpleSHACLShape],
+    debug: Boolean = true
 ) extends Assumption(a):
 
   type Components = Map[Set[Var], Set[AtomicPattern]]
-
-  /** Extend components utilizing shapes. */
-  private def extendComponents(com: Components): Components =
-    com.map((k, v) =>
-      (
-        k,
-        k.flatMap(ki =>
-          v ++ shapes.flatMap(s =>
-            // For each variable/shape combination (ki, s) test if is target
-            if s.isTarget(ki, v) then
-              // and extend the pattern if so.
-              s.constraintToAtomicPatterns(ki)
-            else
-              // Otherwise, do not add anything.
-              Set()
-          )
-        )
-      )
-    )
 
   def axioms: Set[Axiom] =
 
@@ -40,7 +22,8 @@ class SubsumptionsFromMappings(
     // (2)
     // For each shape & component->variable, test if it is a target.
     // If so, extend the pattern by translating the shape to a constraint.
-    val extendedComps = extendComponents(comps)
+    val extendedComps =
+      SimpleSHACLShape.extendComponentsWithShapes(comps, shapes)
 
     // (3)
     // Generate variable mappings and find subsumption.
@@ -54,10 +37,12 @@ class SubsumptionsFromMappings(
       val subv = sub._2.toList.variables
       val supv = sup._2.toList.variables
 
-      println(sup._1.mkString(",") ++ "\n | " ++ sup._2.mkString("\n | "))
-      println(
-        sub._1.mkString(",") ++ "\n | " ++ sub._2.mkString("\n | ") ++ "\n"
-      )
+      if debug then
+        println(sup._1.mkString(",") ++ "\n | " ++ sup._2.mkString("\n | "))
+      if debug then
+        println(
+          sub._1.mkString(",") ++ "\n | " ++ sub._2.mkString("\n | ") ++ "\n"
+        )
 
       // C1 - All numbers of occurrences for variables.
       val c1 = for
@@ -85,8 +70,9 @@ class SubsumptionsFromMappings(
           val mapping = supv.zip(ci).toMap
           // If sup is subsumed by sub while using the current mapping
           if sup._2.toList.mappedWith(mapping).subsumedBy(sub._2.toList) then
-            mapping.foreach((k, v) => print(k.v ++ " -> " ++ v.v ++ ", "))
-            println()
+            if debug then
+              mapping.foreach((k, v) => print(k.v ++ " -> " ++ v.v ++ ", "))
+              println()
             mapping
               // we can filter vacously satisfied subsumptions (i.e., x -> x)
               .filter(_ != _)

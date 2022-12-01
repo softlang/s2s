@@ -21,7 +21,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   val shar = Shar()
   import shar._
 
-  for
+  for 
     p <- Prefix.fromString(config.prefix)
     i <- Iri.fromString("<https://github.com/softlang/s2s/>")
   do shar.state.prefixes.add(p, i)

@@ -119,10 +119,10 @@ object Configuration:
     dcaForPattern = false,
     cwaForPattern = false,
     unaForPattern = false,
-    useMappingMethod = true,
+    useMappingMethod = true
   )
 
-  // Use the mapping in addition. 
+  // Use the mapping in addition.
   def mappingAlso: Configuration = default.copy(
     useMappingMethod = true
   )
