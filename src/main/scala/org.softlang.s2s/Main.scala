@@ -8,8 +8,8 @@ import scala.util.Failure
 import scala.util.Try
 
 /** Command line interface definition. */
-class Conf(baseConfiguration: Configuration, 
-           arguments: Seq[String]) extends ScallopConf(arguments):
+class Conf(baseConfiguration: Configuration, arguments: Seq[String])
+    extends ScallopConf(arguments):
   version(
     "Shapes2Shapes 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz"
   )

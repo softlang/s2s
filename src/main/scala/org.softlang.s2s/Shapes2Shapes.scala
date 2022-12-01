@@ -153,7 +153,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     // Axioms from mapping method.
 
     val mappingSubs =
-      if config.useMappingMethod then MappingMethod(q.pattern, s).axioms
+      if config.useMappingMethod then
+        SubsumptionsFromMappings(q.pattern, s).axioms
       else Set()
 
     if config.useMappingMethod then

@@ -9,6 +9,7 @@ import org.softlang.s2s.core.ShassTry
 import org.softlang.s2s.core.UnsupportedQueryError
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.Vocabulary
+
 import scala.compiletime.ops.boolean
 
 /** A list of atomic patterns. */
@@ -46,17 +47,16 @@ extension (aps: AtomicPatterns)
       case head :: next =>
         // Build this entry by finding all matches
         val ex = partial.filter(_._1.intersect(head.variables).nonEmpty)
-        val thiss = 
+        val thiss =
           // if there are none, create a new entry.
-          if ex.isEmpty then
-            partial + (head.variables -> Set(head))
+          if ex.isEmpty then partial + (head.variables -> Set(head))
           // otherwise, join existing ones.
           else
             // Get the unchanged rest of the components
-            partial.filter(_._1.intersect(head.variables).isEmpty) + 
-            // and join the extended component(s) together.
-            (ex.keySet.flatten.union(head.variables) 
-              -> (Set(head) ++ ex.values.flatten.toSet))
+            partial.filter(_._1.intersect(head.variables).isEmpty) +
+              // and join the extended component(s) together.
+              (ex.keySet.flatten.union(head.variables)
+                -> (Set(head) ++ ex.values.flatten.toSet))
         doComponents(next, thiss)
       // Processed all patterns.
       case Nil => partial

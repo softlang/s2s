@@ -78,7 +78,7 @@ enum AtomicPattern extends Showable:
 
   /** Apply a variable mapping to a atomic pattern. */
   def mappedWith(mapping: Map[Var, Var]): AtomicPattern =
-    def getMapping(v: Var): Var = 
+    def getMapping(v: Var): Var =
       if mapping.contains(v) then mapping(v) else v
     this match
       case LAC(is, io)     => LAC(is, io)
