@@ -89,61 +89,62 @@ object SimpleSHACLShape:
       component: Set[AtomicPattern],
       shapes: Set[SimpleSHACLShape],
       maxDepth: Int,
-      chains: Set[List[Var]],
+      chains: Set[Set[Var]],
       locked: Set[(Var, SimpleSHACLShape)]
   ): Set[AtomicPattern] = returning {
     // For each variable/shape
     variables.flatMap(v =>
-      shapes.flatMap(s =>
-        // TODO: Should we *stop* if this chain exists, or rather, only stop for this variable?! => alternatively, solved by sorting vars?
-
-        // If the variable is a target of the shape (and not already processed).
-        if maxChain(chains) <= maxDepth && !locked.contains((v, s)) && s
-            .isTarget(v, component)
-        then
-          // Add the shapes constraint as pattern
-          val r = constraintToAtomicPatterns(v, s)
-          // Recur with extended variables, component and (v,s) locked.
-          throwReturn {
-            recursiveExtension(
-              // Variables, including any fresh ones from this step.
-              variables ++ r._1,
-              // The extended component with added patterns.
-              component ++ r._2,
-              // The original set of shapes.
-              shapes,
-              maxDepth,
-              // Extend tracking of maximum chains.
-              if r._1.isDefined && r._1.get.isFresh then
-                if v.isFresh then extendChain(chains, r._1.get, v)
-                else newChain(chains, r._1.get)
-              else chains,
-              // Locked variable/shape combinations, including the current step and fresh variables produced for this shape.
-              locked ++ r._1.map((_, s)).toSet.incl((v, s))
-              //locked.incl((v, s)) // TODO: Need to lock r._1 or not?
-            )
-          }
-          // Note: Need to start again, since target relationship may be changed by shapes.
-        else component
-      )
+      // Only allow processing of (fresh) variables, if not all chains are extended beyond the maximum required depth. (Optimization)
+      if minChain(chains, v) <= maxDepth then
+        shapes.flatMap(s =>
+          // If the variable is a target of the shape (and not already processed).
+          if !locked.contains((v, s)) && s.isTarget(v, component)
+          then
+            // Add the shapes constraint as pattern
+            val r = constraintToAtomicPatterns(v, s)
+            // Recur with extended variables, component and (v,s) locked.
+            throwReturn {
+              recursiveExtension(
+                // Variables, including any fresh ones from this step.
+                variables ++ r._1,
+                // The extended component with added patterns.
+                component ++ r._2,
+                // The original set of shapes.
+                shapes,
+                maxDepth,
+                // Extend tracking of maximum chains.
+                if r._1.isDefined && r._1.get.isFresh then
+                  if v.isFresh then extendChain(chains, r._1.get, v)
+                  else newChain(chains, r._1.get)
+                else chains,
+                // Locked variable/shape combinations, including the current step and fresh variables produced for this shape.
+                locked ++ r._1.map((_, s)).toSet.incl((v, s))
+              )
+            }
+            // Note: Need to start again, since target relationship may be changed by shapes.
+          else component
+        )
+      else component
     )
   }
 
   /** Greate a new chain for a fresh variable. */
-  private def newChain(chains: Set[List[Var]], elem: Var): Set[List[Var]] =
-    chains ++ Set(List(elem))
+  private def newChain(chains: Set[Set[Var]], elem: Var): Set[Set[Var]] =
+    chains ++ Set(Set(elem))
 
   /** Extend the chain w.r.t. to some element. */
   private def extendChain(
-      chains: Set[List[Var]],
+      chains: Set[Set[Var]],
       elem: Var,
       head: Var
-  ): Set[List[Var]] =
-    chains.map(chain => if chain.head == head then elem :: chain else chain)
+  ): Set[Set[Var]] =
+    chains.map(chain =>
+      if chain.contains(head) then chain.incl(elem) else chain
+    )
 
-  /** Longest chain of variables. */
-  private def maxChain(chains: Set[List[Var]]): Int =
-    chains.map(_.size).maxOption.getOrElse(0)
+  /** Minimum chain for some variable. */
+  private def minChain(chains: Set[Set[Var]], elem: Var): Int =
+    chains.filter(_.contains(elem)).map(_.size).minOption.getOrElse(0)
 
   /** Generate atomic patterns for this shapes constraint, w.r.t. to a targeted
     * variable.
