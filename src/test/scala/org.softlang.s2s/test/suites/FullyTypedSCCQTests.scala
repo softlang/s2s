@@ -462,31 +462,6 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
   @Test def typed_12_4(): Unit =
     test(Set(":F ⊑ :B"), q12, q12_basicshapes)
 
-  @Test def typed_12_5(): Unit =
-    test(
-      Set("∃:r.⊤ ⊑ ∃:p.:F", ":A ⊑ :E"),
-      q12,
-      atleast = q12_basicshapes.union(
-        Set(
-          ":C ⊑ :G"
-        )
-      )
-    )
-
-  @Test def typed_12_10(): Unit =
-    test(
-      Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
-      q12,
-      atleast = q12_basicshapes.union(
-        Set(
-          ":C ⊑ :G"
-        )
-      )
-    )
-
-  @Test def typed_12_11(): Unit =
-    test(Set("∃:r.⊤ ⊑ ∃:p.:F"), q12, q12_basicshapes)
-
   @Test def typed_12_6(): Unit =
     test(
       Set("∃-:r.⊤ ⊑ ∃-:p.:E", ":B ⊑ :F"),
@@ -506,3 +481,28 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
 
   @Test def typed_12_9(): Unit =
     test(Set(":E ⊑ :A", ":B ⊑ :A"), q12, q12_basicshapes)
+
+  @Test def typed_13_0(): Unit =
+    test(
+      Set("∃:r.⊤ ⊑ ∃:p.:F", ":A ⊑ :E"),
+      q12,
+      atleast = q12_basicshapes.union(
+        Set(
+          ":C ⊑ :G"
+        )
+      )
+    )
+
+  @Test def typed_13_1(): Unit =
+    test(
+      Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
+      q12,
+      atleast = q12_basicshapes.union(
+        Set(
+          ":C ⊑ :G"
+        )
+      )
+    )
+
+  @Test def typed_13_2(): Unit =
+    test(Set("∃:r.⊤ ⊑ ∃:p.:F"), q12, q12_basicshapes)
