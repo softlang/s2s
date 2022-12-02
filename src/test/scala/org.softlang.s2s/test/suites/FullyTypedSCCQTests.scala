@@ -294,13 +294,13 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     test(Set(":A ⊑ ∃:r.:B"), q7, q1_basicshapes)
 
   @Test def typed_7_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q7, q1_basicshapes.union(q1_b_sub_a))
+    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q7, q1_basicshapes)
 
   @Test def typed_7_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q7, q1_basicshapes)
 
   @Test def typed_7_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q7, q1_basicshapes.union(q1_a_sub_b))
+    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q7, q1_basicshapes)
 
   // Q8 -- Constraining with additional type on LHS.
 
@@ -326,7 +326,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     test(Set(":A ⊑ ∃:r.:B"), q8, q1_basicshapes)
 
   @Test def typed_8_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q8, q1_basicshapes.union(q1_b_sub_a))
+    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q8, q1_basicshapes.union(q1_b_sub_a), debug = true)
 
   @Test def typed_8_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q8, q1_basicshapes)

@@ -39,6 +39,7 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
 
 object SimpleSHACLShape:
 
+  /** Test, whether Concept c is a valid target query. */
   private def validTarget(c: Concept): Boolean =
     c match
       case Existential(Inverse(NamedRole(_)), Top) => true
@@ -46,6 +47,7 @@ object SimpleSHACLShape:
       case NamedConcept(_)                         => true
       case _                                       => false
 
+  /** Test, whether Concept c is a valid constraint. */
   private def validConstraint(c: Concept): Boolean =
     c match
       case NamedConcept(_)                                     => true
@@ -93,6 +95,8 @@ object SimpleSHACLShape:
     // For each variable/shape
     variables.flatMap(v =>
       shapes.flatMap(s =>
+        // TODO: Should we *stop* if this chain exists, or rather, only stop for this variable?! => alternatively, solved by sorting vars?
+
         // If the variable is a target of the shape (and not already processed).
         if maxChain(chains) <= maxDepth && !locked.contains((v, s)) && s
             .isTarget(v, component)
@@ -116,6 +120,7 @@ object SimpleSHACLShape:
               else chains,
               // Locked variable/shape combinations, including the current step and fresh variables produced for this shape.
               locked ++ r._1.map((_, s)).toSet.incl((v, s))
+              //locked.incl((v, s)) // TODO: Need to lock r._1 or not?
             )
           }
           // Note: Need to start again, since target relationship may be changed by shapes.
