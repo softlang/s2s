@@ -109,15 +109,25 @@ object SCCQ:
   /** Validate a SCCQ query. Raises an errors for invalid queries. Depending on
     * parameters (`rename`), attempts to fix query.
     */
-  def validate(q: SCCQ, rename: Boolean = false): ShassTry[SCCQ] =
+  def validate(q: SCCQ, rename: Boolean): ShassTry[SCCQ] =
     def vocP = q.pattern.vocabulary
     def vocH = q.template.vocabulary
 
-    if
-      // Invalid: Variables in H, that do not occur in P.
-      vocH.diff(vocP).variables.nonEmpty
-      // Invalid: Shared concepts and properties in H and P.
-      || vocP.intersect(vocH).concepts.nonEmpty
-      || vocP.intersect(vocH).properties.nonEmpty
-    then Left(UnsupportedQueryError(q))
+    // Invalid: Variables in H, that do not occur in P.
+    if vocH.diff(vocP).variables.nonEmpty
+    then
+      Left(
+        UnsupportedQueryError(q, details = "Pattern has undefined variables.")
+      )
+    // Invalid: Shared concepts and properties in H and P (and no auto-rename).
+    else if (!rename && vocP.intersect(vocH).concepts.nonEmpty)
+      || (!rename && vocP.intersect(vocH).properties.nonEmpty)
+    then
+      Left(
+        UnsupportedQueryError(
+          q,
+          details =
+            "Pattern and Temlate share concept or property names. Try enabling --rename or rename them manually."
+        )
+      )
     else Right(q)
