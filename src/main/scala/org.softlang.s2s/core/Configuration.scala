@@ -30,6 +30,9 @@ case class Configuration(
     // Use the mapping method.
     useMappingMethod: Boolean,
 
+    // Generate property subsumption axioms.
+    addPropertySubsumptions: Boolean,
+
     // Rename internal pattern concepts.
     renamePatternInternal: Boolean,
 
@@ -119,12 +122,17 @@ object Configuration:
     dcaForPattern = false,
     cwaForPattern = false,
     unaForPattern = false,
-    useMappingMethod = true
+    useMappingMethod = true,
+    addPropertySubsumptions = false
   )
 
   // Use the mapping in addition.
   def mappingAlso: Configuration = default.copy(
-    useMappingMethod = true
+    dcaForPattern = true,
+    cwaForPattern = false,
+    unaForPattern = false,
+    useMappingMethod = true,
+    addPropertySubsumptions = false
   )
 
   /** Default configuration for Shapes2Shapes. */
@@ -137,6 +145,7 @@ object Configuration:
     unaForPattern = false,
     unaForTemplate = true,
     useMappingMethod = false,
+    addPropertySubsumptions = false,
     renamePatternInternal = true,
     // DCA
     erasePvariables = false,

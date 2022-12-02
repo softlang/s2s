@@ -21,7 +21,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   val shar = Shar()
   import shar._
 
-  for 
+  for
     p <- Prefix.fromString(config.prefix)
     i <- Iri.fromString("<https://github.com/softlang/s2s/>")
   do shar.state.prefixes.add(p, i)
@@ -160,6 +160,15 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     if config.useMappingMethod then
       log.debug("Map(q.P)", mappingSubs.map(_.show).toList)
 
+    // Add property subsumptions.
+
+    val props =
+      if config.addPropertySubsumptions then
+        PropertySubsumption(q.pattern, q.template).axioms
+      else Set()
+    if config.addPropertySubsumptions then
+      log.debug("Prop(q)", props.map(_.show).toList)
+
     // DCA for query pattern.
 
     val dcaP =
@@ -251,6 +260,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           .union(unaP)
           .union(cwaH)
           .union(unaH)
+          .union(props)
       )
     )
     hermit

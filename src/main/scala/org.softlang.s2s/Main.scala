@@ -111,7 +111,7 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
 @main def s2s(args: String*): Unit =
 
   // Initialize CLI configuration.
-  val conf = Conf(Configuration.mappingOnly, args)
+  val conf = Conf(Configuration.mappingAlso, args)
 
   // Create buffered sources and check for errors.
   val qft = Try(io.Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
