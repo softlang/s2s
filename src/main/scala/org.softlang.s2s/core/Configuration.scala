@@ -122,8 +122,7 @@ object Configuration:
     dcaForPattern = false,
     cwaForPattern = false,
     unaForPattern = false,
-    useMappingMethod = true,
-    addPropertySubsumptions = false
+    useMappingMethod = true
   )
 
   // Use the mapping in addition.
@@ -131,8 +130,7 @@ object Configuration:
     dcaForPattern = true,
     cwaForPattern = false,
     unaForPattern = false,
-    useMappingMethod = true,
-    addPropertySubsumptions = false
+    useMappingMethod = true
   )
 
   /** Default configuration for Shapes2Shapes. */
@@ -145,7 +143,7 @@ object Configuration:
     unaForPattern = false,
     unaForTemplate = true,
     useMappingMethod = false,
-    addPropertySubsumptions = false,
+    addPropertySubsumptions = true,
     renamePatternInternal = true,
     // DCA
     erasePvariables = false,

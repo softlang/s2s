@@ -164,7 +164,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val props =
       if config.addPropertySubsumptions then
-        PropertySubsumption(q.pattern, q.template).axioms
+        PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
       else Set()
     if config.addPropertySubsumptions then
       log.debug("Prop(q)", props.map(_.show).toList)
@@ -254,13 +254,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       AxiomSet(
         s.map(_.axiom)
           .union(mappingSubs)
+          .union(props)
           .union(dcaP)
           .union(dcaH)
           .union(cwaP)
           .union(unaP)
           .union(cwaH)
           .union(unaH)
-          .union(props)
       )
     )
     hermit
