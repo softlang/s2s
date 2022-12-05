@@ -62,7 +62,10 @@ class PropertySubsumption(
   // Subsumtion property.
 
   // TODO: Need to extend this definition to consider subsumption, etc.
-  private def subsProperty(c1: Constraints, c2: Constraints): Boolean = c1 == c2
+  private def subsProperty(c1: Constraints, c2: Constraints): Boolean =
+    c1 == c2
+      && c1._1.size == 1 && c1._2.size == 1
+      && c2._1.size == 1 && c2._2.size == 1
 
   def axioms: Set[Axiom] =
     // Test for each property in pattern and in template
