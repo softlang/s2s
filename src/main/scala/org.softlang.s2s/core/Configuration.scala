@@ -125,7 +125,8 @@ object Configuration:
     useMappingMethod = true
   )
 
-  // Use the mapping in addition.
+  // Use the mapping in addition, but no CWA.
+  // This is probably the way to go.
   def mappingAlso: Configuration = default.copy(
     dcaForPattern = true,
     cwaForPattern = false,

@@ -2,6 +2,8 @@ package org.softlang.s2s.infer
 
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl._
+import de.pseifer.shar.reasoning.AxiomSet
+import de.pseifer.shar.reasoning.HermitReasoner
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.query._
 
@@ -22,58 +24,82 @@ class PropertySubsumption(
   // Constraints for template.
   private val templateConstraints = mkConstraints(template)
 
+  // Reasoner for subsumptions.
+
+  private val hermit = HermitReasoner.default
+  hermit.addAxioms(AxiomSet(subs))
+
+  /** Test, whether v1 is subsumed by v2 (according to subs). */
+  private def subsumed(v1: Var, v2: Var): Boolean =
+    hermit.prove(Subsumption(v1.asConcept, v2.asConcept))
+
   // Definition/inferrence of constraints.
 
-  type Constraints = (Set[Var], Set[Var])
+  /** Constraints, as a tuple of occurring variables. */
+  type Constraints = Set[(Var, Var)]
 
-  private def freshConstraints: Constraints = (Set(), Set())
+  /** Mapping from properties to Constraints. */
+  type PropertyConstraints = Map[NamedRole, Option[Constraints]]
 
-  type PropertyConstraints = Map[NamedRole, Constraints]
-
-  private def freshPropertyConstraints: PropertyConstraints = Map()
-
+  /** Update property constraints, unless None. */
   private def update(
       cs: PropertyConstraints,
       property: NamedRole,
-      left: Set[Var],
-      right: Set[Var]
+      constraint: (Var, Var)
   ): PropertyConstraints =
     cs.updated(
       property,
       (
-        cs.getOrElse(property, freshConstraints)._1 ++ left,
-        cs.getOrElse(property, freshConstraints)._2 ++ right
+        cs.getOrElse(property, Some(Set())).map(_ ++ Set(constraint))
       )
     )
 
+  /** Set constraints to None for property. */
+  private def invalidate(
+      cs: PropertyConstraints,
+      property: NamedRole
+  ): PropertyConstraints = cs.updated(property, None)
+
+  /** Add constraint for one AtomicPattern to PropertyConstraints. */
   private def addConstraints(
       constraints: PropertyConstraints,
       ap: AtomicPattern
   ): PropertyConstraints = ap match
-    case LPV(is, ip, vo) => update(constraints, NamedRole(ip), Set(), Set(vo))
-    case VPL(vs, ip, io) => update(constraints, NamedRole(ip), Set(vs), Set())
-    case VPV(vs, ip, vo) => update(constraints, NamedRole(ip), Set(vs), Set(vo))
-    case LPL(is, ip, so) => update(constraints, NamedRole(ip), Set(), Set())
+    case VPV(vs, ip, vo) => update(constraints, NamedRole(ip), (vs, vo))
+    case LPV(is, ip, vo) => invalidate(constraints, NamedRole(ip))
+    case VPL(vs, ip, io) => invalidate(constraints, NamedRole(ip))
+    case LPL(is, ip, so) => invalidate(constraints, NamedRole(ip))
     case _               => constraints
 
+  /** Build set of constraints for AtomicPatterns. */
   private def mkConstraints(a: AtomicPatterns): PropertyConstraints =
-    a.foldLeft(freshPropertyConstraints)(addConstraints)
+    a.foldLeft(Map())(addConstraints)
 
   // Subsumtion property.
 
-  // TODO: Need to extend this definition to consider subsumption, etc.
-  private def subsProperty(c1: Constraints, c2: Constraints): Boolean =
-    c1 == c2
-      && c1._1.size == 1 && c1._2.size == 1
-      && c2._1.size == 1 && c2._2.size == 1
+  /** Constraints for one property subsumed by constraints of another. */
+  private def subsProperty(
+      c1: Option[Constraints],
+      c2: Option[Constraints]
+  ): Boolean =
+    if c1.isDefined && c2.isDefined then
+      // For each constraint of LHS
+      c1.get.forall(c1i =>
+        // there must exist RHS constraints
+        c2.get.exists(c2i =>
+          // with subsumption for lhs (of property) and rhs (of property).
+          subsumed(c1i._1, c2i._1) && subsumed(c1i._2, c2i._2)
+        )
+      )
+    else false
 
   def axioms: Set[Axiom] =
     // Test for each property in pattern and in template
     pattern.properties.flatMap(p1 =>
       template.properties.flatMap(p2 =>
         // lookup constraints (Note: is never empty) and
-        val c1 = patternConstraints.getOrElse(p1, freshConstraints)
-        val c2 = templateConstraints.getOrElse(p2, freshConstraints)
+        val c1 = patternConstraints.getOrElse(p1, Some(Set()))
+        val c2 = templateConstraints.getOrElse(p2, Some(Set()))
         Set(
           // if the subsumption property holds one way
           if subsProperty(c1, c2) then Set(RoleSubsumption(p1, p2)) else Set(),
