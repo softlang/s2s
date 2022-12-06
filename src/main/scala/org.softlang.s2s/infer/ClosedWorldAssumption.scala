@@ -18,15 +18,15 @@ class ClosedWorldAssumption(
     // Use Subsumption instead of Equality.
     useSubsumption: Boolean,
     // Rename internal concepts.
-    renameInternal: Boolean = false,
-    renameToken: String = "'"
-) extends Assumption(a):
+    renameConcepts: Boolean,
+    // Rename internal roles.
+    renameProperties: Boolean,
+    // The token appended when renaming.
+    renameToken: String
+) extends Assumption(a)
+    with Renaming(renameConcepts, renameProperties, renameToken):
 
   import AtomicPattern._
-
-  /** Rename a named concept, if enabled. */
-  private def renamePerhaps(nc: NamedConcept): NamedConcept =
-    if renameInternal then NamedConcept(nc.c.rename(renameToken)) else nc
 
   // Closure for concepts.
   private val conceptClosure: Set[Axiom] = a.concepts.flatMap { c =>
@@ -37,8 +37,8 @@ class ClosedWorldAssumption(
     }
     if rhs.isEmpty then Set()
     else if useSubsumption then
-      Set(Subsumption(renamePerhaps(c), Concept.unionOf(rhs)))
-    else Set(Equality(renamePerhaps(c), Concept.unionOf(rhs)))
+      Set(Subsumption(rename(c), Concept.unionOf(rhs)))
+    else Set(Equality(rename(c), Concept.unionOf(rhs)))
   }
 
   // Closure for properties.
@@ -77,8 +77,10 @@ class ClosedWorldAssumption(
       }
       if rhs.isEmpty then Set()
       else if useSubsumption then
-        Set(Subsumption(Existential(p, Top), Concept.unionOf(rhs)))
-      else Set(Equality(Existential(p, Top), Concept.unionOf(rhs)))
+        Set(
+          Subsumption(Existential(rename(p), Top), Concept.unionOf(rhs))
+        )
+      else Set(Equality(Existential(rename(p), Top), Concept.unionOf(rhs)))
     }
 
   // Closure for inverse properties.
@@ -117,8 +119,16 @@ class ClosedWorldAssumption(
       }
       if rhs.isEmpty then Set()
       else if useSubsumption then
-        Set(Subsumption(Existential(Inverse(p), Top), Concept.unionOf(rhs)))
-      else Set(Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs)))
+        Set(
+          Subsumption(
+            Existential(Inverse(rename(p)), Top),
+            Concept.unionOf(rhs)
+          )
+        )
+      else
+        Set(
+          Equality(Existential(Inverse(rename(p)), Top), Concept.unionOf(rhs))
+        )
     }
 
   // General closure T ⊑ X ⊔ ... ⊔ {a} ... ⊔ A ⊔ ...

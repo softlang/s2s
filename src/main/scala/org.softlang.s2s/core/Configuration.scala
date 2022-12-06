@@ -34,7 +34,10 @@ case class Configuration(
     addPropertySubsumptions: Boolean,
 
     // Rename internal pattern concepts.
-    renamePatternInternal: Boolean,
+    renamePatternInternalConcepts: Boolean,
+
+    // Rename internal pattern Properties.
+    renamePatternInternalProperties: Boolean,
 
     // ***********
     // *** DCA ***
@@ -145,7 +148,8 @@ object Configuration:
     unaForTemplate = true,
     useMappingMethod = false,
     addPropertySubsumptions = true,
-    renamePatternInternal = true,
+    renamePatternInternalConcepts = true,
+    renamePatternInternalProperties = false,
     // DCA
     erasePvariables = false,
     eraseHvariables = false,

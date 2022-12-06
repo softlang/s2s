@@ -164,7 +164,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val props =
       if config.addPropertySubsumptions then
-        PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
+        PropertySubsumption(
+          q.pattern,
+          mappingSubs,
+          q.template,
+          renameProperties = config.renamePatternInternalProperties,
+          renameToken = config.renameToken
+        ).axioms
       else Set()
     if config.addPropertySubsumptions then
       log.debug("Prop(q)", props.map(_.show).toList)
@@ -208,7 +214,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           config.closeTop,
           config.closeLiterals,
           config.useSubsumptionInPatternCWA,
-          renameInternal = config.renamePatternInternal,
+          renameConcepts = config.renamePatternInternalConcepts,
+          renameProperties = config.renamePatternInternalProperties,
           renameToken = config.renameToken
         ).axioms
       else Set()
@@ -225,7 +232,10 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           config.closeProperties,
           config.closeTop,
           config.closeLiterals,
-          config.useSubsumptionInTemplateCWA
+          config.useSubsumptionInTemplateCWA,
+          renameConcepts = false,
+          renameProperties = false,
+          renameToken = config.renameToken
         ).axioms
       else Set()
 

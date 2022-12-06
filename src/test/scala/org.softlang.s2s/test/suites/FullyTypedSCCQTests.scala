@@ -294,13 +294,25 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     test(Set(":A ⊑ ∃:r.:B"), q7, q1_basicshapes)
 
   @Test def typed_7_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q7, q1_basicshapes)
+    test(
+      Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"),
+      q7,
+      q1_basicshapes,
+      // atleast = q1_basicshapes.union(Set(":D ⊑ :C")),
+      debug = true
+    )
 
   @Test def typed_7_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q7, q1_basicshapes)
 
   @Test def typed_7_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q7, q1_basicshapes)
+    test(
+      Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"),
+      q7,
+      q1_basicshapes,
+      // atleast = q1_basicshapes.union(Set(":C ⊑ :D")),
+      debug = true
+    )
 
   // Q8 -- Constraining with additional type on LHS.
 

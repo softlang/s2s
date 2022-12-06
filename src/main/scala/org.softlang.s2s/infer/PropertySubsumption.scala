@@ -13,8 +13,13 @@ class PropertySubsumption(
     // Subsumption axioms for variables.
     subs: Set[Axiom],
     // Input template.
-    template: AtomicPatterns
-) extends Assumption(pattern):
+    template: AtomicPatterns,
+    // Rename internal roles.
+    renameProperties: Boolean,
+    // The token appended when renaming.
+    renameToken: String
+) extends Assumption(pattern)
+    with Renaming(false, renameProperties, renameToken):
 
   import AtomicPattern._
 
@@ -102,9 +107,11 @@ class PropertySubsumption(
         val c2 = templateConstraints.getOrElse(p2, Some(Set()))
         Set(
           // if the subsumption property holds one way
-          if subsProperty(c1, c2) then Set(RoleSubsumption(p1, p2)) else Set(),
+          if subsProperty(c1, c2) then Set(RoleSubsumption(rename(p1), p2))
+          else Set(),
           // or the other.
-          if subsProperty(c2, c1) then Set(RoleSubsumption(p2, p1)) else Set()
+          if subsProperty(c2, c1) then Set(RoleSubsumption(p2, rename(p1)))
+          else Set()
         ).flatten
       )
     )
