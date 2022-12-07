@@ -1,6 +1,5 @@
 CONSTRUCT {
-  ?x a :B . ?y a :C
+  ?x :likes ?y . ?z a :Dog
 } WHERE { 
-  ?x :p ?x . ?y a :A
+  ?x :likes ?y . ?z a :Dog
 }
-
