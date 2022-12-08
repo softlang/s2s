@@ -24,6 +24,9 @@ lazy val root = project
     // Dependencies.
     // Development: DL Reasoning Framework.
     // libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
+    // JSON-LD
+    libraryDependencies += "com.apicatalog" % "titanium-json-ld" % "1.3.1",
+    libraryDependencies += "org.glassfish" % "jakarta.json" % "2.0.1",
     // CLI Application.
     libraryDependencies += "org.rogach" %% "scallop" % "4.1.0",
     // Testing
