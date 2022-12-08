@@ -87,8 +87,9 @@ object SimpleSHACLShape:
           vars,
           // The pattern.
           patterns,
-          // The shapes.
-          shapes,
+          // The shapes, as a list where non-forall shapes come first (!)
+          shapes.filter(!_.isForallShape).toList
+            ++ shapes.filter(_.isForallShape).toList,
           // Maximum depth required (in case of mutually recursive shapes).
           maxDepth,
           // Initial chains (empty).
@@ -103,53 +104,73 @@ object SimpleSHACLShape:
   private def recursiveExtension(
       variables: Set[Var],
       component: Set[AtomicPattern],
-      shapes: Set[SimpleSHACLShape],
+      shapes: List[SimpleSHACLShape],
       maxDepth: Int,
       chains: Set[Set[Var]],
       locked: Set[(Var, SimpleSHACLShape)]
   ): Set[AtomicPattern] = returning {
-    // For each variable/shape
+    // For all variables (currently added) and
     variables.flatMap(v =>
-      // Only allow processing of (fresh) variables, if not all chains are extended beyond the maximum required depth. (Optimization)
-      if minChain(chains, v) <= maxDepth then
-        shapes.flatMap(s =>
-          // If the variable is a target of the shape (and not already processed).
-          if !locked.contains((v, s)) && s.hasTarget(v, component)
-          then
-            // If it is a forall shape, perform extension on all relevant rhs.
-            if s.isForallShape then
-              throwReturn {
-                recurWithForallShape(
-                  v,
-                  s,
-                  variables,
-                  component,
-                  shapes,
-                  maxDepth,
-                  chains,
-                  locked
-                )
-              }
-            // Otherwise, process the normal shape.
-            else
-              throwReturn {
-                recurWithNormalShape(
-                  v,
-                  s,
-                  variables,
-                  component,
-                  shapes,
-                  maxDepth,
-                  chains,
-                  locked
-                )
-              }
-            // Note: Need to start again, since target relationship may be changed by shapes.
-          else component
-        )
-      else component
+      // for all shapes, in order (non-forall first)
+      shapes.flatMap(s =>
+        // (A) if this step is allowed and
+        if stepAllowed(v, s, component, maxDepth, chains, locked)
+        then
+          // this is a forall shape
+          if s.isForallShape then
+            // restart (!) after processing
+            throwReturn {
+              // by adding constraint for rhs of forall.
+              recurWithForallShape(
+                v,
+                s,
+                variables,
+                component,
+                shapes,
+                maxDepth,
+                chains,
+                locked
+              )
+            }
+          // this is not a forall shape
+          else
+            // restart (!) after processing
+            throwReturn {
+              // by expanding the component according to constraint.
+              recurWithNormalShape(
+                v,
+                s,
+                variables,
+                component,
+                shapes,
+                maxDepth,
+                chains,
+                locked
+              )
+            }
+        // (B) otherwise, keeo current component, thereby
+        // continuing with the next shape/variable.
+        else component
+      )
     )
   }
+
+  /** Decide, whether processing is allowed in this step. */
+  private def stepAllowed(
+      variable: Var,
+      shape: SimpleSHACLShape,
+      component: Set[AtomicPattern],
+      maxDepth: Int,
+      chains: Set[Set[Var]],
+      locked: Set[(Var, SimpleSHACLShape)]
+  ): Boolean =
+    // If chaining (w.r.t. to fresh variables) does not exceed max
+    minChain(chains, variable) <= maxDepth &&
+      // and this is a forall shape
+      !locked.contains((variable, shape)) &&
+      // and the shape applies to this variable.
+      shape.hasTarget(variable, component)
+    // Then, this step is allowed.
 
   /** Construct the resursive step with forall shape. */
   private def recurWithForallShape(
@@ -157,7 +178,7 @@ object SimpleSHACLShape:
       s: SimpleSHACLShape,
       variables: Set[Var],
       component: Set[AtomicPattern],
-      shapes: Set[SimpleSHACLShape],
+      shapes: List[SimpleSHACLShape],
       maxDepth: Int,
       chains: Set[Set[Var]],
       locked: Set[(Var, SimpleSHACLShape)]
@@ -199,7 +220,6 @@ object SimpleSHACLShape:
       // No chaining of fresh variables occurs.
       chains,
       // Lock this variable/shape combination.
-      // No new variables were introduced in this step.
       locked ++ Set((v, s))
     )
 
@@ -209,7 +229,7 @@ object SimpleSHACLShape:
       s: SimpleSHACLShape,
       variables: Set[Var],
       component: Set[AtomicPattern],
-      shapes: Set[SimpleSHACLShape],
+      shapes: List[SimpleSHACLShape],
       maxDepth: Int,
       chains: Set[Set[Var]],
       locked: Set[(Var, SimpleSHACLShape)]
@@ -229,7 +249,9 @@ object SimpleSHACLShape:
         else newChain(chains, r._1.get)
       else chains,
       // Locked variable/shape combinations, including the current step and fresh variables produced for this shape.
-      locked ++ r._1.map((_, s)).toSet.incl((v, s))
+      // locked ++ r._1.map((_, s)).toSet.incl((v, s))
+      // Lock this variable/shape combination.
+      locked ++ Set((v, s))
     )
 
   /** Greate a new chain for a fresh variable. */
