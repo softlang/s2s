@@ -3,6 +3,7 @@ package org.softlang.s2s
 import org.rogach.scallop._
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Log
+import org.softlang.s2s.parser.JsonLDToSimpleShacl
 
 import scala.util.Failure
 import scala.util.Try
@@ -117,6 +118,8 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   val qft = Try(io.Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
   val sft = Try(
     if conf.shapesFile().isEmpty then Set()
+    else if conf.shapesFile().contains(".json") then
+      JsonLDToSimpleShacl(conf.shapesFile()).convert
     else io.Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
   )
 
