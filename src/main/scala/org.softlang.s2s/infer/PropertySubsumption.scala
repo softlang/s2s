@@ -18,13 +18,7 @@ class PropertySubsumption(
     renameProperties: Boolean,
     // The token appended when renaming.
     renameToken: String
-) extends Assumption(pattern)
-    with Renaming(false, renameProperties, renameToken):
-
-  import AtomicPattern._
-
-  // Constraints for pattern.
-  private val patternConstraints = mkConstraints(pattern)
+) extends PropertySubsumptionCommon(pattern, renameProperties, renameToken):
 
   // Constraints for template.
   private val templateConstraints = mkConstraints(template)
@@ -37,48 +31,6 @@ class PropertySubsumption(
   /** Test, whether v1 is subsumed by v2 (according to subs). */
   private def subsumed(v1: Var, v2: Var): Boolean =
     hermit.prove(Subsumption(v1.asConcept, v2.asConcept))
-
-  // Definition/inferrence of constraints.
-
-  /** Constraints, as a tuple of occurring variables. */
-  type Constraints = Set[(Var, Var)]
-
-  /** Mapping from properties to Constraints. */
-  type PropertyConstraints = Map[NamedRole, Option[Constraints]]
-
-  /** Update property constraints, unless None. */
-  private def update(
-      cs: PropertyConstraints,
-      property: NamedRole,
-      constraint: (Var, Var)
-  ): PropertyConstraints =
-    cs.updated(
-      property,
-      (
-        cs.getOrElse(property, Some(Set())).map(_ ++ Set(constraint))
-      )
-    )
-
-  /** Set constraints to None for property. */
-  private def invalidate(
-      cs: PropertyConstraints,
-      property: NamedRole
-  ): PropertyConstraints = cs.updated(property, None)
-
-  /** Add constraint for one AtomicPattern to PropertyConstraints. */
-  private def addConstraints(
-      constraints: PropertyConstraints,
-      ap: AtomicPattern
-  ): PropertyConstraints = ap match
-    case VPV(vs, ip, vo) => update(constraints, NamedRole(ip), (vs, vo))
-    case LPV(is, ip, vo) => invalidate(constraints, NamedRole(ip))
-    case VPL(vs, ip, io) => invalidate(constraints, NamedRole(ip))
-    case LPL(is, ip, so) => invalidate(constraints, NamedRole(ip))
-    case _               => constraints
-
-  /** Build set of constraints for AtomicPatterns. */
-  private def mkConstraints(a: AtomicPatterns): PropertyConstraints =
-    a.foldLeft(Map())(addConstraints)
 
   // Subsumtion property.
 

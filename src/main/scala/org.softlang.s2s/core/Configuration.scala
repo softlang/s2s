@@ -149,7 +149,7 @@ object Configuration:
     useMappingMethod = false,
     addPropertySubsumptions = true,
     renamePatternInternalConcepts = true,
-    renamePatternInternalProperties = false,
+    renamePatternInternalProperties = true,
     // DCA
     erasePvariables = false,
     eraseHvariables = false,

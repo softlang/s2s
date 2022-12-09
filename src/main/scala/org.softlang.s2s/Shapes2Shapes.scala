@@ -160,7 +160,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     if config.useMappingMethod then
       log.debug("Map(q.P)", mappingSubs.map(_.show).toList)
 
-    // Add property subsumptions.
+    // Add property subsumptions within query, and between query and shapes.
 
     val props =
       if config.addPropertySubsumptions then
@@ -172,8 +172,22 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           renameToken = config.renameToken
         ).axioms
       else Set()
+
     if config.addPropertySubsumptions then
       log.debug("Prop(q)", props.map(_.show).toList)
+
+    val shapeProps =
+      if config.addPropertySubsumptions then
+        ShapePropertySubsumption(
+          q.pattern,
+          s,
+          renameProperties = config.renamePatternInternalProperties,
+          renameToken = config.renameToken
+        ).axioms
+      else Set()
+
+    if config.addPropertySubsumptions then
+      log.debug("Prop(q,s)", shapeProps.map(_.show).toList)
 
     // DCA for query pattern.
 
@@ -265,6 +279,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         s.map(_.axiom)
           .union(mappingSubs)
           .union(props)
+          .union(shapeProps)
           .union(dcaP)
           .union(dcaH)
           .union(cwaP)
