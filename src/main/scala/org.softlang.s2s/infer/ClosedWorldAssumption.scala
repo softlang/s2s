@@ -19,12 +19,10 @@ class ClosedWorldAssumption(
     useSubsumption: Boolean,
     // Rename internal concepts.
     renameConcepts: Boolean,
-    // Rename internal roles.
-    renameProperties: Boolean,
     // The token appended when renaming.
     renameToken: String
 ) extends Assumption(a)
-    with Renaming(renameConcepts, renameProperties, renameToken):
+    with Renaming(renameConcepts, renameToken):
 
   import AtomicPattern._
 
@@ -78,9 +76,9 @@ class ClosedWorldAssumption(
       if rhs.isEmpty then Set()
       else if useSubsumption then
         Set(
-          Subsumption(Existential(rename(p), Top), Concept.unionOf(rhs))
+          Subsumption(Existential(p, Top), Concept.unionOf(rhs))
         )
-      else Set(Equality(Existential(rename(p), Top), Concept.unionOf(rhs)))
+      else Set(Equality(Existential(p, Top), Concept.unionOf(rhs)))
     }
 
   // Closure for inverse properties.
@@ -121,13 +119,13 @@ class ClosedWorldAssumption(
       else if useSubsumption then
         Set(
           Subsumption(
-            Existential(Inverse(rename(p)), Top),
+            Existential(Inverse(p), Top),
             Concept.unionOf(rhs)
           )
         )
       else
         Set(
-          Equality(Existential(Inverse(rename(p)), Top), Concept.unionOf(rhs))
+          Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs))
         )
     }
 

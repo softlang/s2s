@@ -14,11 +14,7 @@ class PropertySubsumption(
     subs: Set[Axiom],
     // Input template.
     template: AtomicPatterns,
-    // Rename internal roles.
-    renameProperties: Boolean,
-    // The token appended when renaming.
-    renameToken: String
-) extends PropertySubsumptionCommon(pattern, renameProperties, renameToken):
+) extends PropertySubsumptionCommon(pattern):
 
   // Constraints for template.
   private val templateConstraints = mkConstraints(template)
@@ -59,10 +55,10 @@ class PropertySubsumption(
         val c2 = templateConstraints.getOrElse(p2, Some(Set()))
         Set(
           // if the subsumption property holds one way
-          if subsProperty(c1, c2) then Set(RoleSubsumption(rename(p1), p2))
+          if subsProperty(c1, c2) then Set(RoleSubsumption(p1, p2))
           else Set(),
           // or the other.
-          if subsProperty(c2, c1) then Set(RoleSubsumption(p2, rename(p1)))
+          if subsProperty(c2, c1) then Set(RoleSubsumption(p2, p1))
           else Set()
         ).flatten
       )

@@ -98,6 +98,9 @@ case class Configuration(
     // Token to append (if autoRename is set).
     renameToken: String,
 
+    // Token to append for internal operations.
+    renameTokenInternal: String,
+
     // Standard predefined prefix.
     prefix: String,
 
@@ -170,8 +173,9 @@ object Configuration:
     // Therefore, the following defaults are only relevant
     // for development work, in particular, testing.
     optimizeCandidates = true,
-    autoRename = false,
+    autoRename = true,
     renameToken = "'",
+    renameTokenInternal = "*",
     prefix = ":",
     log = true,
     debug = true,

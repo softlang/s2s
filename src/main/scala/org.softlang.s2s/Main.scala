@@ -37,8 +37,8 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
 
   val rename =
     toggle(
-      default = Some(false),
-      descrYes = "Create namespace for input shapes (def: Off)"
+      default = Some(true),
+      descrYes = "Create namespace for inputs (def: On)"
     )
 
   val log =

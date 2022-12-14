@@ -15,6 +15,15 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
       Subsumption(axiom.c.renameIris(token), axiom.d.renameIris(token))
     )
 
+  /** Rename concepts and properties of a Simple SHACL shape. */
+  def renameProperties(token: String): SimpleSHACLShape =
+    SimpleSHACLShape(
+      Subsumption(
+        axiom.c.renameIrisInProperties(token),
+        axiom.d.renameIrisInProperties(token)
+      )
+    )
+
   /** True, if the constraint contains forall. */
   protected def isForallShape: Boolean = axiom.d match
     case Universal(_, _) => true

@@ -7,7 +7,6 @@ import org.softlang.s2s.core.rename
 
 trait Renaming(
     conceptRenaming: Boolean,
-    propertyRenaming: Boolean,
     renameToken: String
 ):
 
@@ -17,4 +16,4 @@ trait Renaming(
 
   /** Rename a named role, if enabled. */
   protected def rename(nr: NamedRole): NamedRole =
-    if propertyRenaming then NamedRole(nr.r.rename(renameToken)) else nr
+    NamedRole(nr.r.rename(renameToken))

@@ -80,19 +80,23 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
     // Run the algorithm.
-    yield algorithm(
-      // Rename the inputs if required.
-      if config.autoRename then
-        SCCQ(q.template, q.pattern.rename(config.renameToken))
-      else q,
-      if config.autoRename then s.map(_.rename(config.renameToken)) else s,
-      log
-    )
+    yield algorithm(renaming(q), renaming(s), log)
 
     // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
 
     (sout, log)
+
+  private def renaming(q: SCCQ): SCCQ =
+    if config.autoRename then
+      SCCQ(q.template, q.pattern.rename(config.renameToken))
+    else q
+
+  private def renaming(s: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
+    val t = if config.autoRename then s.map(_.rename(config.renameToken)) else s
+    if config.addPropertySubsumptions then
+      t.map(_.renameProperties(config.renameTokenInternal))
+    else t
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
@@ -164,13 +168,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val props =
       if config.addPropertySubsumptions then
-        PropertySubsumption(
-          q.pattern,
-          mappingSubs,
-          q.template,
-          renameProperties = config.renamePatternInternalProperties,
-          renameToken = config.renameToken
-        ).axioms
+        PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
       else Set()
 
     if config.addPropertySubsumptions then
@@ -179,11 +177,10 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val shapeProps =
       if config.addPropertySubsumptions then
         ShapePropertySubsumption(
-          q.pattern,
+          q.pattern, 
           s,
-          renameProperties = config.renamePatternInternalProperties,
-          renameToken = config.renameToken
-        ).axioms
+          config.renameTokenInternal
+          ).axioms
       else Set()
 
     if config.addPropertySubsumptions then
@@ -229,8 +226,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           config.closeLiterals,
           config.useSubsumptionInPatternCWA,
           renameConcepts = config.renamePatternInternalConcepts,
-          renameProperties = config.renamePatternInternalProperties,
-          renameToken = config.renameToken
+          renameToken = config.renameTokenInternal
         ).axioms
       else Set()
 
@@ -248,8 +244,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           config.closeLiterals,
           config.useSubsumptionInTemplateCWA,
           renameConcepts = false,
-          renameProperties = false,
-          renameToken = config.renameToken
+          renameToken = config.renameTokenInternal
         ).axioms
       else Set()
 

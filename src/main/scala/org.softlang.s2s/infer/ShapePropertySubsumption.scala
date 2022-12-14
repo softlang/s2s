@@ -13,11 +13,10 @@ class ShapePropertySubsumption(
     pattern: AtomicPatterns,
     // Input shapes.
     shapes: Set[SimpleSHACLShape],
-    // Rename internal roles.
-    renameProperties: Boolean,
-    // The token appended when renaming.
+    // Renaming token.
     renameToken: String
-) extends PropertySubsumptionCommon(pattern, renameProperties, renameToken):
+) extends PropertySubsumptionCommon(pattern)
+    with Renaming(false, renameToken):
 
   import AtomicPattern._
 
@@ -25,6 +24,8 @@ class ShapePropertySubsumption(
 
   // Rudamentary first version working only in very limited cases,
   // when properties are obviously the same (i.e., variables are not retricted).
+
+  //
 
   def axioms: Set[Axiom] =
     patternConstraints.toSet.flatMap { x =>
@@ -43,6 +44,7 @@ class ShapePropertySubsumption(
               RoleSubsumption(rename(n), n),
               RoleSubsumption(n, rename(n))
             )
-          else Set()
+          else 
+            Set()
         case _ => Set()
     }

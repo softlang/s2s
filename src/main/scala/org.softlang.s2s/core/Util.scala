@@ -13,6 +13,17 @@ extension (i: Iri)
       .get
 
 extension (c: Concept)
+
+  def renameIrisInProperties(s: String): Concept =
+    c match
+      case Existential(r, c) => Existential(r.renameIris(s), c.renameIrisInProperties(s))
+      case Universal(r, c)   => Universal(r.renameIris(s), c.renameIrisInProperties(s))
+      case Union(c1, c2) =>
+        Union(c1.renameIrisInProperties(s), c2.renameIrisInProperties(s))
+      case Intersection(c1, c2) =>
+        Intersection(c1.renameIrisInProperties(s), c2.renameIrisInProperties(s))
+      case c => c
+
   def renameIris(s: String): Concept =
     c match
       case Top               => Top

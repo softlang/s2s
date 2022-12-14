@@ -7,14 +7,8 @@ import de.pseifer.shar.reasoning.HermitReasoner
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.query._
 
-abstract class PropertySubsumptionCommon(
-    pattern: AtomicPatterns,
-    // Rename internal roles.
-    renameProperties: Boolean,
-    // The token appended when renaming.
-    renameToken: String
-) extends Assumption(pattern)
-    with Renaming(false, renameProperties, renameToken):
+abstract class PropertySubsumptionCommon(pattern: AtomicPatterns)
+    extends Assumption(pattern):
 
   // Constraints for pattern.
   protected val patternConstraints = mkConstraints(pattern)
