@@ -5,6 +5,8 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.ShassTry
 import org.softlang.s2s.core.UnsupportedQueryError
 import org.softlang.s2s.core.Var
@@ -29,8 +31,16 @@ extension (aps: AtomicPatterns)
   /** Get the nominals in this set of patterns. */
   def nominals: Set[Iri] = aps.flatMap(_.nominals).toSet
 
-  /** Rename in all atomic patterns in this set of patterns. */
-  def rename(token: String): AtomicPatterns = aps.map(_.rename(token))
+  /** Change the Scope of this set of patterns. */
+  def inScope(scope: Scope)(implicit scopes: Scopes): AtomicPatterns =
+    aps.map(_.inScope(scope))
+
+  /// ** Rename in all atomic patterns in this set of patterns. */
+  // def rename(token: String): AtomicPatterns = aps.map(_.rename(token))
+
+  /// ** Rename in all atomic patterns in this set of patterns. */
+  // def renameProperties(token: String): AtomicPatterns =
+  //  aps.map(_.renameProperties(token))
 
   /** Get the vocabulary of this set of patterns. */
   def vocabulary: Vocabulary =

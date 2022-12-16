@@ -1,10 +1,45 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.dl._
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
 
+class DomainClosureAssumptionForTemplate(
+    a: AtomicPatterns,
+    eraseVariables: Boolean,
+    approximateVariables: Boolean,
+    useSubsumption: Boolean
+)(implicit scopes: Scopes)
+    extends DomainClosureAssumption(
+      a,
+      eraseVariables,
+      approximateVariables,
+      useSubsumption
+    )(scopes):
+
+  val leftScope = Scope.Template
+  val rightScope = Scope.Template
+
+class DomainClosureAssumptionForPattern(
+    a: AtomicPatterns,
+    eraseVariables: Boolean,
+    approximateVariables: Boolean,
+    useSubsumption: Boolean
+)(implicit scopes: Scopes)
+    extends DomainClosureAssumption(
+      a,
+      eraseVariables,
+      approximateVariables,
+      useSubsumption
+    )(scopes):
+
+  val leftScope = Scope.Pattern
+  val rightScope = Scope.Input
+
 /** Generate the domain closure assumption, given a set of atomic patterns. */
-class DomainClosureAssumption(
+abstract class DomainClosureAssumption(
     a: AtomicPatterns,
     // Replace concept variables with T
     eraseVariables: Boolean,
@@ -12,7 +47,8 @@ class DomainClosureAssumption(
     approximateVariables: Boolean,
     // Use subsumption instead of equality.
     useSubsumption: Boolean
-) extends Assumption(a):
+)(implicit scopes: Scopes)
+    extends Scopeable:
 
   import AtomicPattern._
 
@@ -61,7 +97,7 @@ class DomainClosureAssumption(
   ): Map[Concept, Concept] =
     vcs.mapValues(c => Concept.map(fn, c)).toMap
 
-  def axioms: Set[Axiom] =
+  protected def prepareAxioms: Set[Axiom] =
     (if eraseVariables then updateVariables(variablesToTop, variableClosure)
      else if approximateVariables then
        updateVariables(variablesToApproximation, variableClosure)

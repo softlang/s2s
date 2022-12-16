@@ -4,7 +4,10 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl._
 import de.pseifer.shar.reasoning.AxiomSet
 import de.pseifer.shar.reasoning.HermitReasoner
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
 
 class PropertySubsumption(
@@ -13,8 +16,9 @@ class PropertySubsumption(
     // Subsumption axioms for variables.
     subs: Set[Axiom],
     // Input template.
-    template: AtomicPatterns,
-) extends PropertySubsumptionCommon(pattern):
+    template: AtomicPatterns
+)(implicit scopes: Scopes)
+    extends PropertySubsumptionCommon(pattern):
 
   // Constraints for template.
   private val templateConstraints = mkConstraints(template)

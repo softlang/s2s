@@ -17,7 +17,7 @@ final case class Var(v: String) extends Showable with AsConcept:
   def isFresh: Boolean = v.contains(Var.freshToken)
 
 object Var:
-  private def freshToken = "?"
+  def freshToken = "?"
   private var freshCounter = -1
 
   /** Generate a fresh variable. */

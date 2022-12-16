@@ -1,8 +1,5 @@
 package org.softlang.s2s.core
 
-import java.io.ObjectInputFilter.Config
-import scala.collection.BitSet
-
 /** A set of configurations for S2S. */
 case class Configuration(
     // *****************
@@ -92,14 +89,8 @@ case class Configuration(
     // Optimize candidate generation.
     optimizeCandidates: Boolean,
 
-    // Automatically rename input concepts and properties.
-    autoRename: Boolean,
-
     // Token to append (if autoRename is set).
     renameToken: String,
-
-    // Token to append for internal operations.
-    renameTokenInternal: String,
 
     // Standard predefined prefix.
     prefix: String,
@@ -173,9 +164,7 @@ object Configuration:
     // Therefore, the following defaults are only relevant
     // for development work, in particular, testing.
     optimizeCandidates = true,
-    autoRename = true,
-    renameToken = "'",
-    renameTokenInternal = "*",
+    renameToken = "٭",
     prefix = ":",
     log = true,
     debug = true,

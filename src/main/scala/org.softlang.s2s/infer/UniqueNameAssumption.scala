@@ -4,7 +4,7 @@ import de.pseifer.shar.dl._
 import org.softlang.s2s.query._
 
 /** Generate the unique name assumption, given a set of atomic patterns. */
-class UniqueNameAssumption(a: AtomicPatterns) extends Assumption(a):
+class UniqueNameAssumption(a: AtomicPatterns) extends Inference:
 
   def axioms: Set[Axiom] =
     // For each pair of nominals.

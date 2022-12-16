@@ -6,45 +6,46 @@ import de.pseifer.shar.reasoning.AxiomSet
 import de.pseifer.shar.reasoning.HermitReasoner
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
 
 class ShapePropertySubsumption(
     // The input pattern.
     pattern: AtomicPatterns,
     // Input shapes.
-    shapes: Set[SimpleSHACLShape],
-    // Renaming token.
-    renameToken: String
-) extends PropertySubsumptionCommon(pattern)
-    with Renaming(false, renameToken):
+    shapes: Set[SimpleSHACLShape]
+)(implicit scopes: Scopes)
+    extends PropertySubsumptionCommon(pattern):
 
   import AtomicPattern._
 
-  // TODO: Improve!
+  // TODO: Shapes targeting roles can widen unconstraint-ness.
 
-  // Rudamentary first version working only in very limited cases,
-  // when properties are obviously the same (i.e., variables are not retricted).
+  // Example: ∃:p.T ⊑ :A and the pattern "?x :p ?y . ?x a :A"
 
-  //
+  // TODO: What about constraints that effectively do not change the result?
 
   def axioms: Set[Axiom] =
     patternConstraints.toSet.flatMap { x =>
       x match
-        case (n, None)                   => Set()
-        case (n, Some(c)) if c.size == 1 =>
-          // If this variable occurrs only in this one pattern
-          if pattern
-              .filter(_.variables.contains(c.head._1))
-              .size == 1 && pattern
-              .filter(_.variables.contains(c.head._2))
-              .size == 1
-            // then this is the same role.
+        case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.Input)))
+        case (n, Some(c)) =>
+          // Check that (all pairs) of variables are unconstrainted.
+          if c.forall(ci =>
+              pattern
+                .filter(_.variables.contains(ci._1))
+                .size == 1 && pattern
+                .filter(_.variables.contains(ci._2))
+                .size == 1
+            )
+            // then the role is unconstrained.
           then
             Set(
-              RoleSubsumption(rename(n), n),
-              RoleSubsumption(n, rename(n))
+              RoleSubsumption(n, n.inScope(Scope.Input)),
+              RoleSubsumption(n.inScope(Scope.Input), n)
             )
-          else 
-            Set()
-        case _ => Set()
+          // otherwise, the role is constrained.
+          else Set(RoleSubsumption(n, n.inScope(Scope.Input)))
     }

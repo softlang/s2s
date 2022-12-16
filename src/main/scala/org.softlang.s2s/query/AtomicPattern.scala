@@ -6,8 +6,10 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 import de.pseifer.shar.dl.NominalConcept
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.Var
-import org.softlang.s2s.core.rename
+import org.softlang.s2s.core.inScope
 
 /** An atomic pattern of a SCCQ.
   */
@@ -33,14 +35,14 @@ enum AtomicPattern extends Showable:
       case LPV(is, ip, vo) => GeneralAtomicPattern.LPV(is, ip, vo)
       case VPV(vs, ip, vo) => GeneralAtomicPattern.VPV(vs, ip, vo)
 
-  /** Rename concepts and properties in this atomic pattern using token. */
-  def rename(token: String): AtomicPattern = this match
-    case LAC(is, io)     => LAC(is, io.rename(token))
-    case VAC(vs, io)     => VAC(vs, io.rename(token))
-    case LPL(is, ip, io) => LPL(is, ip.rename(token), io)
-    case VPL(vs, ip, io) => VPL(vs, ip.rename(token), io)
-    case LPV(is, ip, vo) => LPV(is, ip.rename(token), vo)
-    case VPV(vs, ip, vo) => VPV(vs, ip.rename(token), vo)
+  /** Change the Scope of this pattern. */
+  def inScope(scope: Scope)(implicit scopes: Scopes): AtomicPattern = this match
+    case LAC(is, io)     => LAC(is, io.inScope(scope))
+    case VAC(vs, io)     => VAC(vs, io.inScope(scope))
+    case LPL(is, ip, io) => LPL(is, ip.inScope(scope), io)
+    case VPL(vs, ip, io) => VPL(vs, ip.inScope(scope), io)
+    case LPV(is, ip, vo) => LPV(is, ip.inScope(scope), vo)
+    case VPV(vs, ip, vo) => VPV(vs, ip.inScope(scope), vo)
 
   /** */
   def isPropertyPattern: Boolean =

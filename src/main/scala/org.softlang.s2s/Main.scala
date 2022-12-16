@@ -35,12 +35,6 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       descrYes = "Remove output shapes entailed by others (def: On)"
     )
 
-  val rename =
-    toggle(
-      default = Some(true),
-      descrYes = "Create namespace for inputs (def: On)"
-    )
-
   val log =
     toggle(
       default = Some(true),
@@ -81,8 +75,8 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   val renameToken =
     opt[String](
       required = false,
-      default = Some("'"),
-      descr = "For auto-rename, use this string (def: ')"
+      default = Some("٭"),
+      descr = "Use this String for internal renaming (def: *)"
     )
 
   val queryFile = trailArg[String](descr = "File containing input query")
@@ -98,7 +92,6 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   /** Convert to a S2S configuration. */
   def toConfiguration: Configuration = baseConfiguration.copy(
     optimizeCandidates = optimize(),
-    autoRename = rename(),
     renameToken = renameToken(),
     prefix = prefix(),
     log = log(),

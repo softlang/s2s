@@ -11,7 +11,7 @@ import org.softlang.s2s.infer._
 import org.softlang.s2s.parser.SCCQParser
 import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.query.SCCQ
-import org.softlang.s2s.query.rename
+import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
 
@@ -28,11 +28,14 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   private val sccqp = SCCQParser(shar)
 
+  // The scopes encoding (implicit) needed for renaming.
+  private implicit val scopes: Scopes = Scopes(config.renameToken)
+
   /** Attempt to parse a SCCQ query. */
   def parseQuery(query: String): ShassTry[SCCQ] =
     for
       qi <- sccqp.parse(query)
-      q <- SCCQ.validate(qi, config.autoRename)
+      q <- SCCQ.validate(qi, rename = true)
     yield q
 
   private val shapep = ShapeParser(shar)
@@ -80,23 +83,30 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
     // Run the algorithm.
-    yield algorithm(renaming(q), renaming(s), log)
+    yield algorithm(
+      // Map q to appropriate scopes.
+      SCCQ(
+        q.template.inScope(Scope.Template),
+        q.pattern.inScope(Scope.Pattern)
+      ),
+      // Map shapes to input scopes.
+      s.map(_.inScope(Scope.Input)),
+      // The log.
+      log
+    )
 
     // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
 
     (sout, log)
 
-  private def renaming(q: SCCQ): SCCQ =
-    if config.autoRename then
-      SCCQ(q.template, q.pattern.rename(config.renameToken))
-    else q
-
-  private def renaming(s: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
-    val t = if config.autoRename then s.map(_.rename(config.renameToken)) else s
-    if config.addPropertySubsumptions then
-      t.map(_.renameProperties(config.renameTokenInternal))
-    else t
+    // val t =
+    //  if config.autoRename then
+    //    s.map(_.inScope(Scope.Input, config.renameToken))
+    //  else s
+    // if config.addPropertySubsumptions then
+    //  t.map(_.renameProperties(config.renameTokenInternal))
+    // else t
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
@@ -176,11 +186,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val shapeProps =
       if config.addPropertySubsumptions then
-        ShapePropertySubsumption(
-          q.pattern, 
-          s,
-          config.renameTokenInternal
-          ).axioms
+        ShapePropertySubsumption(q.pattern, s).axioms
       else Set()
 
     if config.addPropertySubsumptions then
@@ -190,7 +196,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val dcaP =
       if config.dcaForPattern then
-        DomainClosureAssumption(
+        DomainClosureAssumptionForPattern(
           q.pattern,
           eraseVariables = config.erasePvariables,
           approximateVariables = config.approximatePvariables,
@@ -204,7 +210,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val dcaH =
       if config.dcaForTemplate then
-        DomainClosureAssumption(
+        DomainClosureAssumptionForTemplate(
           q.template,
           eraseVariables = config.eraseHvariables,
           approximateVariables = config.approximateHvariables,
@@ -218,15 +224,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val cwaP =
       if config.cwaForPattern then
-        ClosedWorldAssumption(
+        ClosedWorldAssumptionForPattern(
           q.pattern,
           config.closeConcepts,
           config.closeProperties,
           config.closeTop,
           config.closeLiterals,
-          config.useSubsumptionInPatternCWA,
-          renameConcepts = config.renamePatternInternalConcepts,
-          renameToken = config.renameTokenInternal
+          config.useSubsumptionInPatternCWA
         ).axioms
       else Set()
 
@@ -236,15 +240,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val cwaH =
       if config.cwaForTemplate then
-        ClosedWorldAssumption(
+        ClosedWorldAssumptionForTemplate(
           q.template,
           config.closeConcepts,
           config.closeProperties,
           config.closeTop,
           config.closeLiterals,
-          config.useSubsumptionInTemplateCWA,
-          renameConcepts = false,
-          renameToken = config.renameTokenInternal
+          config.useSubsumptionInTemplateCWA
         ).axioms
       else Set()
 

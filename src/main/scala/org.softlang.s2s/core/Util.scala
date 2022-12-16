@@ -6,45 +6,55 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 
 extension (i: Iri)
-  def rename(s: String): Iri =
+
+  /** Append some String to an IRI. */
+  private def append(added: String): Iri =
     Iri
-      .makeFromRawIri(i.getRaw ++ s)
+      .makeFromRawIri(i.getRaw ++ added)
       .toOption
       .get
 
+  /** Return the IRI without any token. */
+  private def getBase(scopes: Scopes): Iri =
+    Iri.makeFromRawIri(scopes.removeScopeTokens(i.getRaw)).toOption.get
+
+  private def isVariable: Boolean =
+    // Only variables use the internal shar prefix.
+    i.retracted(Iri.shar).isDefined
+
+  /** Get this IRI in the respective scope. */
+  def inScope(scope: Scope)(implicit scopes: Scopes): Iri =
+    if i.isVariable then i
+    else
+      scope match
+        case Scope.Pattern =>
+          i.getBase(scopes)
+            .append(scopes.patternScopeToken)
+        case Scope.Template =>
+          i.getBase(scopes)
+            .append(scopes.templateScopeToken)
+        case Scope.Input =>
+          i.getBase(scopes)
+            .append(scopes.inputScopeToken)
+
 extension (c: Concept)
-
-  def renameIrisInProperties(s: String): Concept =
-    c match
-      case Existential(r, c) => Existential(r.renameIris(s), c.renameIrisInProperties(s))
-      case Universal(r, c)   => Universal(r.renameIris(s), c.renameIrisInProperties(s))
-      case Union(c1, c2) =>
-        Union(c1.renameIrisInProperties(s), c2.renameIrisInProperties(s))
-      case Intersection(c1, c2) =>
-        Intersection(c1.renameIrisInProperties(s), c2.renameIrisInProperties(s))
-      case c => c
-
-  def renameIris(s: String): Concept =
-    c match
-      case Top               => Top
-      case Bottom            => Bottom
-      case NominalConcept(i) => NominalConcept(i.rename(s))
-      case NamedConcept(i)   => NamedConcept(i.rename(s))
-      case Existential(r, c) => Existential(r.renameIris(s), c.renameIris(s))
-      case Universal(r, c)   => Universal(r.renameIris(s), c.renameIris(s))
-      case Union(c1, c2)     => Union(c1.renameIris(s), c2.renameIris(s))
-      case Intersection(c1, c2) =>
-        Intersection(c1.renameIris(s), c2.renameIris(s))
-      case c =>
-        throw new RuntimeException(
-          "DL construct not supported in rename! (" ++ c.toString ++ ")"
-        )
+  def inScope(scope: Scope)(implicit scopes: Scopes): Concept = c match
+    case NamedConcept(i) => NamedConcept(i.inScope(scope))
+    case Existential(r, c) =>
+      Existential(r.inScope(scope), c.inScope(scope))
+    case Universal(r, c) =>
+      Universal(r.inScope(scope), c.inScope(scope))
+    case Union(c1, c2) =>
+      Union(c1.inScope(scope), c2.inScope(scope))
+    case Intersection(c1, c2) =>
+      Intersection(c1.inScope(scope), c2.inScope(scope))
+    case c => c
 
 extension (r: Role)
-  def renameIris(s: String): Role =
+  def inScope(scope: Scope)(implicit scopes: Scopes): Role =
     r match
-      case NamedRole(i) => NamedRole(i.rename(s))
-      case Inverse(r)   => Inverse(r.renameIris(s))
+      case NamedRole(i) => NamedRole(i.inScope(scope))
+      case Inverse(r)   => Inverse(r.inScope(scope))
 
 /** Basic utility functions. */
 object Util:

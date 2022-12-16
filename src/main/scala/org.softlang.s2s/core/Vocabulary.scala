@@ -47,10 +47,13 @@ case class Vocabulary(
     nominals.diff(voc.nominals)
   )
 
-  /** Appends ' to name. */
-  def triviallyRenamed: Vocabulary = Vocabulary(
-    variables,
-    concepts.map(_.renameIris("'").asInstanceOf[NamedConcept]),
-    properties.map(_.renameIris("'").asInstanceOf[NamedRole]),
-    nominals.map(_.rename("'"))
-  )
+  /** Appends ' to name (Hack via Pattern.Scope) */
+  def triviallyRenamed: Vocabulary =
+    Vocabulary(
+      variables,
+      concepts.map(
+        _.inScope(Scope.Pattern)(Scopes("_triv")).asInstanceOf[NamedConcept]
+      ),
+      properties.map(_.inScope(Scope.Pattern)(Scopes("_triv")).asInstanceOf[NamedRole]),
+      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv")))
+    )

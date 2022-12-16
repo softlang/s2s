@@ -3,13 +3,17 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.dl._
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
 
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape],
     debug: Boolean = false
-) extends Assumption(a):
+)(implicit scopes: Scopes)
+    extends Inference:
 
   type Components = Map[Set[Var], Set[AtomicPattern]]
 
@@ -23,7 +27,12 @@ class SubsumptionsFromMappings(
     // For each shape & component->variable, test if it is a target.
     // If so, extend the pattern by translating the shape to a constraint.
     val extendedComps =
-      SimpleSHACLShape.extendComponentsWithShapes(comps, shapes, a.depth)
+      SimpleSHACLShape.extendComponentsWithShapes(
+        comps,
+        // Map shapes to pattern scope first.
+        shapes.map(_.inScope(Scope.Pattern)),
+        a.depth
+      )
 
     // (3)
     // Generate variable mappings and find subsumption.

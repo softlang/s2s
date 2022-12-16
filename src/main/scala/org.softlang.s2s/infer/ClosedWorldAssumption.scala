@@ -1,11 +1,53 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.dl._
-import org.softlang.s2s.core.rename
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
 
+class ClosedWorldAssumptionForTemplate(
+    a: AtomicPatterns,
+    closeConcepts: Boolean,
+    closeProperties: Boolean,
+    closeTop: Boolean,
+    closeLiterals: Boolean,
+    useSubsumption: Boolean
+)(implicit scopes: Scopes)
+    extends ClosedWorldAssumption(
+      a,
+      closeConcepts,
+      closeProperties,
+      closeTop,
+      closeLiterals,
+      useSubsumption
+    ):
+
+  val leftScope = Scope.Template
+  val rightScope = Scope.Pattern
+
+class ClosedWorldAssumptionForPattern(
+    a: AtomicPatterns,
+    closeConcepts: Boolean,
+    closeProperties: Boolean,
+    closeTop: Boolean,
+    closeLiterals: Boolean,
+    useSubsumption: Boolean
+)(implicit scopes: Scopes)
+    extends ClosedWorldAssumption(
+      a,
+      closeConcepts,
+      closeProperties,
+      closeTop,
+      closeLiterals,
+      useSubsumption
+    ):
+
+  val leftScope = Scope.Pattern
+  val rightScope = Scope.Input
+
 /** Generate the closed world assumption for a set of atomic patterns. */
-class ClosedWorldAssumption(
+abstract class ClosedWorldAssumption(
     a: AtomicPatterns,
     // Closure for concepts.
     closeConcepts: Boolean,
@@ -16,13 +58,9 @@ class ClosedWorldAssumption(
     // Closure for literals {a}.
     closeLiterals: Boolean,
     // Use Subsumption instead of Equality.
-    useSubsumption: Boolean,
-    // Rename internal concepts.
-    renameConcepts: Boolean,
-    // The token appended when renaming.
-    renameToken: String
-) extends Assumption(a)
-    with Renaming(renameConcepts, renameToken):
+    useSubsumption: Boolean
+)(implicit scopes: Scopes)
+    extends Scopeable:
 
   import AtomicPattern._
 
@@ -34,9 +72,8 @@ class ClosedWorldAssumption(
       case _                                  => Set()
     }
     if rhs.isEmpty then Set()
-    else if useSubsumption then
-      Set(Subsumption(rename(c), Concept.unionOf(rhs)))
-    else Set(Equality(rename(c), Concept.unionOf(rhs)))
+    else if useSubsumption then Set(Subsumption(c, Concept.unionOf(rhs)))
+    else Set(Equality(c, Concept.unionOf(rhs)))
   }
 
   // Closure for properties.
@@ -156,7 +193,7 @@ class ClosedWorldAssumption(
       else Set(Subsumption(NominalConcept(o1), Concept.unionOf(rhs)))
     }
 
-  def axioms: Set[Axiom] =
+  protected def prepareAxioms: Set[Axiom] =
     (if closeConcepts then conceptClosure else Set())
       .union(if closeProperties then propertyClosure else Set())
       .union(if closeProperties then inversePropertyClosure else Set())

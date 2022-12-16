@@ -8,7 +8,7 @@ import org.softlang.s2s.core.Var
 import org.softlang.s2s.query._
 
 abstract class PropertySubsumptionCommon(pattern: AtomicPatterns)
-    extends Assumption(pattern):
+    extends Inference:
 
   // Constraints for pattern.
   protected val patternConstraints = mkConstraints(pattern)

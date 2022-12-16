@@ -9,19 +9,9 @@ import scala.util.control.NonLocalReturns.*
 case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
   def show(implicit state: BackendState): String = axiom.show(state)
 
-  /** Rename concepts and properties of a Simple SHACL shape. */
-  def rename(token: String): SimpleSHACLShape =
+  def inScope(scope: Scope)(implicit scopes: Scopes): SimpleSHACLShape =
     SimpleSHACLShape(
-      Subsumption(axiom.c.renameIris(token), axiom.d.renameIris(token))
-    )
-
-  /** Rename concepts and properties of a Simple SHACL shape. */
-  def renameProperties(token: String): SimpleSHACLShape =
-    SimpleSHACLShape(
-      Subsumption(
-        axiom.c.renameIrisInProperties(token),
-        axiom.d.renameIrisInProperties(token)
-      )
+      Subsumption(axiom.c.inScope(scope), axiom.d.inScope(scope))
     )
 
   /** True, if the constraint contains forall. */
