@@ -29,7 +29,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val sccqp = SCCQParser(shar)
 
   // The scopes encoding (implicit) needed for renaming.
-  private implicit val scopes: Scopes = Scopes(config.renameToken)
+  implicit val scopes: Scopes =
+    Scopes(config.renameToken, config.namespacedTopName)
 
   /** Attempt to parse a SCCQ query. */
   def parseQuery(query: String): ShassTry[SCCQ] =
@@ -75,7 +76,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   ): (ShassTry[Set[SimpleSHACLShape]], Log) =
 
     // Initialize the log.
-    val log: Log = Log(debugging = config.debug)
+    val log: Log =
+      Log(debugging = config.debug, topToken = config.namespacedTopName)
 
     val sout = for
       // Parse and validate query.
@@ -99,14 +101,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     sout.left.map(r => log.error(r.show))
 
     (sout, log)
-
-    // val t =
-    //  if config.autoRename then
-    //    s.map(_.inScope(Scope.Input, config.renameToken))
-    //  else s
-    // if config.addPropertySubsumptions then
-    //  t.map(_.renameProperties(config.renameTokenInternal))
-    // else t
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
@@ -141,10 +135,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val cand = CandidateGenerator(
       q.template.vocabulary,
       optimize = config.optimizeCandidates
-    ).axioms
+    )(scopes).axioms
 
     log.debug("S_can", cand.map(_.show).toList)
-
     cand
 
   /** Perform the filtering step of the algorithm. */
@@ -171,8 +164,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         SubsumptionsFromMappings(q.pattern, s).axioms
       else Set()
 
-    if config.useMappingMethod then
-      log.debug("Map(q.P)", mappingSubs.map(_.show).toList)
+    if config.useMappingMethod then log.debug("Map(q.P)", mappingSubs)
 
     // Add property subsumptions within query, and between query and shapes.
 
@@ -181,16 +173,14 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
       else Set()
 
-    if config.addPropertySubsumptions then
-      log.debug("Prop(q)", props.map(_.show).toList)
+    if config.addPropertySubsumptions then log.debug("Prop(q)", props)
 
     val shapeProps =
       if config.addPropertySubsumptions then
         ShapePropertySubsumption(q.pattern, s).axioms
       else Set()
 
-    if config.addPropertySubsumptions then
-      log.debug("Prop(q,s)", shapeProps.map(_.show).toList)
+    if config.addPropertySubsumptions then log.debug("Prop(q,s)", shapeProps)
 
     // DCA for query pattern.
 
@@ -204,7 +194,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.dcaForPattern then log.debug("DCA(q.P)", dcaP.map(_.show).toList)
+    if config.dcaForPattern then log.debug("DCA(q.P)", dcaP)
 
     // DCA for query template.
 
@@ -218,7 +208,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.dcaForTemplate then log.debug("DCA(q.H)", dcaH.map(_.show).toList)
+    if config.dcaForTemplate then log.debug("DCA(q.H)", dcaH)
 
     // CWA for query pattern.
 
@@ -234,7 +224,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.cwaForPattern then log.debug("CWA(q.P)", cwaP.map(_.show).toList)
+    if config.cwaForPattern then log.debug("CWA(q.P)", cwaP)
 
     // CWA for query template.
 
@@ -250,7 +240,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.cwaForTemplate then log.debug("CWA(q.H)", cwaH.map(_.show).toList)
+    if config.cwaForTemplate then log.debug("CWA(q.H)", cwaH)
 
     // UNA for query pattern.
 
@@ -258,7 +248,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       if config.unaForPattern then UniqueNameAssumption(q.pattern).axioms
       else Set()
 
-    if config.unaForPattern then log.debug("UNA(q.P)", unaP.map(_.show).toList)
+    if config.unaForPattern then log.debug("UNA(q.P)", unaP)
 
     // UNA for query template.
 
@@ -266,7 +256,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       if config.unaForTemplate then UniqueNameAssumption(q.template).axioms
       else Set()
 
-    if config.unaForTemplate then log.debug("UNA(q.H)", unaH.map(_.show).toList)
+    if config.unaForTemplate then log.debug("UNA(q.H)", unaH)
+
+    // Namespaced Top definitions.
+
+    val tops =
+      NamespacedTop(q.pattern, q.template, config.useNamespacedTop).axioms
+    log.debug("T", tops)
 
     // Initialize the reasoner.
 
@@ -283,6 +279,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           .union(unaP)
           .union(cwaH)
           .union(unaH)
+          .union(tops)
       )
     )
     hermit

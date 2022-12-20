@@ -95,8 +95,8 @@ class ConfigurationComparison(
         val s = ShapeGenerator(q.pattern.vocabulary, shapes, true).draw
 
         // Initialize logs.
-        val log1 = Log(debugging = true)
-        val log2 = Log(debugging = true)
+        val log1 = Log(debugging = true, "T")
+        val log2 = Log(debugging = true, "T")
         s1.logInput(q, s, log1)
         s2.logInput(q, s, log2)
 
@@ -204,8 +204,8 @@ class ConfigurationComparison(
     // Parse & setup logging.
     val qu = s1.parseQuery(q).toOption.get
     val sh = s1.parseShapes(s).toOption.get
-    val log1 = Log(debugging = true)
-    val log2 = Log(debugging = true)
+    val log1 = Log(debugging = true, "T")
+    val log2 = Log(debugging = true, "T")
     s1.logInput(qu, sh, log1)
     s2.logInput(qu, sh, log2)
 

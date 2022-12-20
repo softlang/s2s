@@ -1,11 +1,14 @@
 package org.softlang.s2s.core
 
+import de.pseifer.shar.core.BackendState
+import de.pseifer.shar.dl.Axiom
+
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.
   *   - `info`: Log some information (`put`).
   *   - `debugging`: Log more information (`debug`).
   */
-class Log(info: Boolean = true, debugging: Boolean = false):
+class Log(info: Boolean = true, debugging: Boolean = false, topToken: String):
 
   private var LOG: String = ""
   private var INFO: Boolean = info
@@ -17,7 +20,10 @@ class Log(info: Boolean = true, debugging: Boolean = false):
       prettyVariableConcepts: Boolean = true
   ): Unit =
     val t1 =
-      if prettyVariableConcepts then LOG.replaceAll("shar", "?")
+      if prettyVariableConcepts then 
+        LOG
+          .replaceAll(s"shar:${topToken}", s"${topToken}")
+          .replaceAll("shar", "?")
       else LOG
 
     val t2 =
@@ -50,3 +56,6 @@ class Log(info: Boolean = true, debugging: Boolean = false):
 
   def debug(title: String, s: List[String]): Unit =
     if DEBUGGING then info(title, s)
+
+  def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
+    debug(title, s.map(_.show).toList)

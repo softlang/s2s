@@ -1,10 +1,15 @@
 package org.softlang.s2s.generate
 
 import de.pseifer.shar.dl._
+import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
+import org.softlang.s2s.core.inScope
 
-class CandidateGenerator(voc: Vocabulary, optimize: Boolean):
+class CandidateGenerator(voc: Vocabulary, optimize: Boolean)(implicit
+    scopes: Scopes
+):
 
   /** Generate all target queries (Concepts). */
   private def generateTargets: Set[Concept] =
@@ -71,4 +76,5 @@ class CandidateGenerator(voc: Vocabulary, optimize: Boolean):
     t <- generateTargets
     c <- generateConstraints
     if !optimize || !entailed(t, c)
-  yield SimpleSHACLShape(Subsumption(t, c))
+  yield SimpleSHACLShape(//Subsumption(t, c))
+    scopes.replaceTop(Subsumption(t, c), Scope.Template, Scope.Template))

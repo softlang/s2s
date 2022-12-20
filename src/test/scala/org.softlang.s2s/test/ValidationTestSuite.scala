@@ -4,6 +4,7 @@ import org.junit.Assert.*
 import org.junit.rules.TestName
 import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core.Configuration
+import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
@@ -24,7 +25,8 @@ abstract class ValidationTestSuite(
 
   def name: TestName
 
-  val s2s = Shapes2Shapes(Configuration.mappingAlso)
+  val config = Configuration.default
+  val s2s = Shapes2Shapes(config)
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()
@@ -73,6 +75,10 @@ abstract class ValidationTestSuite(
       else s"${GREEN}passed${RESET}."
     s"Test case |${color} $c.$sc.$nn ${RESET}| in suite $suite ${msg}"
 
+  /** Change scope of all (Top) in shapes to Scope.Template */
+  private def replaceTop(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
+    shapes.map(s2s.scopes.replaceTop(_, Scope.Template, Scope.Template))
+
   /** Defines a test case. */
   def test(
       sin: Set[String],
@@ -88,9 +94,10 @@ abstract class ValidationTestSuite(
 
     val (actuallSout, log) = s2s.validate(q, sin)
 
-    val exactlyOut = s2s.parseShapes(exactly)
-    val atleastOut = s2s.parseShapes(atleast)
-    val notOut = s2s.parseShapes(not)
+    // Parse the test case (and move T to Scope.Template).
+    val exactlyOut = s2s.parseShapes(exactly).map(replaceTop)
+    val atleastOut = s2s.parseShapes(atleast).map(replaceTop)
+    val notOut = s2s.parseShapes(not).map(replaceTop)
 
     val success = for
       e <- exactlyOut

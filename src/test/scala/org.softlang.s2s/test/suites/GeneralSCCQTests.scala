@@ -78,24 +78,24 @@ class GeneralSCCQTests extends ValidationTestSuite("General"):
       )
     )
 
-  // @Test def general_3_1(): Unit =
-  //  test(
-  //    Set(
-  //      ":A ⊑ :B",
-  //      ":B ⊑ :A"
-  //    ),
-  //    q3,
-  //    Set(
-  //      ":C ⊑ ∃:q.:D",
-  //      ":D ⊑ ∃-:q.:C",
-  //      "∃:q.⊤ ⊑ :C",
-  //      "∃:q.⊤ ⊑ ∃:q.:D",
-  //      "∃:q.⊤ ⊑ ∀-:q.:C",
-  //      "∃-:q.⊤ ⊑ :D",
-  //      "∃-:q.⊤ ⊑ ∃-:q.:C",
-  //      "∃-:q.⊤ ⊑ ∀:q.:D"
-  //    )
-  //  )
+  @Test def general_3_1(): Unit =
+   test(
+     Set(
+       ":A ⊑ :B",
+       ":B ⊑ :A"
+     ),
+     q3,
+     Set(
+       ":C ⊑ ∃:q.:D",
+       ":D ⊑ ∃-:q.:C",
+       "∃:q.⊤ ⊑ :C",
+       "∃:q.⊤ ⊑ ∃:q.:D",
+       "∃:q.⊤ ⊑ ∀-:q.:C",
+       "∃-:q.⊤ ⊑ :D",
+       "∃-:q.⊤ ⊑ ∃-:q.:C",
+       "∃-:q.⊤ ⊑ ∀:q.:D"
+     )
+   )
 
   val q4 = query("?x :q ?x . ?x a :B", "?x :r ?x . ?x a :A")
 
@@ -152,3 +152,8 @@ class GeneralSCCQTests extends ValidationTestSuite("General"):
 
   @Test def general_9_0(): Unit =
     test(noshapes, q9, Set(":B ⊑ :C", ":C ⊑ :B"))
+
+  val q10 = query("?x :l ?y . ?z a :D", "?x :l ?y . ?z a :D")
+
+  @Test def general_10_0(): Unit =
+    test(Set(":D ⊑ ∃:l.:D"), q10, Set(":D ⊑ ∃:l.:D"))

@@ -36,6 +36,12 @@ case class Configuration(
     // Rename internal pattern Properties.
     renamePatternInternalProperties: Boolean,
 
+    // Use namespace-specific concepts for T.
+    useNamespacedTop: Boolean,
+
+    // Name for the namespaced T.
+    namespacedTopName: String,
+
     // ***********
     // *** DCA ***
     // ***********
@@ -114,36 +120,21 @@ case class Configuration(
 /** Some preset configurations. */
 object Configuration:
 
-  // Use the mapping instead of DCA,CWA (, and UNA).
-  def mappingOnly: Configuration = default.copy(
-    dcaForPattern = false,
-    cwaForPattern = false,
-    unaForPattern = false,
-    useMappingMethod = true
-  )
-
-  // Use the mapping in addition, but no CWA.
-  // This is probably the way to go.
-  def mappingAlso: Configuration = default.copy(
-    dcaForPattern = true,
-    cwaForPattern = false,
-    unaForPattern = false,
-    useMappingMethod = true
-  )
-
   /** Default configuration for Shapes2Shapes. */
   def default: Configuration = Configuration(
     // Algorithm
     dcaForPattern = true,
     dcaForTemplate = true,
-    cwaForPattern = true,
+    cwaForPattern = false,
     cwaForTemplate = true,
     unaForPattern = false,
     unaForTemplate = true,
-    useMappingMethod = false,
+    useMappingMethod = true,
     addPropertySubsumptions = true,
     renamePatternInternalConcepts = true,
     renamePatternInternalProperties = true,
+    useNamespacedTop = true,
+    namespacedTopName = "T",
     // DCA
     erasePvariables = false,
     eraseHvariables = false,
