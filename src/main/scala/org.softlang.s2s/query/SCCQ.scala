@@ -119,7 +119,12 @@ object SCCQ:
   /** Validate a SCCQ query. Raises an errors for invalid queries. Depending on
     * parameters (`rename`), attempts to fix query.
     */
-  def validate(q: SCCQ, rename: Boolean): ShassTry[SCCQ] =
+  def validate(
+      q: SCCQ,
+      rename: Boolean,
+      renameToken: String,
+      topSymbol: String
+  ): ShassTry[SCCQ] =
     def vocP = q.pattern.vocabulary
     def vocH = q.template.vocabulary
 
@@ -127,7 +132,7 @@ object SCCQ:
     if vocH.diff(vocP).variables.nonEmpty
     then
       Left(
-        UnsupportedQueryError(q, details = "Pattern has undefined variables.")
+        UnsupportedQueryError(q, details = "Template has undefined variables.")
       )
     // Invalid: Shared concepts and properties in H and P (and no auto-rename).
     else if (!rename && vocP.intersect(vocH).concepts.nonEmpty)
@@ -138,6 +143,25 @@ object SCCQ:
           q,
           details =
             "Pattern and Temlate share concept or property names. Try enabling --rename or rename them manually."
+        )
+      )
+    else if vocP.contains(renameToken) || vocH.contains(topSymbol)
+    then
+      Left(
+        UnsupportedQueryError(
+          q,
+          details =
+            s"The query uses the restricted symbol $renameToken. Use --renameToken to change this symbol, or change the offending IRI."
+        )
+      )
+    else if vocP.variables.exists(v => v.v == topSymbol)
+      || vocH.variables.exists(v => v.v == topSymbol)
+    then
+      Left(
+        UnsupportedQueryError(
+          q,
+          details =
+            s"The query uses the restricted symbol $topSymbol as a variable name. Use --topSymbol to change this symbol, or change the offending variable."
         )
       )
     else Right(q)

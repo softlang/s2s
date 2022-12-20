@@ -79,6 +79,13 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       descr = "Use this String for internal renaming (def: *)"
     )
 
+  val topSymbol =
+    opt[String](
+      required = false,
+      default = Some("T"),
+      descr = "Use this String for internal Top (def: T)"
+    )
+
   val queryFile = trailArg[String](descr = "File containing input query")
 
   val shapesFile = trailArg[String](
@@ -93,6 +100,7 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   def toConfiguration: Configuration = baseConfiguration.copy(
     optimizeCandidates = optimize(),
     renameToken = renameToken(),
+    namespacedTopName = topSymbol(),
     prefix = prefix(),
     log = log(),
     debug = debug(),

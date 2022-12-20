@@ -47,13 +47,24 @@ case class Vocabulary(
     nominals.diff(voc.nominals)
   )
 
+  /** This vocabulary contains a specific string somewhere. */
+  def contains(s: String): Boolean =
+    variables.exists(v => v.v.indexOf(s) != -1) || concepts.exists(c =>
+      c.c.contains(s)
+    ) || properties.exists(p => p.r.contains(s)) || nominals.exists(n =>
+      n.contains(s)
+    )
+
   /** Appends ' to name (Hack via Pattern.Scope) */
   def triviallyRenamed: Vocabulary =
     Vocabulary(
       variables,
       concepts.map(
-        _.inScope(Scope.Pattern)(Scopes("_triv")).asInstanceOf[NamedConcept]
+        _.inScope(Scope.Pattern)(Scopes("_triv", "T"))
+          .asInstanceOf[NamedConcept]
       ),
-      properties.map(_.inScope(Scope.Pattern)(Scopes("_triv")).asInstanceOf[NamedRole]),
-      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv")))
+      properties.map(
+        _.inScope(Scope.Pattern)(Scopes("_triv", "T")).asInstanceOf[NamedRole]
+      ),
+      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv", "T")))
     )

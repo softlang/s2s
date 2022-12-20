@@ -22,6 +22,10 @@ extension (i: Iri)
     // Only variables use the internal shar prefix.
     i.retracted(Iri.shar).isDefined
 
+  /** This IRI contains a substring. */
+  def contains(s: String): Boolean =
+    i.toString.indexOf(s) != -1
+
   /** Get this IRI in the respective scope. */
   def inScope(scope: Scope)(implicit scopes: Scopes): Iri =
     if i.isVariable then i

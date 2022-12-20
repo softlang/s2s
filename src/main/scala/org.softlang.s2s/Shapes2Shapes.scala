@@ -36,7 +36,12 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def parseQuery(query: String): ShassTry[SCCQ] =
     for
       qi <- sccqp.parse(query)
-      q <- SCCQ.validate(qi, rename = true)
+      q <- SCCQ.validate(
+        qi,
+        rename = true,
+        config.renameToken,
+        config.namespacedTopName
+      )
     yield q
 
   private val shapep = ShapeParser(shar)

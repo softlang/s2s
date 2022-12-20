@@ -19,8 +19,9 @@ abstract class ShowableShassError(
     val msg: Showable,
     details: String = ""
 ) extends ShassError:
-  def show(implicit state: BackendState): String = format(tag, msg.show(state))
-  override def toString: String = format(tag, msg.toString)
+  def show(implicit state: BackendState): String =
+    format(tag, msg.show(state), details)
+  override def toString: String = format(tag, msg.toString, details)
 
 class NotAtomicError(msg: Showable)
     extends ShowableShassError("Not an atomic pattern", msg)

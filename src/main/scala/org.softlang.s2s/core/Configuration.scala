@@ -131,7 +131,6 @@ object Configuration:
     renamePatternInternalConcepts = true,
     renamePatternInternalProperties = true,
     useNamespacedTop = true,
-    namespacedTopName = "T",
     // DCA
     erasePvariables = false,
     eraseHvariables = false,
@@ -157,5 +156,6 @@ object Configuration:
     debug = true,
     hidecolon = true,
     prettyVariableConcepts = true,
-    printOutput = false
+    printOutput = false,
+    namespacedTopName = "T"
   )
