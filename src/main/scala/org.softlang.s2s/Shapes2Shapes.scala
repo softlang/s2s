@@ -218,7 +218,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           q.pattern,
           config.closeConcepts,
           config.closeProperties,
-          config.closeTop,
           config.closeLiterals,
           config.useSubsumptionInPatternCWA
         ).axioms
@@ -234,7 +233,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           q.template,
           config.closeConcepts,
           config.closeProperties,
-          config.closeTop,
           config.closeLiterals,
           config.useSubsumptionInTemplateCWA
         ).axioms

@@ -76,9 +76,6 @@ case class Configuration(
     // Closure for properties.
     closeProperties: Boolean,
 
-    // Closure for T.
-    closeTop: Boolean,
-
     // Closure for literals {a}.
     closeLiterals: Boolean,
 
@@ -145,7 +142,6 @@ object Configuration:
     // CWA
     closeConcepts = true,
     closeProperties = true,
-    closeTop = false,
     closeLiterals = false,
     useSubsumptionInPatternCWA = false,
     useSubsumptionInTemplateCWA = false,

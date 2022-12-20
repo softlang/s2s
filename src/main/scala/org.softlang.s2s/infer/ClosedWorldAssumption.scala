@@ -10,7 +10,6 @@ class ClosedWorldAssumptionForTemplate(
     a: AtomicPatterns,
     closeConcepts: Boolean,
     closeProperties: Boolean,
-    closeTop: Boolean,
     closeLiterals: Boolean,
     useSubsumption: Boolean
 )(implicit scopes: Scopes)
@@ -18,7 +17,6 @@ class ClosedWorldAssumptionForTemplate(
       a,
       closeConcepts,
       closeProperties,
-      closeTop,
       closeLiterals,
       useSubsumption
     ):
@@ -30,7 +28,6 @@ class ClosedWorldAssumptionForPattern(
     a: AtomicPatterns,
     closeConcepts: Boolean,
     closeProperties: Boolean,
-    closeTop: Boolean,
     closeLiterals: Boolean,
     useSubsumption: Boolean
 )(implicit scopes: Scopes)
@@ -38,7 +35,6 @@ class ClosedWorldAssumptionForPattern(
       a,
       closeConcepts,
       closeProperties,
-      closeTop,
       closeLiterals,
       useSubsumption
     ):
@@ -53,8 +49,6 @@ abstract class ClosedWorldAssumption(
     closeConcepts: Boolean,
     // Closure for properties.
     closeProperties: Boolean,
-    // Closure for T.
-    closeTop: Boolean,
     // Closure for literals {a}.
     closeLiterals: Boolean,
     // Use Subsumption instead of Equality.
@@ -166,16 +160,16 @@ abstract class ClosedWorldAssumption(
         )
     }
 
-  // General closure T ⊑ X ⊔ ... ⊔ {a} ... ⊔ A ⊔ ...
-  private val generalClosure =
-    Subsumption(
-      Top,
-      Concept.unionOf(
-        a.concepts.toList
-          .union(a.nominals.toList.map(NominalConcept(_)))
-          .union(a.variables.toList.map(_.asConcept))
-      )
-    )
+  //// General closure T ⊑ X ⊔ ... ⊔ {a} ... ⊔ A ⊔ ...
+  //private val generalClosure =
+  //  Subsumption(
+  //    Top,
+  //    Concept.unionOf(
+  //      a.concepts.toList
+  //        .union(a.nominals.toList.map(NominalConcept(_)))
+  //        .union(a.variables.toList.map(_.asConcept))
+  //    )
+  //  )
 
   private val literalsClosure: Set[Axiom] =
     a.nominals.flatMap { o1 =>
@@ -197,5 +191,5 @@ abstract class ClosedWorldAssumption(
     (if closeConcepts then conceptClosure else Set())
       .union(if closeProperties then propertyClosure else Set())
       .union(if closeProperties then inversePropertyClosure else Set())
-      .union(if closeTop then Set(generalClosure) else Set())
+      //.union(if closeTop then Set(generalClosure) else Set())
       .union(if closeLiterals then literalsClosure else Set())
