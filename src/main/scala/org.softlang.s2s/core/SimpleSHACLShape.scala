@@ -14,10 +14,25 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
       Subsumption(axiom.c.inScope(scope), axiom.d.inScope(scope))
     )
 
-  /** True, if the constraint contains forall. */
-  protected def isForallShape: Boolean = axiom.d match
+  /** True, if the constraint contains universal quantification. */
+  def isForallShape: Boolean = axiom.d match
     case Universal(_, _) => true
     case _               => false
+
+  /** True, if the constraint contains existential quantification. */
+  def isExistsShape: Boolean = axiom.d match
+    case Existential(_, _) => true
+    case _                 => false
+
+  /** True, if the constraint contains existential quantification. */
+  def isConceptShape: Boolean = axiom.d match
+    case NamedConcept(_) => true
+    case _               => false
+
+  /** True, if the target contains existential quantification. */
+  def hasExistentialTarget: Boolean = axiom.c match
+    case Existential(_, _) => true
+    case _                 => false
 
   /** Test, whether `candidate` is a target of this shape `inPattern`. */
   protected def hasTarget(

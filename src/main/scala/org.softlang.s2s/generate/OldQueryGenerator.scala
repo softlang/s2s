@@ -8,11 +8,10 @@ import org.softlang.s2s.query._
 
 import scala.util.Random
 
-class QueryGenerator(
+/** Generator for queries over a vocabulary. */
+class OldQueryGenerator(
     // Defines variables, concepts, properties and nominals (optional).
     voc: Vocabulary,
-    // Generate a query P <- P if true.
-    // templateAsPattern: Boolean,
     // Minimum number of patterns.
     minPatterns: Int,
     // Maximum number of patterns.

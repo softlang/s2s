@@ -9,72 +9,7 @@ import org.softlang.s2s.core.inScope
 
 class CandidateGenerator(voc: Vocabulary, optimize: Boolean)(implicit
     scopes: Scopes
-):
+) extends ShapeGenerator(voc, optimize):
 
-  /** Generate all target queries (Concepts). */
-  private def generateTargets: Set[Concept] =
-    voc.concepts.toList
-      .union(voc.properties.toList.flatMap { p =>
-        Set(Existential(p, Top), Existential(Inverse(p), Top))
-      })
-      .toSet
-
-  /** Generate all constraints (Concepts). */
-  private def generateConstraints: Set[Concept] =
-    voc.concepts.toList
-      .union(
-        voc.properties.toList.flatMap { p =>
-          voc.concepts.flatMap { c =>
-            Set(
-              Existential(p, c),
-              Existential(Inverse(p), c),
-              Universal(p, c),
-              Universal(Inverse(p), c)
-            )
-          }
-        }
-      )
-      .toSet
-
-  private def isNC(c: Concept): Boolean =
-    c match
-      case NamedConcept(_) => true
-      case _               => false
-
-  private def isU(c: Concept): Boolean =
-    c match
-      case Universal(_, _) => true
-      case _               => false
-
-  private def isE(c: Concept): Boolean =
-    c match
-      case Existential(_, _) => true
-      case _                 => false
-
-  private def hasIR(c: Concept): Boolean =
-    c match
-      case Universal(Inverse(_), _)   => true
-      case Existential(Inverse(_), _) => true
-      case _                          => false
-
-  private def hasR(c: Concept): Boolean =
-    c match
-      case Universal(NamedRole(_), _)   => true
-      case Existential(NamedRole(_), _) => true
-      case _                            => false
-
-  /** Filter, that matches all shapes entailed, given that all other shapes are
-    * generated.
-    */
-  private def entailed(target: Concept, constraint: Concept): Boolean =
-    target == constraint
-      || (isNC(target) && isU(constraint))
-      || (isE(target) && hasR(target) && isU(constraint) && hasR(constraint))
-      || (isE(target) && hasIR(target) && isU(constraint) && hasIR(constraint))
-
-  def axioms: Set[SimpleSHACLShape] = for
-    t <- generateTargets
-    c <- generateConstraints
-    if !optimize || !entailed(t, c)
-  yield SimpleSHACLShape(//Subsumption(t, c))
-    scopes.replaceTop(Subsumption(t, c), Scope.Template, Scope.Template))
+  def axioms: Set[SimpleSHACLShape] =
+    generate.map(scopes.replaceTop(_, Scope.Template, Scope.Template))

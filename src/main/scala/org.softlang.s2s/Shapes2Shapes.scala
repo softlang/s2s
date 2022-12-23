@@ -151,7 +151,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       hermit: HermitReasoner,
       log: Log
   ): Set[SimpleSHACLShape] =
-    val out = canditates.filter(si => hermit.prove(si.axiom))
+    print(canditates.size)
+    val out = canditates.filter(si =>
+      print(".")
+      hermit.prove(si.axiom)
+    )
     log.info("S_out", out.map(_.show).toList)
     out
 
@@ -270,19 +274,20 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     // Initialize the reasoner.
 
     val hermit = HermitReasoner.default
-    hermit.addAxioms(
-      AxiomSet(
-        s.map(_.axiom)
-          .union(mappingSubs)
-          .union(props)
-          .union(shapeProps)
-          .union(dcaP)
-          .union(dcaH)
-          .union(cwaP)
-          .union(unaP)
-          .union(cwaH)
-          .union(unaH)
-          .union(tops)
-      )
+
+    val axs = AxiomSet(
+      s.map(_.axiom)
+        .union(mappingSubs)
+        .union(props)
+        .union(shapeProps)
+        .union(dcaP)
+        .union(dcaH)
+        .union(cwaP)
+        .union(unaP)
+        .union(cwaH)
+        .union(unaH)
+        .union(tops)
     )
+
+    hermit.addAxioms(axs)
     hermit

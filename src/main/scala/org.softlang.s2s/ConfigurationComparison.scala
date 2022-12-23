@@ -5,6 +5,10 @@ import de.pseifer.shar.dl.Subsumption
 import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
+import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
+import org.softlang.s2s.generate.given_Conversion_Float_Float_FloatRange
+import org.softlang.s2s.generate.given_Conversion_Int_ConstantInt
+import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.vocabulary
 
@@ -14,14 +18,13 @@ import scala.util.Random
 class ConfigurationComparison(
     c1: Configuration,
     c2: Configuration,
-    compareVariableSubsumptions: Boolean = false,
+    trials: Int = 1000,
     compareResults: Boolean = true,
-    stepTrials: Int = 1000,
-    randomSets: Int = 0,
+    compareVariableSubsumptions: Boolean = true,
     stopAfterFirstResult: Boolean = true
 ):
 
-  // Test Instances.
+  // Test S2S Instances.
   private val s1 = Shapes2Shapes(c1)
   private val s2 = Shapes2Shapes(c2)
 
@@ -35,6 +38,8 @@ class ConfigurationComparison(
 
     val kb1 = s1.buildKB(q, s, log1)
     val kb2 = s2.buildKB(q, s, log2)
+
+    println(q.show(s1.shar.state))
 
     // Perform first test: Comparison of subsumption.
 
@@ -80,19 +85,22 @@ class ConfigurationComparison(
     // Return results of first and second test.
     (t1, t2)
 
-  // Test `n` trials to identify a difference.
+  /** Test with generator setup for trials many runs. */
   private def search(
-      n: Int,
-      qg: QueryGenerator,
-      shapes: Int
+      qg: ProblemGenerator
   ): List[(SCCQ, Set[SimpleSHACLShape])] =
     def doSearch(trial: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
-      print(".")
+
+      // Primitive progress bar.
+      print("|")
+
       if trial <= 0 then Nil
       else
+
         // Sample query and shapes.
-        val q = qg.draw
-        val s = ShapeGenerator(q.pattern.vocabulary, shapes, true).draw
+        val qs = qg.draw()
+        val q = qs._1
+        val s = qs._2
 
         // Initialize logs.
         val log1 = Log(debugging = true, "T")
@@ -111,107 +119,66 @@ class ConfigurationComparison(
             println(List.fill(80)("-").mkString(""))
             (q, s) :: doSearch(trial - 1)
         else doSearch(trial - 1)
-    doSearch(n)
+    doSearch(trials)
 
-  // Run trials with this configuration.
-  private def step(
-      minNumberOfVariables: Int,
-      minNumberOfConcepts: Int,
-      minNumberOfProperties: Int,
-      minNumberOfNominals: Int,
-      minPatterns: Int,
-      maxPatterns: Int,
-      shapes: Int,
-      trials: Int = stepTrials
-  ): List[(SCCQ, Set[SimpleSHACLShape])] =
-    print(
-      List(
-        minNumberOfVariables,
-        minNumberOfConcepts,
-        minNumberOfProperties,
-        minNumberOfNominals,
-        minPatterns,
-        maxPatterns,
-        shapes
-      ).mkString(".")
-    )
-    val voc = VocabularyGenerator(
-      minNumberOfVariables,
-      minNumberOfVariables + 1,
-      minNumberOfConcepts,
-      minNumberOfConcepts + 1,
-      minNumberOfProperties,
-      minNumberOfProperties + 1,
-      minNumberOfNominals,
-      minNumberOfNominals + 1
-    ).draw
-    search(
-      trials,
-      QueryGenerator(voc, minPatterns, maxPatterns),
-      shapes
-    )
+  /** One step, with a generator config an number of trials. */
+  private def step(config: ProblemGeneratorConfig): Unit =
+    print(config)
+    search(ProblemGenerator(config)(s1.scopes))
+    println("done.")
 
-  // Generate set sets of random trials (with stepTrials each).
-  private def random(set: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
-    if set <= 0 then Nil
-    else
-      val p1 = Random.between(1, 3)
-      val p2 = Random.between(1, 3)
-      val n = step(
-        Random.between(1, 3),
-        Random.between(1, 3),
-        Random.between(1, 3),
-        Random.between(0, 1), // TODO
-        p1.min(p2),
-        p1.max(p2) + 1,
-        Random.between(1, 3)
-      )
-      n ++ random(set - 1)
-
-  /** Run randomSets * stepTrials random trials. */
-  def randomized(): Unit =
-    for r <- random(randomSets)
-    do println("\nExecuted " ++ r.toString ++ " trials without differences.")
-
-  /** Widen search space in 10 steps * stepTrials, then finish with randomSets *
-    * stepTrials random trials.
-    */
   def structured(): Unit =
-    // Widen search space with each step.
+    // Widen search with various configurations.
 
-    // Only patterns x : A
-    step(1, 2, 0, 0, 2, 4, 0)
-    step(1, 2, 0, 0, 2, 4, 1)
-    step(1, 2, 0, 0, 2, 4, 2)
-    step(2, 2, 0, 0, 2, 4, 1)
-    step(2, 2, 0, 0, 2, 4, 2)
+    // Only concepts.
+    // step(
+    //  ProblemGeneratorConfig(
+    //    minPatternSize = (3, 5),
+    //    maxPatternSize = (5, 7),
+    //    minTemplateSize = 3,
+    //    maxTemplateSize = 5,
+    //    freshVariable = 0.8f,
+    //    variablesCount = 1,
+    //    freshConcept = 1.0f,
+    //    conceptsCount = 10,
+    //    freshProperty = 1.0f,
+    //    propertiesCount = 10,
+    //    freshNominal = 0.0f,
+    //    nominalsCount = -1,
+    //    propertyConceptRatio = 0.0f,
+    //    variableToNominalRatio = 1.0f,
+    //    minNumberOfShapes = 1,
+    //    maxNumberOfShapes = 3,
+    //    propertyConceptTargetRatio = -1.0f,
+    //    propertyConceptConstraintRatio = -1.0f,
+    //    includeForallConstraints = false
+    //  )
+    // )
 
-    // Arbitrary patterns
-    step(1, 2, 2, 0, 2, 4, 0)
-    step(1, 2, 2, 0, 2, 4, 1)
-    step(1, 2, 2, 0, 2, 4, 2)
-    step(2, 2, 2, 0, 2, 4, 1)
-    step(2, 2, 2, 0, 2, 4, 2)
+    val rc = ProblemGeneratorConfig(
+      minPatternSize = (1, 9),
+      maxPatternSize = (9, 10),
+      minTemplateSize = (1, 9),
+      maxTemplateSize = (9, 10),
+      freshVariable = (0.0f, 1.0f),
+      variablesCount = (1, 10),
+      freshConcept = (0.0f, 1.0f),
+      conceptsCount = (1, 10),
+      freshProperty = (0.0f, 1.0f),
+      propertiesCount = (1, 10),
+      freshNominal = 0.0f,
+      nominalsCount = 0,
+      propertyConceptRatio = (0.0f, 1.0f),
+      variableToNominalRatio = 1.0f,
+      minNumberOfShapes = (1, 9),
+      maxNumberOfShapes = (9, 10),
+      propertyConceptTargetRatio = -1.0f,
+      propertyConceptConstraintRatio = -1.0f,
+      includeForallConstraints = true
+    )
 
-    // Random trials
-    random(randomSets)
-
-  /** Compare one set of query and shapes. */
-  def standalone(
-      q: String,
-      s: Set[String]
-  ): Unit =
-    // Parse & setup logging.
-    val qu = s1.parseQuery(q).toOption.get
-    val sh = s1.parseShapes(s).toOption.get
-    val log1 = Log(debugging = true, "T")
-    val log2 = Log(debugging = true, "T")
-    s1.logInput(qu, sh, log1)
-    s2.logInput(qu, sh, log2)
-
-    // Run single comparison.
-    compare(qu, sh, log1, log2)
-
-    // Format output.
-    log1.print(true, true)
-    log2.print(true, true)
+    step(rc)
+    // step(rc)
+    // step(rc)
+    // step(rc)
+    // step(rc)
