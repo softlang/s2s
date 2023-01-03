@@ -16,20 +16,22 @@ case class ProblemGeneratorConfig(
     variablesCount: IntParameter,
     // Probability of generating a fresh concept (0.0 to 1.0).
     freshConcept: FloatParameter,
-    // Total number of concepts allowed. -1 for unlimited.
+    // Total number of concepts allowed. 0 for unlimited.
     conceptsCount: IntParameter,
     // Probability of generating a fresh property (0.0 to 1.0).
     freshProperty: FloatParameter,
-    // Total number of properties allowed. -1 for unlimited.
+    // Total number of properties allowed. 0 for unlimited.
     propertiesCount: IntParameter,
     // Probability of generating a fresh nominal (0.0 to 1.0).
     freshNominal: FloatParameter,
-    // Total number of nominals allowed. -1 for unlimited.
+    // Total number of nominals allowed. 0 for unlimited.
     nominalsCount: IntParameter,
     // Ratio of property patterns to concept patterns (0.0 to 1.0).
     propertyConceptRatio: FloatParameter,
     // Ratio of variables to nominals in patterns (0.0 to 1.0).
     variableToNominalRatio: FloatParameter,
+    // Avoid self-circles by redrawing N times.
+    cyclicRedrawCount: IntParameter,
 
     // Shape parameters.
 

@@ -18,40 +18,19 @@ import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(config: Configuration = Configuration.default):
 
+  // Instanziate the reasoning framework.
   val shar = Shar()
   import shar._
 
+  // Set the s2s prefix.
   for
     p <- Prefix.fromString(config.prefix)
     i <- Iri.fromString("<https://github.com/softlang/s2s/>")
   do shar.state.prefixes.add(p, i)
 
-  private val sccqp = SCCQParser(shar)
-
-  // The scopes encoding (implicit) needed for renaming.
+  // The scope encoding (implicit) needed for renaming.
   implicit val scopes: Scopes =
     Scopes(config.renameToken, config.namespacedTopName)
-
-  /** Attempt to parse a SCCQ query. */
-  def parseQuery(query: String): ShassTry[SCCQ] =
-    for
-      qi <- sccqp.parse(query)
-      q <- SCCQ.validate(
-        qi,
-        rename = true,
-        config.renameToken,
-        config.namespacedTopName
-      )
-    yield q
-
-  private val shapep = ShapeParser(shar)
-
-  /** Attempt to parse a set of Simple SHACL shapes. */
-  def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
-    for s <- Util
-        .flipEitherHead(shapes.map(shapep.parse(_)).toList)
-        .map(_.toSet)
-    yield s
 
   /** Run validation and format results (if enabled). */
   def run(
@@ -61,20 +40,22 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     // Run validation with query and shapes.
     val res = validate(query, shapes)
+    val resLog = res._2
+    val resShapes = res._1
 
     // Print log (if enabled).
     if config.log || config.debug then
-      res._2.print(config.hidecolon, config.prettyVariableConcepts)
+      resLog.print(config.hidecolon, config.prettyVariableConcepts)
 
     // Print results (if enabled).
     if config.printOutput then
-      for result <- res._1
+      for result <- resShapes
       do result.map(_.show).foreach(println)
 
     // Return output shapes.
-    res._1
+    resShapes
 
-  /** Run validation with a Log. */
+  /** Run validation and return a Log. */
   def validate(
       query: String,
       shapes: Set[String]
@@ -90,77 +71,73 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
     // Run the algorithm.
-    yield algorithm(
-      // Map q to appropriate scopes.
-      SCCQ(
-        q.template.inScope(Scope.Template),
-        q.pattern.inScope(Scope.Pattern)
-      ),
-      // Map shapes to input scopes.
-      s.map(_.inScope(Scope.Input)),
-      // The log.
-      log
-    )
+    yield algorithm(q, s, log)
 
     // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
 
     (sout, log)
 
+  /** The query parser. */
+  private val sccqp = SCCQParser(shar)
+
+  /** Attempt to parse a SCCQ query. */
+  private def parseQuery(query: String): ShassTry[SCCQ] =
+    for
+      qi <- sccqp.parse(query)
+      q <- SCCQ.validate(
+        qi,
+        rename = true,
+        config.renameToken,
+        config.namespacedTopName
+      )
+    yield q
+
+  /** The shape parser. */
+  private val shapep = ShapeParser(shar)
+
+  /** Attempt to parse a set of Simple SHACL shapes. */
+  private def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
+    for s <- Util
+        .flipEitherHead(shapes.map(shapep.parse(_)).toList)
+        .map(_.toSet)
+    yield s
+
+
   /** Run algorithm with formal input (given a log). */
   def algorithm(
-      q: SCCQ,
-      s: Set[SimpleSHACLShape],
+      qi: SCCQ,
+      si: Set[SimpleSHACLShape],
       log: Log
   ): Set[SimpleSHACLShape] =
 
+    // Pre-process query and shapes, by setting scopes.
+    val preq = SCCQ(
+        qi.template.inScope(Scope.Template),
+        qi.pattern.inScope(Scope.Pattern)
+      )
+    val pres = si.map(_.inScope(Scope.Input))
+
     // Log input.
-    logInput(q, s, log)
+    logInput(preq, pres, log)
 
     // Infer axioms from query and shapes.
-    val hermit = buildKB(q, s, log)
+    val hermit = buildKB(preq, pres, log)
 
     // Generate candidates.
-    val cand = generateCandidates(q, log)
+    val cand = generateCandidates(preq, log)
 
     // Filter candidates.
     filter(cand, hermit, log)
 
   /** Add input query and shapes to log. */
-  def logInput(q: SCCQ, s: Set[SimpleSHACLShape], log: Log): Unit =
+  private def logInput(q: SCCQ, s: Set[SimpleSHACLShape], log: Log): Unit =
     log.info("q", q.show)
     log.debug("Σ(q)", q.vocabulary.show)
     log.info("S_in", s.map(_.show).toList)
 
-  /** Perform the candidate generation step of the algorithm. */
-  def generateCandidates(
-      q: SCCQ,
-      log: Log
-  ): Set[SimpleSHACLShape] =
-    val cand = CandidateGenerator(
-      q.template.vocabulary,
-      optimize = config.optimizeCandidates
-    )(scopes).axioms
-
-    log.debug("S_can", cand.map(_.show).toList)
-    cand
-
-  /** Perform the filtering step of the algorithm. */
-  def filter(
-      canditates: Set[SimpleSHACLShape],
-      hermit: HermitReasoner,
-      log: Log
-  ): Set[SimpleSHACLShape] =
-    print(canditates.size)
-    val out = canditates.filter(si =>
-      print(".")
-      hermit.prove(si.axiom)
-    )
-    log.info("S_out", out.map(_.show).toList)
-    out
-
   /** Perform the KB construction set of the algorithm. */
-  def buildKB(
+  private def buildKB(
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log: Log
@@ -291,3 +268,31 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     hermit.addAxioms(axs)
     hermit
+
+  /** Perform the candidate generation step of the algorithm. */
+  private def generateCandidates(
+      q: SCCQ,
+      log: Log
+  ): Set[SimpleSHACLShape] =
+    val cand = CandidateGenerator(
+      q.template.vocabulary,
+      optimize = config.optimizeCandidates
+    )(scopes).axioms
+
+    log.debug("S_can", cand.map(_.show).toList)
+    cand
+
+  /** Perform the filtering step of the algorithm. */
+  private def filter(
+      canditates: Set[SimpleSHACLShape],
+      hermit: HermitReasoner,
+      log: Log
+  ): Set[SimpleSHACLShape] =
+    print(canditates.size)
+    val out = canditates.filter(si =>
+      print(".")
+      hermit.prove(si.axiom)
+    )
+    log.info("S_out", out.map(_.show).toList)
+    out
+

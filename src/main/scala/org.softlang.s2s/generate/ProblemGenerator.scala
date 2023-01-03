@@ -72,11 +72,17 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   /** Generator for property atomic patterns. */
   private def generatePP: AtomicPattern =
     if flip(config.variableToNominalRatio.sample) then
-      VPV(
-        variableGenerator.draw(),
-        roleGenerator.draw().r,
-        variableGenerator.draw()
-      )
+      // Draw the first variable.
+      val v1 = variableGenerator.draw()
+      // (Re)draw the second if needed.
+      var v2 = variableGenerator.draw()
+      var counter = 0
+      var max = config.cyclicRedrawCount.sample
+      while(counter < max && v1 == v2) {
+        v2 = variableGenerator.draw()
+      }
+
+      VPV(v1, roleGenerator.draw().r, v2)
     else {
       if flip(0.333) then
         VPL(
@@ -187,13 +193,13 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
     // Randomly select requierd subset from filtered shapes.
     Random
-      .shuffle(filtered)
+      .shuffle(filtered.toList)
       .take(
         randRange(
           config.minNumberOfShapes.sample,
           config.maxNumberOfShapes.sample
         )
-      )
+      ).toSet
 
   /** Sample a query instance, only. */
   def drawQuery(): SCCQ =
@@ -212,6 +218,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
     // Do not generate fresh variables for template.
     variableGenerator.lock()
+    variableGenerator.setThings(pattern.flatMap(_.variables))
 
     val template = Set
       .fill(config.maxTemplateSize.sample)(generate)

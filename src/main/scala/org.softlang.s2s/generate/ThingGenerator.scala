@@ -27,7 +27,7 @@ class ThingGenerator[T](
     // flips for generating a fresh one (and not generator is not locked),
     // generate a new concept.
     if things.isEmpty ||
-      (!locked && (things.size < maximumCount || maximumCount == -1)
+      (!locked && (things.size < maximumCount || maximumCount == 0)
         && flip(freshProbability))
     then
       // Generate,
@@ -37,7 +37,10 @@ class ThingGenerator[T](
       // and return.
       fresh
     // Else, draw a random existing one.
-    else Random.shuffle(things).head
+    else Random.shuffle(things.toList).head
+
+  /** Set or initialize things. */
+  def setThings(t: Set[T]): Unit = things = t
 
   /** Sample this generator. */
   def draw(): T = mk

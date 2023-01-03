@@ -19,8 +19,6 @@ class ConfigurationComparison(
     c1: Configuration,
     c2: Configuration,
     trials: Int = 1000,
-    compareResults: Boolean = true,
-    compareVariableSubsumptions: Boolean = true,
     stopAfterFirstResult: Boolean = true
 ):
 
@@ -28,71 +26,19 @@ class ConfigurationComparison(
   private val s1 = Shapes2Shapes(c1)
   private val s2 = Shapes2Shapes(c2)
 
-  /** Compare one set of query and shapes. */
+  /** Compare results for one set of query and shapes. */
   private def compare(
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log1: Log,
       log2: Log
-  ): (Boolean, Boolean) =
-
-    val kb1 = s1.buildKB(q, s, log1)
-    val kb2 = s2.buildKB(q, s, log2)
-
-    println(q.show(s1.shar.state))
-
-    // Perform first test: Comparison of subsumption.
-
-    val t1 =
-      if compareVariableSubsumptions then
-
-        // Construct all variable subsuptions.
-        val subs: List[Axiom] = (for
-          v1 <- q.variables
-          v2 <- q.variables
-          if v1 != v2
-        yield Subsumption(v1.asConcept, v2.asConcept)).toList
-
-        val r1 = subs.map(kb1.prove)
-        val r2 = subs.map(kb2.prove)
-
-        log1.info(
-          "Subsumptions",
-          subs.zip(r1).map((x, y) => s"$x: $y")
-        )
-
-        log2.info(
-          "Subsumptions",
-          subs.zip(r2).map((x, y) => s"$x: $y")
-        )
-
-        r1 == r2
-      else true
-
-    // Perform second test: Comparison of results.
-
-    val t2 = if compareResults then
-
-      val c1 = s1.generateCandidates(q, log1)
-      val c2 = s2.generateCandidates(q, log2)
-
-      val r1 = s1.filter(c1, kb1, log1)
-      val r2 = s2.filter(c2, kb2, log2)
-
-      r1 == r2
-    else true
-
-    // Return results of first and second test.
-    (t1, t2)
+  ): Boolean = s1.algorithm(q, s, log1) == s2.algorithm(q, s, log2)
 
   /** Test with generator setup for trials many runs. */
   private def search(
       qg: ProblemGenerator
   ): List[(SCCQ, Set[SimpleSHACLShape])] =
     def doSearch(trial: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
-
-      // Primitive progress bar.
-      print("|")
 
       if trial <= 0 then Nil
       else
@@ -102,22 +48,26 @@ class ConfigurationComparison(
         val q = qs._1
         val s = qs._2
 
+        // Progress
+        println(q.show(s1.shar.state))
+        s.map(_.show(s1.shar.state)).foreach(println)
+
         // Initialize logs.
         val log1 = Log(debugging = true, "T")
         val log2 = Log(debugging = true, "T")
-        s1.logInput(q, s, log1)
-        s2.logInput(q, s, log2)
 
-        val t = compare(q, s, log1, log2)
-
-        if !t._1 || !t._2 then
+        // If results are different
+        if !compare(q, s, log1, log2) then
+          // print the logs.
           println()
           log1.print(true, true)
           log2.print(true, true)
+          // Return this result, or continue (if allowed).
           if stopAfterFirstResult then List((q, s))
           else
             println(List.fill(80)("-").mkString(""))
             (q, s) :: doSearch(trial - 1)
+        // If there was no difference, continue with next trial.
         else doSearch(trial - 1)
     doSearch(trials)
 
@@ -170,6 +120,7 @@ class ConfigurationComparison(
       nominalsCount = 0,
       propertyConceptRatio = (0.0f, 1.0f),
       variableToNominalRatio = 1.0f,
+      cyclicRedrawCount = 10,
       minNumberOfShapes = (1, 9),
       maxNumberOfShapes = (9, 10),
       propertyConceptTargetRatio = -1.0f,

@@ -157,11 +157,7 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       useNamespacedTop = false
     ),
     // Perform 1000 trials per generator configuration.
-    trials = 1000,
-    // Compare S_out for any differences.
-    compareResults = true,
-    // Compare all subsumptions between query variables as well.
-    compareVariableSubsumptions = false,
+    trials = 1,
     // Generate multiple results.
     stopAfterFirstResult = false
   )
@@ -190,20 +186,22 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       variablesCount = 2,
       // Probability of generating a fresh concept (0.0 to 1.0).
       freshConcept = 1.0f,
-      // Total number of concepts allowed. 0 for unlimited.
+      // Total number of concepts allowed.
       conceptsCount = 10,
       // Probability of generating a fresh property (0.0 to 1.0).
       freshProperty = 1.0f,
-      // Total number of properties allowed. 0 for unlimited.
+      // Total number of properties allowed. 
       propertiesCount = 10,
       // Probability of generating a fresh nominal (0.0 to 1.0).
       freshNominal = 0.0f,
-      // Total number of nominals allowed. 0 for unlimited.
-      nominalsCount = -1,
+      // Total number of nominals allowed. 
+      nominalsCount = 0,
       // Ratio of property patterns to concept patterns (0.0 to 1.0).
       propertyConceptRatio = 0.5f,
       // Ratio of variables to nominals in patterns (0.0 to 1.0).
       variableToNominalRatio = 1.0f,
+      // Avoid self-circles by redrawing N times.
+      cyclicRedrawCount = 10,
       // Min/max number of input shapes.
       minNumberOfShapes = 8,
       maxNumberOfShapes = 10,
