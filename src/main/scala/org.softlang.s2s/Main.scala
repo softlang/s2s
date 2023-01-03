@@ -217,7 +217,7 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
 
   val gen = ProblemGenerator(config)(s2s.scopes)
 
-  val qs = gen.draw()
+  val qs = gen.sample()
   val q = qs._1
   val s = qs._2
 

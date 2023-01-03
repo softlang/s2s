@@ -66,41 +66,41 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   /** Generator for concept atomic patterns. */
   private def generateCP: AtomicPattern =
     if flip(config.variableToNominalRatio.sample) then
-      VAC(variableGenerator.draw(), conceptGenerator.draw().c)
-    else LAC(nominalGenerator.draw(), conceptGenerator.draw().c)
+      VAC(variableGenerator.sample(), conceptGenerator.sample().c)
+    else LAC(nominalGenerator.sample(), conceptGenerator.sample().c)
 
   /** Generator for property atomic patterns. */
   private def generatePP: AtomicPattern =
     if flip(config.variableToNominalRatio.sample) then
-      // Draw the first variable.
-      val v1 = variableGenerator.draw()
-      // (Re)draw the second if needed.
-      var v2 = variableGenerator.draw()
+      // sample the first variable.
+      val v1 = variableGenerator.sample()
+      // (Re)sample the second if needed.
+      var v2 = variableGenerator.sample()
       var counter = 0
       var max = config.cyclicRedrawCount.sample
       while(counter < max && v1 == v2) {
-        v2 = variableGenerator.draw()
+        v2 = variableGenerator.sample()
       }
 
-      VPV(v1, roleGenerator.draw().r, v2)
+      VPV(v1, roleGenerator.sample().r, v2)
     else {
       if flip(0.333) then
         VPL(
-          variableGenerator.draw(),
-          roleGenerator.draw().r,
-          nominalGenerator.draw()
+          variableGenerator.sample(),
+          roleGenerator.sample().r,
+          nominalGenerator.sample()
         )
       else if flip() then
         LPL(
-          nominalGenerator.draw(),
-          roleGenerator.draw().r,
-          nominalGenerator.draw()
+          nominalGenerator.sample(),
+          roleGenerator.sample().r,
+          nominalGenerator.sample()
         )
       else
         LPV(
-          nominalGenerator.draw(),
-          roleGenerator.draw().r,
-          variableGenerator.draw()
+          nominalGenerator.sample(),
+          roleGenerator.sample().r,
+          variableGenerator.sample()
         )
     }
 
@@ -162,12 +162,12 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   def visualize: String = config.toString
 
   /** Sample a problem instance from this generator. */
-  def draw(): (SCCQ, Set[SimpleSHACLShape]) =
-    val q = drawQuery()
-    (q, drawShapes(q))
+  def sample(): (SCCQ, Set[SimpleSHACLShape]) =
+    val q = sampleQuery()
+    (q, sampleShapes(q))
 
   /** Sample a set of SimpleSHACLShapes */
-  def drawShapes(q: SCCQ): Set[SimpleSHACLShape] =
+  def sampleShapes(q: SCCQ): Set[SimpleSHACLShape] =
 
     // The complete set of posible shapes.
     val initial = ShapeGenerator(q.pattern.vocabulary, true).generate
@@ -202,7 +202,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
       ).toSet
 
   /** Sample a query instance, only. */
-  def drawQuery(): SCCQ =
+  def sampleQuery(): SCCQ =
 
     // Reset the generators.
     variableGenerator.reset()

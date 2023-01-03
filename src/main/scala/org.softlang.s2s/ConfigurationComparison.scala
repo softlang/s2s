@@ -44,7 +44,7 @@ class ConfigurationComparison(
       else
 
         // Sample query and shapes.
-        val qs = qg.draw()
+        val qs = qg.sample()
         val q = qs._1
         val s = qs._2
 

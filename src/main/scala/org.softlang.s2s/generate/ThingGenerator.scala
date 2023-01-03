@@ -43,7 +43,7 @@ class ThingGenerator[T](
   def setThings(t: Set[T]): Unit = things = t
 
   /** Sample this generator. */
-  def draw(): T = mk
+  def sample(): T = mk
 
   /** Lock generation of fresh instances. */
   def lock(): Unit = locked = true
