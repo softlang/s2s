@@ -190,11 +190,11 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       conceptsCount = 10,
       // Probability of generating a fresh property (0.0 to 1.0).
       freshProperty = 1.0f,
-      // Total number of properties allowed. 
+      // Total number of properties allowed.
       propertiesCount = 10,
       // Probability of generating a fresh nominal (0.0 to 1.0).
       freshNominal = 0.0f,
-      // Total number of nominals allowed. 
+      // Total number of nominals allowed.
       nominalsCount = 0,
       // Ratio of property patterns to concept patterns (0.0 to 1.0).
       propertyConceptRatio = 0.5f,

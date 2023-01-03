@@ -78,7 +78,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
       var v2 = variableGenerator.sample()
       var counter = 0
       var max = config.cyclicRedrawCount.sample
-      while(counter < max && v1 == v2) {
+      while (counter < max && v1 == v2) {
         v2 = variableGenerator.sample()
       }
 
@@ -199,7 +199,8 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
           config.minNumberOfShapes.sample,
           config.maxNumberOfShapes.sample
         )
-      ).toSet
+      )
+      .toSet
 
   /** Sample a query instance, only. */
   def sampleQuery(): SCCQ =

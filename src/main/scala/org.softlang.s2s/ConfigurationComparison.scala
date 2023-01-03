@@ -36,10 +36,10 @@ class ConfigurationComparison(
 
   /** Test with generator setup for trials many runs. */
   private def search(
-      qg: ProblemGenerator
+      qg: ProblemGenerator,
+      verbose: Boolean = true
   ): List[(SCCQ, Set[SimpleSHACLShape])] =
     def doSearch(trial: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
-
       if trial <= 0 then Nil
       else
 
@@ -49,8 +49,10 @@ class ConfigurationComparison(
         val s = qs._2
 
         // Progress
-        println(q.show(s1.shar.state))
-        s.map(_.show(s1.shar.state)).foreach(println)
+        if verbose then
+          println("\nProblem:")
+          println(q.show(s1.shar.state))
+          s.map(_.show(s1.shar.state)).foreach(println)
 
         // Initialize logs.
         val log1 = Log(debugging = true, "T")

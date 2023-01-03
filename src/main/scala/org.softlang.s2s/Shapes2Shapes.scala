@@ -82,7 +82,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val sccqp = SCCQParser(shar)
 
   /** Attempt to parse a SCCQ query. */
-  private def parseQuery(query: String): ShassTry[SCCQ] =
+  def parseQuery(query: String): ShassTry[SCCQ] =
     for
       qi <- sccqp.parse(query)
       q <- SCCQ.validate(
@@ -97,7 +97,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val shapep = ShapeParser(shar)
 
   /** Attempt to parse a set of Simple SHACL shapes. */
-  private def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
+  def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
     for s <- Util
         .flipEitherHead(shapes.map(shapep.parse(_)).toList)
         .map(_.toSet)

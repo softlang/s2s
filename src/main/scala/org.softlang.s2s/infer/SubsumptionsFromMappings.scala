@@ -17,6 +17,16 @@ class SubsumptionsFromMappings(
 
   type Components = Map[Set[Var], Set[AtomicPattern]]
 
+  /** All subsets of a required size. */
+  private def subsets[T](s: Set[T], ofSize: Int): List[Set[T]] =
+    if ofSize == 0 then List(Set())
+    else if s.isEmpty then Nil
+    else
+      subsets(s.tail, ofSize - 1).map(Set(s.head) ++ _) ++ subsets(
+        s.tail,
+        ofSize
+      )
+
   def axioms: Set[Axiom] =
 
     // (1)
@@ -59,18 +69,25 @@ class SubsumptionsFromMappings(
         i <- 0 to subv.size
       yield List.fill(i)(v)
 
+      if debug then
+        println(c1.size)
+        println(c1)
+
       // C2 - All possible RHS (in terms of occurring variables).
-      val c2 = c1.toList.flatten.toSet
-        // All subsets
-        .subsets
-        // of the required size.
-        .filter(_.size == supv.size)
-        .toList
+      val c2 = subsets(c1.toList.flatten.toSet, supv.size)
+
+      if debug then
+        println(c2.size)
+        println(c2)
 
       // C3 - Finally, all permutations for the RHS of the mapping.
       val c3 = c2
         .flatMap(_.toList.permutations)
         .toList
+
+      if debug then
+        println(c3.size)
+        println(c3)
 
       val axioms =
         for ci <- c3
