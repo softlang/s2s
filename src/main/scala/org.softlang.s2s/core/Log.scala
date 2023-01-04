@@ -2,17 +2,47 @@ package org.softlang.s2s.core
 
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.dl.Axiom
+import java.time.LocalDateTime
+
+enum ProfileEntry:
+  case Start(activity: String, timeStamp: LocalDateTime)
+  case End(activity: String, timeStamp: LocalDateTime)
+
+  def isStart(activity: String): Boolean = this match
+    case Start(a, _) => a == activity
+    case _           => false
+
+  def isEnd(activity: String): Boolean = this match
+    case End(a, _) => a == activity
+    case _         => false
+
+  def time: LocalDateTime = this match
+    case Start(_, time) => time
+    case End(_, time)   => time
+
+  override def toString(): String = this match
+    case Start(a, t) =>
+      t.toLocalTime.toString ++ ", " ++ a.filter(!_.isWhitespace) ++ "-start"
+    case End(a, t) =>
+      t.toLocalTime.toString ++ ", " ++ a.filter(!_.isWhitespace) ++ "-end"
 
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.
   *   - `info`: Log some information (`put`).
   *   - `debugging`: Log more information (`debug`).
   */
-class Log(info: Boolean = true, debugging: Boolean = false, topToken: String):
+class Log(
+    topToken: String,
+    info: Boolean = true,
+    debugging: Boolean = false,
+    profiling: Boolean = false
+):
 
   private var LOG: String = ""
   private var INFO: Boolean = info
   private var DEBUGGING: Boolean = debugging
+
+  private var the_profile: List[ProfileEntry] = Nil
 
   /** Print log to stdout. */
   def print(
@@ -20,7 +50,7 @@ class Log(info: Boolean = true, debugging: Boolean = false, topToken: String):
       prettyVariableConcepts: Boolean = true
   ): Unit =
     val t1 =
-      if prettyVariableConcepts then 
+      if prettyVariableConcepts then
         LOG
           .replaceAll(s"shar:${topToken}", s"${topToken}")
           .replaceAll("shar", "?")
@@ -59,3 +89,15 @@ class Log(info: Boolean = true, debugging: Boolean = false, topToken: String):
 
   def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
     debug(title, s.map(_.show).toList)
+
+  def profileStart(action: String): Unit =
+    val entry = ProfileEntry.Start(action, LocalDateTime.now())
+    if profiling then println(entry)
+    the_profile = entry :: the_profile
+
+  def profileEnd(action: String): Unit =
+    val entry = ProfileEntry.End(action, LocalDateTime.now())
+    if profiling then println(entry)
+    the_profile = entry :: the_profile
+
+  def profile: List[ProfileEntry] = the_profile.reverse

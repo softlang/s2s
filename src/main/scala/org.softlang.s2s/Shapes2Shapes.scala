@@ -103,7 +103,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         .map(_.toSet)
     yield s
 
-
   /** Run algorithm with formal input (given a log). */
   def algorithm(
       qi: SCCQ,
@@ -111,24 +110,38 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       log: Log
   ): Set[SimpleSHACLShape] =
 
+    log.profileStart("algorithm")
+
     // Pre-process query and shapes, by setting scopes.
     val preq = SCCQ(
-        qi.template.inScope(Scope.Template),
-        qi.pattern.inScope(Scope.Pattern)
-      )
+      qi.template.inScope(Scope.Template),
+      qi.pattern.inScope(Scope.Pattern)
+    )
     val pres = si.map(_.inScope(Scope.Input))
 
     // Log input.
     logInput(preq, pres, log)
+    log.profileStart("build")
 
     // Infer axioms from query and shapes.
     val hermit = buildKB(preq, pres, log)
 
+    log.profileEnd("build")
+    log.profileStart("candidates")
+
     // Generate candidates.
     val cand = generateCandidates(preq, log)
 
+    log.profileEnd("candidates")
+    log.profileStart("filter")
+
     // Filter candidates.
-    filter(cand, hermit, log)
+    val result = filter(cand, hermit, log)
+
+    log.profileEnd("filter")
+    log.profileEnd("algorithm")
+
+    result
 
   /** Add input query and shapes to log. */
   private def logInput(q: SCCQ, s: Set[SimpleSHACLShape], log: Log): Unit =
@@ -143,6 +156,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       log: Log
   ): HermitReasoner =
 
+    log.profileStart("build-mapping")
+
     // Axioms from mapping method.
 
     val mappingSubs =
@@ -151,6 +166,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       else Set()
 
     if config.useMappingMethod then log.debug("Map(q.P)", mappingSubs)
+
+    log.profileEnd("build-mapping")
+    log.profileStart("build-properties")
 
     // Add property subsumptions within query, and between query and shapes.
 
@@ -168,6 +186,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     if config.addPropertySubsumptions then log.debug("Prop(q,s)", shapeProps)
 
+    log.profileEnd("build-properties")
+    log.profileStart("build-dca-p")
+
     // DCA for query pattern.
 
     val dcaP =
@@ -182,6 +203,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     if config.dcaForPattern then log.debug("DCA(q.P)", dcaP)
 
+    log.profileEnd("build-dca-p")
+    log.profileStart("build-dca-t")
+
     // DCA for query template.
 
     val dcaH =
@@ -195,6 +219,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       else Set()
 
     if config.dcaForTemplate then log.debug("DCA(q.H)", dcaH)
+
+    log.profileEnd("build-dca-t")
+    log.profileStart("build-cwa-p")
 
     // CWA for query pattern.
 
@@ -211,6 +238,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     if config.cwaForPattern then log.debug("CWA(q.P)", cwaP)
 
+    log.profileEnd("build-cwa-p")
+    log.profileStart("build-cwa-t")
+
     // CWA for query template.
 
     val cwaH =
@@ -226,6 +256,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     if config.cwaForTemplate then log.debug("CWA(q.H)", cwaH)
 
+    log.profileEnd("build-cwa-t")
+    log.profileStart("build-una-p")
+
     // UNA for query pattern.
 
     val unaP =
@@ -233,6 +266,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       else Set()
 
     if config.unaForPattern then log.debug("UNA(q.P)", unaP)
+
+    log.profileEnd("build-una-p")
+    log.profileStart("build-una-t")
 
     // UNA for query template.
 
@@ -242,11 +278,17 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     if config.unaForTemplate then log.debug("UNA(q.H)", unaH)
 
+    log.profileEnd("build-una-t")
+    log.profileStart("build-top")
+
     // Namespaced Top definitions.
 
     val tops =
       NamespacedTop(q.pattern, q.template, config.useNamespacedTop).axioms
     log.debug("T", tops)
+
+    log.profileEnd("build-top")
+    log.profileStart("build-add")
 
     // Initialize the reasoner.
 
@@ -267,6 +309,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     )
 
     hermit.addAxioms(axs)
+
+    log.profileStart("build-add")
+
     hermit
 
   /** Perform the candidate generation step of the algorithm. */
@@ -284,15 +329,26 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   /** Perform the filtering step of the algorithm. */
   private def filter(
-      canditates: Set[SimpleSHACLShape],
+      candidates: Set[SimpleSHACLShape],
       hermit: HermitReasoner,
       log: Log
   ): Set[SimpleSHACLShape] =
-    print(canditates.size)
-    val out = canditates.filter(si =>
+
+    // Process first candidate separately (for profiling).
+    val first = candidates.take(1)
+    val rest = candidates.drop(1)
+
+    log.profileStart("filter-inithermit")
+    val ff = first.filter(si => hermit.prove(si.axiom))
+    log.profileEnd("filter-inithermit")
+
+    print(candidates.size)
+
+    val out = ff ++ rest.filter(si =>
       print(".")
       hermit.prove(si.axiom)
     )
+    println()
+
     log.info("S_out", out.map(_.show).toList)
     out
-

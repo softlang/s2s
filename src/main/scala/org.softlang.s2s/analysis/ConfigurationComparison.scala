@@ -1,4 +1,4 @@
-package org.softlang.s2s
+package org.softlang.s2s.analysis
 
 import de.pseifer.shar.dl.Axiom
 import de.pseifer.shar.dl.Subsumption
@@ -11,9 +11,6 @@ import org.softlang.s2s.generate.given_Conversion_Int_ConstantInt
 import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.vocabulary
-
-import scala.collection.BitSet
-import scala.util.Random
 
 class ConfigurationComparison(
     c1: Configuration,
@@ -55,8 +52,8 @@ class ConfigurationComparison(
           s.map(_.show(s1.shar.state)).foreach(println)
 
         // Initialize logs.
-        val log1 = Log(debugging = true, "T")
-        val log2 = Log(debugging = true, "T")
+        val log1 = Log("T", debugging = true)
+        val log2 = Log("T", debugging = true)
 
         // If results are different
         if !compare(q, s, log1, log2) then

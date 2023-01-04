@@ -5,6 +5,9 @@ import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Log
 import org.softlang.s2s.parser.JsonLDToSimpleShacl
 
+import org.softlang.s2s.analysis.ConfigurationComparison
+import org.softlang.s2s.analysis.Profiling
+
 import scala.util.Failure
 import scala.util.Try
 
@@ -163,6 +166,67 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   )
 
   compare.structured()
+
+@main def profile(): Unit =
+  import org.softlang.s2s.generate._
+  import org.softlang.s2s.generate.given_Conversion_Int_ConstantInt
+  import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
+  import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
+  import org.softlang.s2s.generate.given_Conversion_Float_Float_FloatRange
+
+  val c = Configuration.default
+
+  val gc =
+    ProblemGeneratorConfig(
+      minPatternSize = (3, 5),
+      maxPatternSize = (5, 7),
+      minTemplateSize = 3,
+      maxTemplateSize = 5,
+      freshVariable = 0.8f,
+      variablesCount = 2,
+      freshConcept = 1.0f,
+      conceptsCount = 10,
+      freshProperty = 1.0f,
+      propertiesCount = 10,
+      freshNominal = 0.0f,
+      nominalsCount = 0,
+      propertyConceptRatio = 0.5f,
+      variableToNominalRatio = 1.0f,
+      cyclicRedrawCount = 10,
+      minNumberOfShapes = 1,
+      maxNumberOfShapes = 3,
+      propertyConceptTargetRatio = -1.0f,
+      propertyConceptConstraintRatio = -1.0f,
+      includeForallConstraints = false
+    )
+
+  Profiling(c, gc).run(10)
+
+  // Profiling(
+  //  Configuration.default,
+  //  ProblemGeneratorConfig(
+  //    minPatternSize = (1, 9),
+  //    maxPatternSize = (9, 10),
+  //    minTemplateSize = (1, 9),
+  //    maxTemplateSize = (9, 10),
+  //    freshVariable = (0.0f, 1.0f),
+  //    variablesCount = (1, 10),
+  //    freshConcept = (0.0f, 1.0f),
+  //    conceptsCount = (1, 10),
+  //    freshProperty = (0.0f, 1.0f),
+  //    propertiesCount = (1, 10),
+  //    freshNominal = 0.0f,
+  //    nominalsCount = 0,
+  //    propertyConceptRatio = (0.0f, 1.0f),
+  //    variableToNominalRatio = 1.0f,
+  //    cyclicRedrawCount = 10,
+  //    minNumberOfShapes = (1, 9),
+  //    maxNumberOfShapes = (9, 10),
+  //    propertyConceptTargetRatio = -1.0f,
+  //    propertyConceptConstraintRatio = -1.0f,
+  //    includeForallConstraints = true
+  //  )
+  // ).run(1)
 
 @main def dev(): Unit =
   import org.softlang.s2s.generate._
