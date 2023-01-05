@@ -24,8 +24,8 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
   /** Sample from a range of values. */
   private def randRange(from: Int, to: Int): Int =
-    if from >= to then Random.between(to - 1, to)
-    else Random.between(from, to)
+    if from >= to then from
+    else Random.between(from, to + 1)
 
   /** Make a Iri from String s. */
   private def mkIri(s: String): Iri = Iri
