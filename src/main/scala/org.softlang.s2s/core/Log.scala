@@ -22,9 +22,9 @@ enum ProfileEntry:
 
   override def toString(): String = this match
     case Start(a, t) =>
-      t.toLocalTime.toString ++ ", " ++ a.filter(!_.isWhitespace) ++ "-start"
+      s"${t.toLocalTime} ${a.filter(!_.isWhitespace)}-start"
     case End(a, t) =>
-      t.toLocalTime.toString ++ ", " ++ a.filter(!_.isWhitespace) ++ "-end"
+      s"${t.toLocalTime} ${a.filter(!_.isWhitespace)}-end"
 
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.

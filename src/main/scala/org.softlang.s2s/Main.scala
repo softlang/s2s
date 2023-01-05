@@ -200,7 +200,7 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       includeForallConstraints = false
     )
 
-  Profiling(c, gc).run(10)
+  Profiling(c).run(gc, 10)
 
   // Profiling(
   //  Configuration.default,

@@ -339,16 +339,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val rest = candidates.drop(1)
 
     log.profileStart("filter-inithermit")
+
     val ff = first.filter(si => hermit.prove(si.axiom))
+
     log.profileEnd("filter-inithermit")
 
-    print(candidates.size)
-
-    val out = ff ++ rest.filter(si =>
-      print(".")
-      hermit.prove(si.axiom)
-    )
-    println()
+    val out = ff ++ rest.filter(si => hermit.prove(si.axiom))
 
     log.info("S_out", out.map(_.show).toList)
+
     out

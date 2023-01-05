@@ -11,6 +11,9 @@ class ThingGenerator[T](
     generator: Int => T
 ):
 
+  override def toString: String =
+    s"($freshProbability, $maximumCount) - locked:$locked - ${things}"
+
   // If locked, generate no fresh instances.
   private var locked: Boolean = false
 

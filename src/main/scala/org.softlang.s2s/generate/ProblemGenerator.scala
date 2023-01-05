@@ -80,6 +80,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
       var max = config.cyclicRedrawCount.sample
       while (counter < max && v1 == v2) {
         v2 = variableGenerator.sample()
+        counter += 1
       }
 
       VPV(v1, roleGenerator.sample().r, v2)
