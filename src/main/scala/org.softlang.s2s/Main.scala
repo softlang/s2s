@@ -1,12 +1,12 @@
 package org.softlang.s2s
 
 import org.rogach.scallop._
+import org.softlang.s2s.analysis.ConfigurationComparison
+import org.softlang.s2s.analysis.Profiling
+import org.softlang.s2s.core.ActiveReasoner
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Log
 import org.softlang.s2s.parser.JsonLDToSimpleShacl
-
-import org.softlang.s2s.analysis.ConfigurationComparison
-import org.softlang.s2s.analysis.Profiling
 
 import scala.util.Failure
 import scala.util.Try
@@ -48,6 +48,12 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
     toggle(
       default = Some(true),
       descrYes = "Hide colon in prefixes in log (def: On)"
+    )
+
+  val usejfact =
+    toggle(
+      default = Some(false),
+      descrYes = "Use JFact over HermiT (def: Off)"
     )
 
   val debug =
@@ -97,12 +103,23 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
     default = Some("")
   )
 
+  val reasoner = choice(
+    choices = Seq("hermit", "jfact", "openllet"),
+    descr = "Reasoner to use (def: hermit).",
+    default = Some("hermit")
+  )
+
   verify()
 
   /** Convert to a S2S configuration. */
   def toConfiguration: Configuration = baseConfiguration.copy(
     optimizeCandidates = optimize(),
     renameToken = renameToken(),
+    activeReasoner = reasoner() match
+      case "hermit"   => ActiveReasoner.Hermit
+      case "jfact"    => ActiveReasoner.Jfact
+      case "openllet" => ActiveReasoner.Openllet
+    ,
     namespacedTopName = topSymbol(),
     prefix = prefix(),
     log = log(),
@@ -153,14 +170,14 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   val compare = ConfigurationComparison(
     // Configuration 1:
     common.copy(
-      useNamespacedTop = true
+      activeReasoner = ActiveReasoner.Hermit
     ),
     // Configuration 2:
     common.copy(
-      useNamespacedTop = false
+      activeReasoner = ActiveReasoner.Jfact
     ),
     // Perform 1000 trials per generator configuration.
-    trials = 1,
+    trials = 100,
     // Generate multiple results.
     stopAfterFirstResult = false
   )
@@ -174,59 +191,47 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
   import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
   import org.softlang.s2s.generate.given_Conversion_Float_Float_FloatRange
 
-  val c = Configuration.default
+  val profiling = Profiling(Configuration.default)
+  val trials = 100
 
-  val gc =
+  def nShapes(n: Int) =
     ProblemGeneratorConfig(
-      minPatternSize = (3, 5),
-      maxPatternSize = (5, 7),
+      minPatternSize = 3,
+      maxPatternSize = 6,
       minTemplateSize = 3,
-      maxTemplateSize = 5,
+      maxTemplateSize = 6,
       freshVariable = 0.8f,
-      variablesCount = 2,
-      freshConcept = 1.0f,
+      variablesCount = 5,
+      freshConcept = 0.5f,
       conceptsCount = 10,
-      freshProperty = 1.0f,
-      propertiesCount = 10,
+      freshProperty = 0.8f,
+      propertiesCount = 2,
       freshNominal = 0.0f,
       nominalsCount = 0,
-      propertyConceptRatio = 0.5f,
+      propertyConceptRatio = 0.7f,
       variableToNominalRatio = 1.0f,
       cyclicRedrawCount = 10,
-      minNumberOfShapes = 1,
-      maxNumberOfShapes = 3,
+      minNumberOfShapes = n,
+      maxNumberOfShapes = n,
       propertyConceptTargetRatio = -1.0f,
       propertyConceptConstraintRatio = -1.0f,
-      includeForallConstraints = false
+      includeForallConstraints = false,
+      seed = "McCool"
     )
 
-  Profiling(c).run(gc, 10)
-
-  // Profiling(
-  //  Configuration.default,
-  //  ProblemGeneratorConfig(
-  //    minPatternSize = (1, 9),
-  //    maxPatternSize = (9, 10),
-  //    minTemplateSize = (1, 9),
-  //    maxTemplateSize = (9, 10),
-  //    freshVariable = (0.0f, 1.0f),
-  //    variablesCount = (1, 10),
-  //    freshConcept = (0.0f, 1.0f),
-  //    conceptsCount = (1, 10),
-  //    freshProperty = (0.0f, 1.0f),
-  //    propertiesCount = (1, 10),
-  //    freshNominal = 0.0f,
-  //    nominalsCount = 0,
-  //    propertyConceptRatio = (0.0f, 1.0f),
-  //    variableToNominalRatio = 1.0f,
-  //    cyclicRedrawCount = 10,
-  //    minNumberOfShapes = (1, 9),
-  //    maxNumberOfShapes = (9, 10),
-  //    propertyConceptTargetRatio = -1.0f,
-  //    propertyConceptConstraintRatio = -1.0f,
-  //    includeForallConstraints = true
-  //  )
-  // ).run(1)
+  println(
+    List(
+      "-------------------------------------" ++
+        "Report" ++
+        "-------------------------------------",
+      profiling.run(nShapes(0), trials)
+      // profiling.run(nShapes(1), trials)
+      // profiling.run(nShapes(2), trials),
+      // profiling.run(nShapes(3), trials),
+      // profiling.run(nShapes(4), trials),
+      // profiling.run(nShapes(5), trials)
+    ).mkString("\n")
+  )
 
 @main def dev(): Unit =
   import org.softlang.s2s.generate._
@@ -274,7 +279,9 @@ class Conf(baseConfiguration: Configuration, arguments: Seq[String])
       // Ratio of property (exists, forall) vs. Concept constraints.
       propertyConceptConstraintRatio = -1.0f,
       // Ratio of existential vs. universal quantification in constraints.
-      includeForallConstraints = false
+      includeForallConstraints = false,
+      // Random seed. Use "" for random seed.
+      seed = ""
     )
 
   println(config)

@@ -4,8 +4,6 @@ import de.pseifer.shar.dl._
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 
-import scala.util.Random
-
 /** Generate all shapes over a vocabulary. */
 class ShapeGenerator(voc: Vocabulary, optimize: Boolean):
 

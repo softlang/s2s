@@ -28,14 +28,17 @@ enum ProfileEntry:
 
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.
-  *   - `info`: Log some information (`put`).
-  *   - `debugging`: Log more information (`debug`).
+  *   - `info`: Log some information (info method).
+  *   - `debugging`: Log more information (debug method).
+  *   - `profiling`: Print timestamps during execution.
+  *   - `noisy`: Print all (active) logs during execution.
   */
 class Log(
     topToken: String,
     info: Boolean = true,
     debugging: Boolean = false,
-    profiling: Boolean = false
+    profiling: Boolean = false,
+    noisy: Boolean = false
 ):
 
   private var LOG: String = ""
@@ -65,7 +68,10 @@ class Log(
   /** Get log as a string. */
   override def toString: String = LOG
 
+  // Actually append to the log. If `noisy` is set,
+  // then also dump to stdout.
   private def output(s: String): Unit =
+    if noisy then println(s)
     LOG += s ++ "\n\n"
 
   /** Log an errors. */
@@ -89,6 +95,9 @@ class Log(
 
   def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
     debug(title, s.map(_.show).toList)
+
+  def debugNoisy(content: String): Unit =
+    if noisy then debug(content)
 
   def profileStart(action: String): Unit =
     val entry = ProfileEntry.Start(action, LocalDateTime.now())

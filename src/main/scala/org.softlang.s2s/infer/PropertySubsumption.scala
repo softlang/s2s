@@ -25,7 +25,7 @@ class PropertySubsumption(
 
   // Reasoner for subsumptions.
 
-  private val hermit = HermitReasoner.default
+  private val hermit = HermitReasoner()
   hermit.addAxioms(AxiomSet(subs))
 
   /** Test, whether v1 is subsumed by v2 (according to subs). */

@@ -105,10 +105,10 @@ class ConfigurationComparison(
     // )
 
     val rc = ProblemGeneratorConfig(
-      minPatternSize = (1, 9),
-      maxPatternSize = (9, 10),
-      minTemplateSize = (1, 9),
-      maxTemplateSize = (9, 10),
+      minPatternSize = 2,
+      maxPatternSize = 3,
+      minTemplateSize = 2,
+      maxTemplateSize = 3,
       freshVariable = (0.0f, 1.0f),
       variablesCount = (1, 10),
       freshConcept = (0.0f, 1.0f),
@@ -120,8 +120,8 @@ class ConfigurationComparison(
       propertyConceptRatio = (0.0f, 1.0f),
       variableToNominalRatio = 1.0f,
       cyclicRedrawCount = 10,
-      minNumberOfShapes = (1, 9),
-      maxNumberOfShapes = (9, 10),
+      minNumberOfShapes = 1,
+      maxNumberOfShapes = 2,
       propertyConceptTargetRatio = -1.0f,
       propertyConceptConstraintRatio = -1.0f,
       includeForallConstraints = true

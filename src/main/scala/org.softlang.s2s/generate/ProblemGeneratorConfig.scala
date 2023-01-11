@@ -45,7 +45,10 @@ case class ProblemGeneratorConfig(
     // Set to -1.0 for default.
     propertyConceptConstraintRatio: FloatParameter,
     // Allow universal quantification in constraints.
-    includeForallConstraints: Boolean
+    includeForallConstraints: Boolean,
+
+    // Random seed. Use "" for random seed.
+    seed: String = ""
 ):
 
   override def toString: String =

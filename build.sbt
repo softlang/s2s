@@ -24,6 +24,12 @@ lazy val root = project
     // Dependencies.
     // Development: DL Reasoning Framework.
     // libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
+    // JFact reasoner support.
+    libraryDependencies += "net.sourceforge.owlapi" % "jfact" % "5.0.3",
+    libraryDependencies += "org.slf4j" % "slf4j-nop" % "2.0.6",
+    // Openllet reasoner support.
+    libraryDependencies += "com.github.galigator.openllet" % "openllet-owlapi" % "2.6.5",
     // JSON-LD
     libraryDependencies += "com.apicatalog" % "titanium-json-ld" % "1.3.1",
     libraryDependencies += "org.glassfish" % "jakarta.json" % "2.0.1",

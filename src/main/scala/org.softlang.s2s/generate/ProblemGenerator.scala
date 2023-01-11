@@ -18,14 +18,18 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   private var actualMaxShapes = config.maxNumberOfShapes
   private var actualMinShapes = config.minNumberOfShapes
 
+  // Initialize the rnd instance.
+  private val rnd =
+    if config.seed == "" then Random() else Random(config.seed.map(_.toInt).sum)
+
   /** Flip a (weighted) coin. */
   private def flip(prop: Float = 0.5): Boolean =
-    Random.nextFloat() <= prop
+    rnd.nextFloat() <= prop
 
   /** Sample from a range of values. */
   private def randRange(from: Int, to: Int): Int =
     if from >= to then from
-    else Random.between(from, to + 1)
+    else rnd.between(from, to + 1)
 
   /** Make a Iri from String s. */
   private def mkIri(s: String): Iri = Iri
@@ -37,47 +41,51 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
   /** Generator for nominals. */
   private val nominalGenerator = ThingGenerator[Iri](
-    config.freshNominal.sample,
-    config.nominalsCount.sample,
-    id => mkIri("a" ++ id.toString)
+    config.freshNominal.sample(rnd),
+    config.nominalsCount.sample(rnd),
+    id => mkIri("a" ++ id.toString),
+    rnd
   )
 
   /** Generator for variables. */
   private val variableGenerator = ThingGenerator[Var](
-    config.freshVariable.sample,
-    config.variablesCount.sample,
-    id => Var("v" ++ id.toString)
+    config.freshVariable.sample(rnd),
+    config.variablesCount.sample(rnd),
+    id => Var("v" ++ id.toString),
+    rnd
   )
 
   /** Generator for properties. */
   private val roleGenerator = ThingGenerator[NamedRole](
-    config.freshConcept.sample,
-    config.conceptsCount.sample,
-    id => NamedRole(mkIri("p" ++ id.toString))
+    config.freshConcept.sample(rnd),
+    config.conceptsCount.sample(rnd),
+    id => NamedRole(mkIri("p" ++ id.toString)),
+    rnd
   )
 
   /** Generator for concepts. */
   private val conceptGenerator = ThingGenerator[NamedConcept](
-    config.freshConcept.sample,
-    config.conceptsCount.sample,
-    id => NamedConcept(mkIri("C" ++ id.toString))
+    config.freshConcept.sample(rnd),
+    config.conceptsCount.sample(rnd),
+    id => NamedConcept(mkIri("C" ++ id.toString)),
+    rnd
   )
 
   /** Generator for concept atomic patterns. */
   private def generateCP: AtomicPattern =
-    if flip(config.variableToNominalRatio.sample) then
+    if flip(config.variableToNominalRatio.sample(rnd)) then
       VAC(variableGenerator.sample(), conceptGenerator.sample().c)
     else LAC(nominalGenerator.sample(), conceptGenerator.sample().c)
 
   /** Generator for property atomic patterns. */
   private def generatePP: AtomicPattern =
-    if flip(config.variableToNominalRatio.sample) then
+    if flip(config.variableToNominalRatio.sample(rnd)) then
       // sample the first variable.
       val v1 = variableGenerator.sample()
       // (Re)sample the second if needed.
       var v2 = variableGenerator.sample()
       var counter = 0
-      var max = config.cyclicRedrawCount.sample
+      var max = config.cyclicRedrawCount.sample(rnd)
       while (counter < max && v1 == v2) {
         v2 = variableGenerator.sample()
         counter += 1
@@ -107,7 +115,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
   /** Generate atomic pattern. */
   private def generate: AtomicPattern =
-    if flip(config.propertyConceptRatio.sample) then generatePP
+    if flip(config.propertyConceptRatio.sample(rnd)) then generatePP
     else generateCP
 
   /** Adapt shape candidates to set ratio for some marker. */
@@ -164,8 +172,18 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
   /** Sample a problem instance from this generator. */
   def sample(): (SCCQ, Set[SimpleSHACLShape]) =
+    doSample(0)
+
+  private def doSample(failure: Int): (SCCQ, Set[SimpleSHACLShape]) =
     val q = sampleQuery()
-    (q, sampleShapes(q))
+    val s = sampleShapes(q)
+
+    // If minimum number of shapes is violated (e.g., due to unlikely ratios)
+    // retry. In total, we retry 10 times. Then, we accept this violation.
+
+    if s.size >= config.minNumberOfShapes.min || failure >= 10 then
+      (q, sampleShapes(q))
+    else doSample(failure + 1)
 
   /** Sample a set of SimpleSHACLShapes */
   def sampleShapes(q: SCCQ): Set[SimpleSHACLShape] =
@@ -183,22 +201,22 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
       ratioalize(
         allowed,
         !_.isConceptShape,
-        config.propertyConceptConstraintRatio.sample
+        config.propertyConceptConstraintRatio.sample(rnd)
       )
 
     val filtered = ratioalize(
       filtered1,
       _.hasExistentialTarget,
-      config.propertyConceptTargetRatio.sample
+      config.propertyConceptTargetRatio.sample(rnd)
     )
 
     // Randomly select requierd subset from filtered shapes.
-    Random
+    rnd
       .shuffle(filtered.toList)
       .take(
         randRange(
-          config.minNumberOfShapes.sample,
-          config.maxNumberOfShapes.sample
+          config.minNumberOfShapes.sample(rnd),
+          config.maxNumberOfShapes.sample(rnd)
         )
       )
       .toSet
@@ -213,9 +231,12 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
     nominalGenerator.reset()
 
     val pattern = Set
-      .fill(config.maxPatternSize.sample)(generate)
+      .fill(config.maxPatternSize.sample(rnd))(generate)
       .take(
-        randRange(config.minPatternSize.sample, config.maxPatternSize.sample)
+        randRange(
+          config.minPatternSize.sample(rnd),
+          config.maxPatternSize.sample(rnd)
+        )
       )
 
     // Do not generate fresh variables for template.
@@ -223,9 +244,12 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
     variableGenerator.setThings(pattern.flatMap(_.variables))
 
     val template = Set
-      .fill(config.maxTemplateSize.sample)(generate)
+      .fill(config.maxTemplateSize.sample(rnd))(generate)
       .take(
-        randRange(config.minTemplateSize.sample, config.maxTemplateSize.sample)
+        randRange(
+          config.minTemplateSize.sample(rnd),
+          config.maxTemplateSize.sample(rnd)
+        )
       )
 
     SCCQ(template.toList, pattern.toList)

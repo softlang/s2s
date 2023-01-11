@@ -3,6 +3,7 @@ package org.softlang.s2s.test
 import org.junit.Assert.*
 import org.junit.rules.TestName
 import org.softlang.s2s.Shapes2Shapes
+import org.softlang.s2s.core.ActiveReasoner
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.SimpleSHACLShape
@@ -25,7 +26,9 @@ abstract class ValidationTestSuite(
 
   def name: TestName
 
-  val config = Configuration.default
+  val config = Configuration.default.copy(
+    activeReasoner = ActiveReasoner.Hermit
+  )
   val s2s = Shapes2Shapes(config)
 
   /** Empty set of shapes. */

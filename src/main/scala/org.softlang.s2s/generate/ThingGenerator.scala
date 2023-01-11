@@ -8,7 +8,8 @@ import scala.util.Random
 class ThingGenerator[T](
     freshProbability: Float,
     maximumCount: Int,
-    generator: Int => T
+    generator: Int => T,
+    rnd: Random
 ):
 
   override def toString: String =
@@ -19,7 +20,7 @@ class ThingGenerator[T](
 
   /** Flip a (weighted) coin. */
   private def flip(prop: Float = 0.5): Boolean =
-    Random.nextFloat() <= prop
+    rnd.nextFloat() <= prop
 
   /** The generated things T in this query. */
   private var things: Set[T] = Set()
@@ -40,7 +41,7 @@ class ThingGenerator[T](
       // and return.
       fresh
     // Else, draw a random existing one.
-    else Random.shuffle(things.toList).head
+    else rnd.shuffle(things.toList).head
 
   /** Set or initialize things. */
   def setThings(t: Set[T]): Unit = things = t

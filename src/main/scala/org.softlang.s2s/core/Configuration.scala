@@ -1,5 +1,10 @@
 package org.softlang.s2s.core
 
+enum ActiveReasoner:
+  case Hermit
+  case Jfact
+  case Openllet
+
 /** A set of configurations for S2S. */
 case class Configuration(
     // *****************
@@ -89,6 +94,9 @@ case class Configuration(
     // *** User Options ***
     // ********************
 
+    // Use the JFact reasoner, instead of HermiT.
+    activeReasoner: ActiveReasoner,
+
     // Optimize candidate generation.
     optimizeCandidates: Boolean,
 
@@ -149,6 +157,7 @@ object Configuration:
     // the CLI framework!
     // Therefore, the following defaults are only relevant
     // for development work, in particular, testing.
+    activeReasoner = ActiveReasoner.Hermit,
     optimizeCandidates = true,
     renameToken = "٭",
     prefix = ":",

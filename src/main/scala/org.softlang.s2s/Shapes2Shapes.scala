@@ -3,8 +3,7 @@ package org.softlang.s2s
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Prefix
-import de.pseifer.shar.reasoning.AxiomSet
-import de.pseifer.shar.reasoning.HermitReasoner
+import de.pseifer.shar.reasoning._
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
 import org.softlang.s2s.infer._
@@ -14,6 +13,9 @@ import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
 import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
+
+import uk.ac.manchester.cs.jfact.JFactFactory
+import openllet.owlapi.OpenlletReasonerFactory
 
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(config: Configuration = Configuration.default):
@@ -154,7 +156,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log: Log
-  ): HermitReasoner =
+  ): DLReasoner =
 
     log.profileStart("build-mapping")
 
@@ -292,7 +294,18 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     // Initialize the reasoner.
 
-    val hermit = HermitReasoner.default
+    val reasoner =
+      if config.activeReasoner == ActiveReasoner.Jfact then
+        OwlApiReasoner(JFactFactory())
+      else if config.activeReasoner == ActiveReasoner.Openllet then
+        OwlApiReasoner(OpenlletReasonerFactory())
+      else
+        HermitReasoner(
+          configuration = HermitConfiguration(
+            existentialStrategy = HermitExistentialStrategy.IndividualReuse
+          ),
+          debugging = false
+        )
 
     val axs = AxiomSet(
       s.map(_.axiom)
@@ -308,11 +321,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         .union(tops)
     )
 
-    hermit.addAxioms(axs)
+    reasoner.addAxioms(axs)
 
     log.profileStart("build-add")
 
-    hermit
+    reasoner
 
   /** Perform the candidate generation step of the algorithm. */
   private def generateCandidates(
@@ -325,12 +338,14 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     )(scopes).axioms
 
     log.debug("S_can", cand.map(_.show).toList)
+    log.debugNoisy(s"(${cand.size})")
+
     cand
 
   /** Perform the filtering step of the algorithm. */
   private def filter(
       candidates: Set[SimpleSHACLShape],
-      hermit: HermitReasoner,
+      reasoner: DLReasoner,
       log: Log
   ): Set[SimpleSHACLShape] =
 
@@ -340,11 +355,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     log.profileStart("filter-inithermit")
 
-    val ff = first.filter(si => hermit.prove(si.axiom))
+    val ff = first.filter(si => reasoner.prove(si.axiom))
 
     log.profileEnd("filter-inithermit")
 
-    val out = ff ++ rest.filter(si => hermit.prove(si.axiom))
+    val out = ff ++ rest.filter(si => reasoner.prove(si.axiom))
 
     log.info("S_out", out.map(_.show).toList)
 
