@@ -1,12 +1,24 @@
+import scala.sys.process._
+import sbt._
+
 val scala3Version = "3.2.0"
 
 // Name of fat jar produced via 'assembly' plugin.
 val jarName = "s2s.jar"
 
+// The Shar framework for reasoning as a Git dependeny.
+lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
+
+// Command to clean the staging folder, such that Shar dependency is refreshed.
+def stagingClean = Command.command("staging-clean"){currentState =>
+	val homeDir = sys.env("HOME")
+	val k = ("rm -rf "+ homeDir + "/.sbt/1.0/staging/").!
+	currentState
+}
+
 lazy val root = project
   .in(file("."))
-  // Release: DL Reasoning Framework.
-  .dependsOn(RootProject(uri("https://github.com/pseifer/shar.git")))
+  .dependsOn(shar)
   .settings(
     // Project settings.
     name := "shapes2shapes",
@@ -21,9 +33,10 @@ lazy val root = project
       case PathList("META-INF", _*) => MergeStrategy.discard
       case _                        => MergeStrategy.first
     },
+    commands += stagingClean,
+    // Development: DL Reasoning Framework (for local testing only).
+    //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     // Dependencies.
-    // Development: DL Reasoning Framework.
-    // libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
     // JFact reasoner support.
     libraryDependencies += "net.sourceforge.owlapi" % "jfact" % "5.0.3",
