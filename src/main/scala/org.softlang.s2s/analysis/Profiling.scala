@@ -55,9 +55,9 @@ class Profiling(
     def close(): Unit =
       if !anyout then first = true
 
-  val s2s = Shapes2Shapes(config)
-
   private def runStep(q: SCCQ, s: Set[SimpleSHACLShape]): ProfileAnalysis =
+
+    val s2s = Shapes2Shapes(config)
 
     // Format problem.
 
@@ -107,7 +107,7 @@ class Profiling(
       chunkCount: Int = 10
   ): Unit =
 
-    val gen = ProblemGenerator(genConfig)(s2s.scopes)
+    val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)
 
     // IO Files.
 
@@ -123,6 +123,9 @@ class Profiling(
     var trial = 0
     var results: List[ProfileAnalysis] = Nil
     val chunkSize = trials / chunkCount
+
+    // val drop1 = gen.sample()
+    // val drop2 = gen.sample()
 
     // Run all trials in chunks.
     while (trial < trials)

@@ -12,15 +12,11 @@ import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.*
 import scala.concurrent.duration.*
-import scala.util.{Try, Failure, Success}
-
-import java.util.concurrent.TimeoutException
 
 import uk.ac.manchester.cs.jfact.JFactFactory
 import openllet.owlapi.OpenlletReasonerFactory
+import org.antlr.v4.parse.ANTLRParser.finallyClause_return
 
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(config: Configuration = Configuration.default):
@@ -38,9 +34,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   // The scope encoding (implicit) needed for renaming.
   implicit val scopes: Scopes =
     Scopes(config.renameToken, config.namespacedTopName)
-
-  // Reset the fresh variable counter.
-  Var.counterReset()
 
   /** Create a fresh log. */
   private def createLog: Log =
@@ -371,35 +364,40 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     reasoner.addAxioms(axioms)
 
-    // Start filtering, with timeout.
-    val prFuture = filterFuture(candidates, reasoner, plog)
+    var result: Option[(Log, Set[SimpleSHACLShape])] = None
+
+    val t = new Thread {
+      override def run(): Unit =
+        result = Some(filter(candidates, reasoner, plog))
+    }
+
+    t.start()
+    t.join(timeout.toMillis)
+    t.stop()
 
     // Wait configured timeout for completion.
-    Try(Await.result(prFuture, timeout)) match
-      case Success(pr) =>
+    result match
+      case Some(pr) =>
         // Include log only of the completed run / if completed.
         log.append(pr._1)
         // Return the filtered set of shapes.
         pr._2
-      case Failure(t: TimeoutException) =>
+      case None =>
         if currentTry <= retry then
           log.restart("filter", currentTry, retry, timeout)
           filter(candidates, axioms, log, retry, timeout, currentTry + 1)
         else
           log.timeout("filter", retry, timeout)
           Set()
-      // Other exceptions, perhaps by the reasoner, are re-thrown here.
-      case Failure(e) => throw e
 
-  private def filterFuture(
+  private def filter(
       candidates: Set[SimpleSHACLShape],
       reasoner: DLReasoner,
       log: Log
-  ): Future[(Log, Set[SimpleSHACLShape])] = Future {
+  ): (Log, Set[SimpleSHACLShape]) =
 
     val out = candidates.filter(si => reasoner.prove(si.axiom))
 
     log.info("S_out", out.map(_.show).toList)
 
     (log, out)
-  }

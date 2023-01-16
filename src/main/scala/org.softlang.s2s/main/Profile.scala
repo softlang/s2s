@@ -50,4 +50,4 @@ object Profile:
       seed = "letsgo"
     )
 
-    profiling.run(pgc, trials = 10, chunkCount = 1)
+    profiling.run(pgc, trials = 1000, chunkCount = 10)
