@@ -10,10 +10,16 @@ val jarName = "s2s.jar"
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
 
 // Command to clean the staging folder, such that Shar dependency is refreshed.
-def stagingClean = Command.command("staging-clean"){currentState =>
-	val homeDir = sys.env("HOME")
-	val k = ("rm -rf "+ homeDir + "/.sbt/1.0/staging/").!
-	currentState
+def stagingClean = Command.command("staging-clean") { currentState =>
+  val os = sys.props("os.name").toLowerCase
+  if (os.contains("windows")) {
+    val dir = "C:" + sys.env("HOMEPATH") + "\\.sbt\\1.0\\staging\\"
+    ("cmd /C rd /s /q " + dir).!
+  } else {
+    val dir = sys.env("HOME") + "/.sbt/1.0/staging/"
+    ("rm -rf " + dir).!
+  }
+  currentState
 }
 
 lazy val root = project
@@ -37,8 +43,6 @@ lazy val root = project
       case _                        => MergeStrategy.first
     },
     commands += stagingClean,
-    // Development: DL Reasoning Framework (for local testing only).
-    //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     // Dependencies.
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
     // JFact reasoner support.
