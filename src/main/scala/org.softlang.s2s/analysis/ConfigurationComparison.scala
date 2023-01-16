@@ -2,7 +2,7 @@ package org.softlang.s2s.analysis
 
 import de.pseifer.shar.dl.Axiom
 import de.pseifer.shar.dl.Subsumption
-import org.softlang.s2s.Shapes2Shapes
+import org.softlang.s2s.infer.Shapes2Shapes
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
 import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat

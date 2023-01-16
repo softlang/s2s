@@ -97,6 +97,12 @@ case class Configuration(
     // Use the JFact reasoner, instead of HermiT.
     activeReasoner: ActiveReasoner,
 
+    // Timeout for reasoning attempts (in milliseconds).
+    timeout: Long,
+
+    // Times the reasoning is allowed to restart after timeout.
+    retry: Int,
+
     // Optimize candidate generation.
     optimizeCandidates: Boolean,
 
@@ -158,6 +164,8 @@ object Configuration:
     // Therefore, the following defaults are only relevant
     // for development work, in particular, testing.
     activeReasoner = ActiveReasoner.Hermit,
+    timeout = 2000,
+    retry = 1,
     optimizeCandidates = true,
     renameToken = "٭",
     prefix = ":",

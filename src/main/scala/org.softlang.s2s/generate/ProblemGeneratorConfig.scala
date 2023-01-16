@@ -51,7 +51,32 @@ case class ProblemGeneratorConfig(
     seed: String = ""
 ):
 
-  override def toString: String =
+  private def fieldNames: List[String] =
+    List(
+      "MinPatternSize",
+      "MaxPatternSize",
+      "MinTemplateSize",
+      "MaxTemplateSize",
+      "FreshVariable",
+      "VariablesCount",
+      "FreshConcept",
+      "ConceptsCount",
+      "FreshProperty",
+      "PropertiesCount",
+      "FreshNominal",
+      "NominalsCount",
+      "PropertyConceptRatio",
+      "VariableToNominalRatio",
+      "CyclicRedrawCount",
+      "MinNumberOfShapes",
+      "MaxNumberOfShapes",
+      "PropertyConceptTargetRatio",
+      "PropertyConceptConstraintRatio",
+      "IncludeForallConstraints",
+      "Seed"
+    )
+
+  private def fields: List[String] =
     List(
       minPatternSize,
       maxPatternSize,
@@ -67,9 +92,16 @@ case class ProblemGeneratorConfig(
       nominalsCount,
       propertyConceptRatio,
       variableToNominalRatio,
+      cyclicRedrawCount,
       minNumberOfShapes,
       maxNumberOfShapes,
       propertyConceptTargetRatio,
       propertyConceptConstraintRatio,
-      includeForallConstraints
-    ).mkString("_")
+      includeForallConstraints,
+      seed
+    ).map(_.toString)
+
+  override def toString: String = fields.mkString("_")
+
+  def formatLong: String =
+    fieldNames.zip(fields).map((n, f) => s"$n: $f").mkString("\n")

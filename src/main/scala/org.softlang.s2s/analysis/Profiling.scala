@@ -2,7 +2,7 @@ package org.softlang.s2s.analysis
 
 import de.pseifer.shar.dl.Axiom
 import de.pseifer.shar.dl.Subsumption
-import org.softlang.s2s.Shapes2Shapes
+import org.softlang.s2s.infer.Shapes2Shapes
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
 import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
@@ -12,9 +12,19 @@ import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.vocabulary
 
-import java.time.temporal._
+import scala.util.{Try, Success, Failure}
 
-class Profiling(config: Configuration, noisy: Boolean = false):
+import java.time.LocalDateTime
+import java.nio.file.{Paths, Files}
+import java.nio.file.StandardOpenOption
+import java.nio.charset.StandardCharsets
+
+class Profiling(
+    config: Configuration,
+    noisy: Boolean,
+    logTime: Boolean = false,
+    logNoisy: Boolean = false
+):
 
   /** Primitive progress tracker. */
   private class ProgressBar(trials: Int):
@@ -23,9 +33,12 @@ class Profiling(config: Configuration, noisy: Boolean = false):
     private val del = List.fill(2 * ts + header.size + 1)('\b').mkString("")
     private var first: Boolean = true
 
+    // If any output occurs, do not print progress.
+    private val anyout = noisy || logTime || logNoisy
+
     /** Update the progress bar. */
     def update(trial: Int): Unit =
-      if !noisy then
+      if !anyout then
         if first then first = false
         else print(del)
         print(
@@ -33,79 +46,119 @@ class Profiling(config: Configuration, noisy: Boolean = false):
             .padTo(ts, ' ')
             .reverse ++ "/" ++ trials.toString
         )
-      // For noisy profiling, only dump the trial
+      // For anyout + noisy profiling, only dump the trial
       // (as much debugging info will be printed between).
-      else println(s"Trial: $trial/$trials")
+      else if noisy then println(s"Trial: $trial/$trials")
+      // Otherwise, do not print anything.
 
     /** Close the progress bar. */
     def close(): Unit =
-      if !noisy then
-        first = true
-        print(del)
+      if !anyout then first = true
 
   val s2s = Shapes2Shapes(config)
 
-  private def runStep(q: SCCQ, s: Set[SimpleSHACLShape]): (Long, Long) =
+  private def runStep(q: SCCQ, s: Set[SimpleSHACLShape]): ProfileAnalysis =
 
-    if noisy then println(s"Query: ${q.show(s2s.shar.state)}")
-    if noisy then
-      println(s"Shapes: ${s.map(_.show(s2s.shar.state)).mkString(",")}")
+    // Format problem.
+
+    val qS = q.show(s2s.shar.state)
+    val sinS = s.map(_.show(s2s.shar.state)).mkString(",")
+
+    if noisy then println(s"Query: $qS")
+    if noisy then println(s"Shapes: $sinS")
+
+    // Create a log and run algorithm on that log.
 
     val log = Log(
       "T",
-      info = noisy,
-      debugging = noisy,
-      profiling = noisy,
-      noisy = noisy
+      info = true,
+      debugging = true,
+      profiling = logTime,
+      noisy = logNoisy
     )
-    s2s.algorithm(q, s, log)
 
-    val tstart = log.profile.find(_.isStart("algorithm")).get.time
-    val tend = log.profile.find(_.isEnd("algorithm")).get.time
-    val total = tstart.until(tend, ChronoUnit.MILLIS)
+    log.problem(q, s, qS, sinS)
 
-    val fstart = log.profile.find(_.isStart("filter")).get.time
-    val fend = log.profile.find(_.isEnd("filter")).get.time
-    val filter = fstart.until(fend, ChronoUnit.MILLIS)
+    val analysis =
+      try {
+        val t = Try(s2s.algorithm(q, s, log))
+        // Create performance profile analysis.
+        log.profile.analyze(t.toEither.left.toOption)
 
-    val perc = (filter.toDouble / total.toDouble) * 100
+      } catch {
+        case e: OutOfMemoryError =>
+          println("Warning: OutOfMemoryError. Run might be broken.")
+          log.profile.analyze(Some(e))
+      }
 
-    if noisy then println(s"Total: ${total}ms")
-    if noisy then println(f"Filtering: ${filter}ms ($perc%.2f of total)")
+    if noisy then println(analysis.toString ++ "\n")
 
-    (total, filter)
+    analysis
 
   /** Run `trials` trials with given configuration. */
-  def run(genConfig: ProblemGeneratorConfig, trials: Int): String =
+  def run(
+      // Generator configuration.
+      genConfig: ProblemGeneratorConfig,
+      // Number of trials.
+      trials: Int,
+      // Write CSV to file.
+      writeToFile: Boolean = true,
+      // Number of chunks (saves intermediate results).
+      chunkCount: Int = 10
+  ): Unit =
 
     val gen = ProblemGenerator(genConfig)(s2s.scopes)
 
+    // IO Files.
+
+    val time = LocalDateTime.now()
+    val timeFmt = time.toString.replaceAll(":", "_")
+    val runFile = s"profile_${timeFmt}.csv"
+    val metaFile = s"profile_${timeFmt}.meta.txt"
+
+    // Execute all trials.
+
     val bar = ProgressBar(trials)
 
-    val results = (1 to trials).map(i =>
-      val qs = gen.sample()
-      bar.update(i)
-      runStep(qs._1, qs._2)
-    )
+    var trial = 0
+    var results: List[ProfileAnalysis] = Nil
+    val chunkSize = trials / chunkCount
+
+    // Run all trials in chunks.
+    while (trial < trials)
+      var chunk = 0
+
+      // Process a single chunk.
+      while (chunk < chunkSize && trial < trials)
+        chunk += 1
+        trial += 1
+
+        val qs = gen.sample()
+        bar.update(trial)
+        results = results ++ List(runStep(qs._1, qs._2))
+
+      // Create intermediate report at the end of chunks.
+      val report = results.evaluate(trials, config.retry, config.timeout)
+
+      val meta = List(
+        s"Time: ${time}",
+        s"Trials: ${trials}",
+        s"Reasoner: ${config.activeReasoner}",
+        s"Max Retries: ${config.retry}",
+        s"Timeout: ${config.timeout}",
+        s"--Configuration--\n${genConfig.formatLong}",
+        s"--Report--\n$report"
+      ).mkString("\n")
+
+      if writeToFile then
+        Files.write(
+          Paths.get(runFile),
+          results.csv.getBytes(StandardCharsets.UTF_8)
+        )
+
+        Files.write(
+          Paths.get(metaFile),
+          meta.getBytes(StandardCharsets.UTF_8)
+        )
+
     bar.close()
-
-    val total = results.map(_._1)
-    val filter = results.map(_._2)
-
-    val percs = total.zip(filter).map((t, f) => f.toDouble / t.toDouble)
-
-    val med = total.sorted.drop(total.size / 2).headOption.getOrElse(0)
-    val avgperc = (percs.sum / percs.size.toDouble) * 100.0
-
-    val report = List(
-      s"Configuration: $genConfig",
-      s"Trials: $trials",
-      s"Average execution time: ${total.sum / total.size}ms",
-      s"Median execution time: ${med}ms",
-      f"Average percentage spent on filtering: $avgperc%.2f",
-      s"Longest trial: ${total.max}ms",
-      s"Shortes trial: ${total.min}ms"
-    ).mkString("\n")
-
-    if noisy then println(report)
-    report

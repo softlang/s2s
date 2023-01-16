@@ -2,29 +2,13 @@ package org.softlang.s2s.core
 
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.dl.Axiom
+import org.softlang.s2s.analysis.Profile
+import org.softlang.s2s.analysis.ProfileEntry
+import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.query.SCCQ
+
 import java.time.LocalDateTime
-
-enum ProfileEntry:
-  case Start(activity: String, timeStamp: LocalDateTime)
-  case End(activity: String, timeStamp: LocalDateTime)
-
-  def isStart(activity: String): Boolean = this match
-    case Start(a, _) => a == activity
-    case _           => false
-
-  def isEnd(activity: String): Boolean = this match
-    case End(a, _) => a == activity
-    case _         => false
-
-  def time: LocalDateTime = this match
-    case Start(_, time) => time
-    case End(_, time)   => time
-
-  override def toString(): String = this match
-    case Start(a, t) =>
-      s"${t.toLocalTime} ${a.filter(!_.isWhitespace)}-start"
-    case End(a, t) =>
-      s"${t.toLocalTime} ${a.filter(!_.isWhitespace)}-end"
+import scala.concurrent.duration.Duration
 
 /** Log that can be printed or return as a String. Has three levels. Errors are
   * always logged.
@@ -41,13 +25,114 @@ class Log(
     noisy: Boolean = false
 ):
 
+  // Internal state, the log and the profiling data.
   private var LOG: String = ""
-  private var INFO: Boolean = info
-  private var DEBUGGING: Boolean = debugging
+  private var PROFILE: Profile = Nil
 
-  private var the_profile: List[ProfileEntry] = Nil
+  // Actually append to the log. If `noisy` is set,
+  // then also dump to stdout.
+  private def output(s: String): Unit =
+    if noisy then println(s)
+    LOG += s ++ "\n\n"
 
-  /** Print log to stdout. */
+  /** Append another log to this log. */
+  def append(ol: Log): Unit =
+    LOG = LOG ++ ol.LOG
+    PROFILE = PROFILE ++ ol.PROFILE
+
+  // Public API for formatting through output(s: String)
+
+  /** Force some (error) message to the log. */
+  def error(e: String): Unit = output(e)
+
+  /** Log information. */
+  def info(s: String): Unit =
+    if debugging || info then output(s)
+
+  /** Log information with label. */
+  def info(title: String, s: String): Unit =
+    info(title.trim ++ " = " ++ s.trim)
+
+  /** Log list of information with label. */
+  def info(title: String, s: List[String]): Unit =
+    info(Util.formatSet(s.toSet, prefix = title.trim ++ " = ", oneline = false))
+
+  /** Log information (in debugging mode). */
+  def debug(s: String): Unit = if debugging then info(s)
+
+  /** Log information (in debugging mode) with label. */
+  def debug(title: String, s: String): Unit = if debugging then info(title, s)
+
+  /** Log list of information (in debugging mode) with label. */
+  def debug(title: String, s: List[String]): Unit =
+    if debugging then info(title, s)
+
+  /** Log set of axioms (in debugging mode) with label. */
+  def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
+    debug(title, s.map(_.show).toList)
+
+  /** Debug information only if in noisy mode. */
+  def debugNoisy(content: String): Unit =
+    if noisy then debug(content)
+
+  /** Start profiling of an action with a label. */
+  def profileStart(action: String): Unit =
+    val entry = ProfileEntry.Start(action, LocalDateTime.now())
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
+  /** End profiling of an action with a label (must be started first). */
+  def profileEnd(action: String): Unit =
+    val entry = ProfileEntry.End(action, LocalDateTime.now())
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
+  /** Log restarting of a task. */
+  def restart(
+      action: String,
+      attempt: Int,
+      maxAttempts: Int,
+      timeout: Duration
+  ): Unit =
+    val entry =
+      ProfileEntry.Restart(
+        action,
+        timeout,
+        attempt,
+        maxAttempts,
+        LocalDateTime.now()
+      )
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
+  /** Log final timeout of a task. */
+  def timeout(action: String, attempts: Int, timeout: Duration): Unit =
+    val entry =
+      ProfileEntry.Timeout(
+        action,
+        timeout,
+        attempts,
+        LocalDateTime.now()
+      )
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
+  def problem(
+      q: SCCQ,
+      sin: Set[SimpleSHACLShape],
+      qS: String,
+      sinS: String
+  ): Unit =
+    val entry =
+      ProfileEntry.Problem(q, sin, qS, sinS, LocalDateTime.now())
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
+  def profile: List[ProfileEntry] = PROFILE.reverse
+
+  // IO/Formatting
+
+  /** Print this log to stdout. */
   def print(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true
@@ -67,46 +152,3 @@ class Log(
 
   /** Get log as a string. */
   override def toString: String = LOG
-
-  // Actually append to the log. If `noisy` is set,
-  // then also dump to stdout.
-  private def output(s: String): Unit =
-    if noisy then println(s)
-    LOG += s ++ "\n\n"
-
-  /** Log an errors. */
-  def error(e: String): Unit = output(e)
-
-  def info(s: String): Unit =
-    if DEBUGGING || INFO then output(s)
-
-  def info(title: String, s: String): Unit =
-    info(title.trim ++ " = " ++ s.trim)
-
-  def info(title: String, s: List[String]): Unit =
-    info(Util.formatSet(s.toSet, prefix = title.trim ++ " = ", oneline = false))
-
-  def debug(s: String): Unit = if DEBUGGING then info(s)
-
-  def debug(title: String, s: String): Unit = if DEBUGGING then info(title, s)
-
-  def debug(title: String, s: List[String]): Unit =
-    if DEBUGGING then info(title, s)
-
-  def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
-    debug(title, s.map(_.show).toList)
-
-  def debugNoisy(content: String): Unit =
-    if noisy then debug(content)
-
-  def profileStart(action: String): Unit =
-    val entry = ProfileEntry.Start(action, LocalDateTime.now())
-    if profiling then println(entry)
-    the_profile = entry :: the_profile
-
-  def profileEnd(action: String): Unit =
-    val entry = ProfileEntry.End(action, LocalDateTime.now())
-    if profiling then println(entry)
-    the_profile = entry :: the_profile
-
-  def profile: List[ProfileEntry] = the_profile.reverse
