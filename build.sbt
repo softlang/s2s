@@ -12,7 +12,10 @@ lazy val root = project
     name := "shapes2shapes",
     organization := "org.softlang",
     version := "0.0.1",
-    javaOptions += "-dfile.encoding=utf-8",
+    run / fork := true,
+    run / outputStrategy := Some(StdoutOutput),
+    run / javaOptions += "-Xmx4G",
+    run / javaOptions += "-Dfile.encoding=UTF-8",
     scalaVersion := scala3Version,
     // Settings for assembly (fat jar).
     assembly / mainClass := Some("org.softlang.s2s.s2s"),

@@ -2,11 +2,11 @@ package org.softlang.s2s.test
 
 import org.junit.Assert.*
 import org.junit.rules.TestName
-import org.softlang.s2s.Shapes2Shapes
 import org.softlang.s2s.core.ActiveReasoner
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.infer.Shapes2Shapes
 import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
 import java.nio.charset.StandardCharsets

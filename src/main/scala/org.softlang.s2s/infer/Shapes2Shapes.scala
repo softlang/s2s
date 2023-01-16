@@ -1,4 +1,4 @@
-package org.softlang.s2s
+package org.softlang.s2s.infer
 
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
@@ -6,13 +6,18 @@ import de.pseifer.shar.core.Prefix
 import de.pseifer.shar.reasoning._
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
-import org.softlang.s2s.infer._
 import org.softlang.s2s.parser.SCCQParser
 import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
-import org.stringtemplate.v4.compiler.GroupParser.formalArgs_scope
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.*
+import scala.concurrent.duration.*
+import scala.util.{Try, Failure, Success}
+
+import java.util.concurrent.TimeoutException
 
 import uk.ac.manchester.cs.jfact.JFactFactory
 import openllet.owlapi.OpenlletReasonerFactory
@@ -33,6 +38,26 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   // The scope encoding (implicit) needed for renaming.
   implicit val scopes: Scopes =
     Scopes(config.renameToken, config.namespacedTopName)
+
+  // Reset the fresh variable counter.
+  Var.counterReset()
+
+  /** Create a fresh log. */
+  private def createLog: Log =
+    Log(debugging = config.debug, topToken = config.namespacedTopName)
+
+  /** Create a fresh reasoner. */
+  private def createReasoner: DLReasoner =
+    if config.activeReasoner == ActiveReasoner.Jfact then
+      OwlApiReasoner(JFactFactory())
+    else if config.activeReasoner == ActiveReasoner.Openllet then
+      OwlApiReasoner(OpenlletReasonerFactory())
+    else
+      HermitReasoner(
+        configuration = HermitConfiguration(
+          existentialStrategy = HermitExistentialStrategy.IndividualReuse
+        )
+      )
 
   /** Run validation and format results (if enabled). */
   def run(
@@ -64,8 +89,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   ): (ShassTry[Set[SimpleSHACLShape]], Log) =
 
     // Initialize the log.
-    val log: Log =
-      Log(debugging = config.debug, topToken = config.namespacedTopName)
+    val log: Log = createLog
 
     val sout = for
       // Parse and validate query.
@@ -126,7 +150,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     log.profileStart("build")
 
     // Infer axioms from query and shapes.
-    val hermit = buildKB(preq, pres, log)
+    val axioms = buildAxioms(preq, pres, log)
 
     log.profileEnd("build")
     log.profileStart("candidates")
@@ -138,7 +162,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     log.profileStart("filter")
 
     // Filter candidates.
-    val result = filter(cand, hermit, log)
+    val result = filter(
+      cand,
+      axioms,
+      log,
+      config.retry,
+      config.timeout.millis
+    )
 
     log.profileEnd("filter")
     log.profileEnd("algorithm")
@@ -152,11 +182,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     log.info("S_in", s.map(_.show).toList)
 
   /** Perform the KB construction set of the algorithm. */
-  private def buildKB(
+  private def buildAxioms(
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log: Log
-  ): DLReasoner =
+  ): AxiomSet =
 
     log.profileStart("build-mapping")
 
@@ -292,22 +322,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     log.profileEnd("build-top")
     log.profileStart("build-add")
 
-    // Initialize the reasoner.
+    // Return the complete set of axioms.
 
-    val reasoner =
-      if config.activeReasoner == ActiveReasoner.Jfact then
-        OwlApiReasoner(JFactFactory())
-      else if config.activeReasoner == ActiveReasoner.Openllet then
-        OwlApiReasoner(OpenlletReasonerFactory())
-      else
-        HermitReasoner(
-          configuration = HermitConfiguration(
-            existentialStrategy = HermitExistentialStrategy.IndividualReuse
-          ),
-          debugging = false
-        )
-
-    val axs = AxiomSet(
+    AxiomSet(
       s.map(_.axiom)
         .union(mappingSubs)
         .union(props)
@@ -320,12 +337,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         .union(unaH)
         .union(tops)
     )
-
-    reasoner.addAxioms(axs)
-
-    log.profileStart("build-add")
-
-    reasoner
 
   /** Perform the candidate generation step of the algorithm. */
   private def generateCandidates(
@@ -345,22 +356,50 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   /** Perform the filtering step of the algorithm. */
   private def filter(
       candidates: Set[SimpleSHACLShape],
-      reasoner: DLReasoner,
-      log: Log
+      axioms: AxiomSet,
+      log: Log,
+      retry: Int,
+      timeout: Duration,
+      currentTry: Int = 1
   ): Set[SimpleSHACLShape] =
 
-    // Process first candidate separately (for profiling).
-    val first = candidates.take(1)
-    val rest = candidates.drop(1)
+    // A fresh log.
+    val plog = createLog
 
-    log.profileStart("filter-inithermit")
+    // A fresh reasoner.
+    val reasoner = createReasoner
 
-    val ff = first.filter(si => reasoner.prove(si.axiom))
+    reasoner.addAxioms(axioms)
 
-    log.profileEnd("filter-inithermit")
+    // Start filtering, with timeout.
+    val prFuture = filterFuture(candidates, reasoner, plog)
 
-    val out = ff ++ rest.filter(si => reasoner.prove(si.axiom))
+    // Wait configured timeout for completion.
+    Try(Await.result(prFuture, timeout)) match
+      case Success(pr) =>
+        // Include log only of the completed run / if completed.
+        log.append(pr._1)
+        // Return the filtered set of shapes.
+        pr._2
+      case Failure(t: TimeoutException) =>
+        if currentTry <= retry then
+          log.restart("filter", currentTry, retry, timeout)
+          filter(candidates, axioms, log, retry, timeout, currentTry + 1)
+        else
+          log.timeout("filter", retry, timeout)
+          Set()
+      // Other exceptions, perhaps by the reasoner, are re-thrown here.
+      case Failure(e) => throw e
+
+  private def filterFuture(
+      candidates: Set[SimpleSHACLShape],
+      reasoner: DLReasoner,
+      log: Log
+  ): Future[(Log, Set[SimpleSHACLShape])] = Future {
+
+    val out = candidates.filter(si => reasoner.prove(si.axiom))
 
     log.info("S_out", out.map(_.show).toList)
 
-    out
+    (log, out)
+  }

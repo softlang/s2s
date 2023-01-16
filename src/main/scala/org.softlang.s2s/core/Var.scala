@@ -21,14 +21,11 @@ object Var:
   def freshToken = "?"
   private var freshCounter = -1
 
+  def counterReset(): Unit =
+    freshCounter = -1
+
   /** Generate a fresh variable. */
   def fresh(): Var =
     freshCounter += 1
-
-    if freshCounter > 999 then
-      throw new RuntimeException(
-        "Requesting exceedingly large number of variables. " +
-          "This is probably not intended."
-      )
 
     Var(freshToken ++ freshCounter.toString)

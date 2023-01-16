@@ -1,9 +1,22 @@
 package org.softlang.s2s.core
 
+import uk.ac.manchester.cs.jfact.JFactFactory
+
 enum ActiveReasoner:
   case Hermit
   case Jfact
   case Openllet
+
+  override def toString: String = this match
+    case Hermit   => "hermit"
+    case Jfact    => "jfact"
+    case Openllet => "openllet"
+
+object ActiveReasoner:
+  def fromString(s: String): ActiveReasoner = s match
+    case "jfact"    => ActiveReasoner.Jfact
+    case "openllet" => ActiveReasoner.Openllet
+    case _          => ActiveReasoner.Hermit
 
 /** A set of configurations for S2S. */
 case class Configuration(
@@ -162,7 +175,7 @@ object Configuration:
     // and are overwritten by standard settings of
     // the CLI framework!
     // Therefore, the following defaults are only relevant
-    // for development work, in particular, testing.
+    // for development (testing) and analysis.
     activeReasoner = ActiveReasoner.Hermit,
     timeout = 2000,
     retry = 1,
