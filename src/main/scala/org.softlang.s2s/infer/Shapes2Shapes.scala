@@ -89,8 +89,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       q <- parseQuery(query)
       // Parse and validate input shapes.
       s <- parseShapes(shapes)
-    // Run the algorithm.
-    yield algorithm(q, s, log)
+      // Run the algorithm.
+      r <- algorithm(q, s, log)
+    yield r
 
     // Output (first) error, if any.
     sout.left.map(r => log.error(r.show))
@@ -127,7 +128,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       qi: SCCQ,
       si: Set[SimpleSHACLShape],
       log: Log
-  ): Set[SimpleSHACLShape] =
+  ): ShassTry[Set[SimpleSHACLShape]] =
 
     log.profileStart("algorithm")
 
@@ -354,7 +355,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       retry: Int,
       timeout: Duration,
       currentTry: Int = 1
-  ): Set[SimpleSHACLShape] =
+  ): ShassTry[Set[SimpleSHACLShape]] =
 
     // A fresh log.
     val plog = createLog
@@ -363,17 +364,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val reasoner = createReasoner
 
     reasoner.addAxioms(axioms)
-
-    var result: Option[(Log, Set[SimpleSHACLShape])] = None
-
-    val t = new Thread {
-      override def run(): Unit =
-        result = Some(filter(candidates, reasoner, plog))
-    }
-
-    t.start()
-    t.join(timeout.toMillis)
-    t.stop()
+    val result = filterWithTimeout(candidates, reasoner, plog, timeout)
 
     // Wait configured timeout for completion.
     result match
@@ -381,23 +372,32 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         // Include log only of the completed run / if completed.
         log.append(pr._1)
         // Return the filtered set of shapes.
-        pr._2
+        Right(pr._2)
       case None =>
         if currentTry <= retry then
           log.restart("filter", currentTry, retry, timeout)
           filter(candidates, axioms, log, retry, timeout, currentTry + 1)
         else
           log.timeout("filter", retry, timeout)
-          Set()
+          Left(TimeoutError(config.timeout, config.retry))
 
-  private def filter(
+  private def filterWithTimeout(
       candidates: Set[SimpleSHACLShape],
       reasoner: DLReasoner,
-      log: Log
-  ): (Log, Set[SimpleSHACLShape]) =
+      log: Log,
+      timeout: Duration
+  ): Option[(Log, Set[SimpleSHACLShape])] =
 
-    val out = candidates.filter(si => reasoner.prove(si.axiom))
+    var result: Option[Set[SimpleSHACLShape]] = None
 
-    log.info("S_out", out.map(_.show).toList)
+    val t = new Thread {
+      override def run(): Unit =
+        result = Some(candidates.filter(si => reasoner.prove(si.axiom)))
+    }
 
-    (log, out)
+    t.start()
+    t.join(timeout.toMillis)
+    t.stop()
+
+    if result.isDefined then log.info("S_out", result.get.map(_.show).toList)
+    result.map((log, _))

@@ -55,7 +55,11 @@ class Profiling(
     def close(): Unit =
       if !anyout then first = true
 
-  private def runStep(q: SCCQ, s: Set[SimpleSHACLShape]): ProfileAnalysis =
+  private def runStep(
+      q: SCCQ,
+      s: Set[SimpleSHACLShape],
+      trialID: Int
+  ): ProfileAnalysis =
 
     val s2s = Shapes2Shapes(config)
 
@@ -83,12 +87,25 @@ class Profiling(
       try {
         val t = Try(s2s.algorithm(q, s, log))
         // Create performance profile analysis.
-        log.profile.analyze(t.toEither.left.toOption)
+        log.profile.analyze(
+          t.toEither.map(r =>
+            (
+              r.toOption.getOrElse(Set()),
+              r.toOption
+                .getOrElse(Set())
+                .map(_.show(s2s.shar.state))
+                .mkString(",")
+            )
+          ),
+          trialID
+        )
 
       } catch {
         case e: OutOfMemoryError =>
           println("Warning: OutOfMemoryError. Run might be broken.")
-          log.profile.analyze(Some(e))
+          log.profile.analyze(Left(e), trialID)
+        case e =>
+          log.profile.analyze(Left(e), trialID)
       }
 
     if noisy then println(analysis.toString ++ "\n")
@@ -104,7 +121,9 @@ class Profiling(
       // Write CSV to file.
       writeToFile: Boolean = true,
       // Number of chunks (saves intermediate results).
-      chunkCount: Int = 10
+      chunkCount: Int = 10,
+      // Run additional and drop results for the first X samples.
+      dropFirstX: Int = 10
   ): Unit =
 
     val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)
@@ -118,7 +137,9 @@ class Profiling(
 
     // Execute all trials.
 
-    val bar = ProgressBar(trials)
+    val allTrials = trials + dropFirstX
+
+    val bar = ProgressBar(allTrials)
 
     var trial = 0
     var results: List[ProfileAnalysis] = Nil
@@ -128,20 +149,22 @@ class Profiling(
     // val drop2 = gen.sample()
 
     // Run all trials in chunks.
-    while (trial < trials)
+    while (trial < allTrials)
       var chunk = 0
 
       // Process a single chunk.
-      while (chunk < chunkSize && trial < trials)
+      while (chunk < chunkSize && trial < allTrials)
         chunk += 1
         trial += 1
 
         val qs = gen.sample()
         bar.update(trial)
-        results = results ++ List(runStep(qs._1, qs._2))
+        results = results ++ List(runStep(qs._1, qs._2, trial))
+
+      val actualResults = results.drop(dropFirstX)
 
       // Create intermediate report at the end of chunks.
-      val report = results.evaluate(trials, config.retry, config.timeout)
+      val report = actualResults.evaluate(trials, config.retry, config.timeout)
 
       val meta = List(
         s"Time: ${time}",
@@ -156,7 +179,7 @@ class Profiling(
       if writeToFile then
         Files.write(
           Paths.get(runFile),
-          results.csv.getBytes(StandardCharsets.UTF_8)
+          actualResults.csv.getBytes(StandardCharsets.UTF_8)
         )
 
         Files.write(

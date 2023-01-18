@@ -7,12 +7,20 @@ type ShassTry[T] = Either[ShassError, T]
 
 trait ShassError:
   protected def format(tag: String, msg: String, details: String = ""): String =
-    "[Shass] " ++ tag ++ ": " ++ msg.toString ++ " - " ++ details
+    "[Shass] " ++ tag ++ ": " ++ msg.toString ++ (if details != "" then
+                                                    " - " ++ details
+                                                  else "")
   def show(implicit state: BackendState): String
 
 abstract class BasicShassError(tag: String, val msg: String) extends ShassError:
   def show(implicit state: BackendState): String = format(tag, msg)
   override def toString: String = format(tag, msg)
+
+class TimeoutError(timeout: Long, retry: Int)
+    extends BasicShassError(
+      "Reasoning Timeout",
+      s"Reasoning timed out after $timeout ms (and ${retry + 1} tries)"
+    )
 
 abstract class ShowableShassError(
     tag: String,

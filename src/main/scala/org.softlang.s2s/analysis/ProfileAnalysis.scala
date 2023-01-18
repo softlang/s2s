@@ -5,24 +5,30 @@ import org.softlang.s2s.query.SCCQ
 
 import scala.concurrent.duration.Duration
 
+type ProblemType = (SCCQ, String, Set[SimpleSHACLShape], String)
+
 /** Analysis of a single-run Profile. */
-sealed trait ProfileAnalysis:
+sealed trait ProfileAnalysis(problem: ProblemType, id: Int):
   def csv: String
 
 case class FailedAnalysis(
     // The problem of this run.
-    problem: (SCCQ, String, Set[SimpleSHACLShape], String),
+    problem: ProblemType,
     // The failure.
-    t: Throwable
-) extends ProfileAnalysis:
+    t: Throwable,
+    // Trial ID.
+    id: Int
+) extends ProfileAnalysis(problem, id):
   override def toString: String = s"Failed analysis: ${t.getLocalizedMessage}"
 
   def csv: String =
-    s"${t.getLocalizedMessage()};0;0;0;0;0;${problem._2};${problem._4}"
+    s"$id;${t.getLocalizedMessage()};0;0;0;0;0;${problem._2};${problem._4};Nil"
 
 case class SuccessfulAnalysis(
     // The problem of this run.
-    problem: (SCCQ, String, Set[SimpleSHACLShape], String),
+    problem: ProblemType,
+    // Result of this analysis.
+    result: (Set[SimpleSHACLShape], String),
     // Total time.
     total: Duration,
     // Time spent filtering.
@@ -32,8 +38,10 @@ case class SuccessfulAnalysis(
     // Number of times filtering restarted.
     restartsCount: Int,
     // Time for (non-successful) restarts.
-    timeSpentRestarting: Duration
-) extends ProfileAnalysis:
+    timeSpentRestarting: Duration,
+    // Trial ID.
+    id: Int
+) extends ProfileAnalysis(problem, id):
 
   private def fmtTotal: String =
     val head = s"Total: $total"
@@ -59,7 +67,7 @@ case class SuccessfulAnalysis(
 
   /** Format as CSV value. */
   def csv: String =
-    s"success;$total;$filtering;$timedOut;$restartsCount;$timeSpentRestarting;${problem._2};${problem._4}"
+    s"$id;success;${total.toMillis};${filtering.toMillis};$timedOut;$restartsCount;${timeSpentRestarting.toMillis};${problem._2};${problem._4};${result._2}"
 
   /** Total time not considering restarts (only successful run). */
   def totalWithoutRestats: Duration = total - timeSpentRestarting
@@ -78,4 +86,4 @@ case class SuccessfulAnalysis(
 
 object ProfileAnalysis:
   def header: String =
-    "Failure;Total Time;Time Filtering;Timed Out;Restarts Count;Time Restarting;Query;Input Shapes"
+    "ID;Failure;Total Time (ms);Time Filtering (ms);Timed Out;Restarts Count;Time Restarting (ms);Query;Input Shapes;Output Shapes"

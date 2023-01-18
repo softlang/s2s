@@ -67,72 +67,108 @@ extension (inAnalyses: ProfileAnalyses)
       maxRestarts: Int,
       timeoutL: Long
   ): ProfileAnalysesEvaluation =
-
-    val analyses = inAnalyses.flatMap(a =>
-      a match
-        case s: SuccessfulAnalysis => List(s)
-        case _                     => Nil
-    )
-
-    val failures = inAnalyses.flatMap(a =>
-      a match
-        case f: FailedAnalysis => List(f)
-        case _                 => Nil
-    )
-
-    val timeout = timeoutL.millis
-    val size = analyses.size
-
-    val totals = analyses.map(_.total)
-    val totalsWR = analyses.map(_.totalWithoutRestats)
-    val totalsNT = analyses.filter(!_.timedOut).map(_.total)
-
-    val filterings = analyses.map(_.filtering)
-    val filteringsWR = analyses.map(_.filteringWithoutRestarts)
-    val filteringsNT = analyses.filter(!_.timedOut).map(_.filtering)
-
-    val percs = analyses.map(_.percentageFiltering)
-    val percsWR = analyses.map(_.percentageFilteringWithoutRestarts)
-    val percsNT = analyses.filter(!_.timedOut).map(_.percentageFiltering)
-
-    val restarts = analyses.map(_.restartsCount)
-    val timeouts = analyses.map(_.timedOut)
-
-    ProfileAnalysesEvaluation(
-      trials,
-      failures.size,
-      failures = failures,
-      samples = TriValue(
-        totals.size,
-        totalsWR.size,
-        totalsNT.size
-      ),
-      averageExecutionTime = TriValue(
-        ProfileAnalyses.averageDuration(totals),
-        ProfileAnalyses.averageDuration(totalsWR),
-        ProfileAnalyses.averageDuration(totalsNT)
-      ),
-      medianExecutionTime = TriValue(
-        ProfileAnalyses.medianDuration(totals),
-        ProfileAnalyses.medianDuration(totalsWR),
-        ProfileAnalyses.medianDuration(totalsNT)
-      ),
-      averagePercentageFiltering = TriValue(
-        percs.sum / percs.size,
-        percsWR.sum / percsWR.size,
-        percsNT.sum / percsNT.size
-      ),
-      longest = TriValue(
-        totals.max,
-        totalsWR.max,
-        totalsNT.max
-      ),
-      shortest = TriValue(
-        totals.min,
-        totalsWR.min,
-        totalsNT.min
+    if inAnalyses.isEmpty then
+      ProfileAnalysesEvaluation(
+        trials,
+        0,
+        failures = Nil,
+        samples = TriValue(
+          0,
+          0,
+          0
+        ),
+        averageExecutionTime = TriValue(
+          0.millis,
+          0.millis,
+          0.millis
+        ),
+        medianExecutionTime = TriValue(
+          0.millis,
+          0.millis,
+          0.millis
+        ),
+        averagePercentageFiltering = TriValue(
+          0,
+          0,
+          0
+        ),
+        longest = TriValue(
+          0.millis,
+          0.millis,
+          0.millis
+        ),
+        shortest = TriValue(
+          0.millis,
+          0.millis,
+          0.millis
+        )
       )
-    )
+    else
+      val analyses = inAnalyses.flatMap(a =>
+        a match
+          case s: SuccessfulAnalysis => List(s)
+          case _                     => Nil
+      )
+
+      val failures = inAnalyses.flatMap(a =>
+        a match
+          case f: FailedAnalysis => List(f)
+          case _                 => Nil
+      )
+
+      val timeout = timeoutL.millis
+      val size = analyses.size
+
+      val totals = analyses.map(_.total)
+      val totalsWR = analyses.map(_.totalWithoutRestats)
+      val totalsNT = analyses.filter(!_.timedOut).map(_.total)
+
+      val filterings = analyses.map(_.filtering)
+      val filteringsWR = analyses.map(_.filteringWithoutRestarts)
+      val filteringsNT = analyses.filter(!_.timedOut).map(_.filtering)
+
+      val percs = analyses.map(_.percentageFiltering)
+      val percsWR = analyses.map(_.percentageFilteringWithoutRestarts)
+      val percsNT = analyses.filter(!_.timedOut).map(_.percentageFiltering)
+
+      val restarts = analyses.map(_.restartsCount)
+      val timeouts = analyses.map(_.timedOut)
+
+      ProfileAnalysesEvaluation(
+        trials,
+        failures.size,
+        failures = failures,
+        samples = TriValue(
+          totals.size,
+          totalsWR.size,
+          totalsNT.size
+        ),
+        averageExecutionTime = TriValue(
+          ProfileAnalyses.averageDuration(totals),
+          ProfileAnalyses.averageDuration(totalsWR),
+          ProfileAnalyses.averageDuration(totalsNT)
+        ),
+        medianExecutionTime = TriValue(
+          ProfileAnalyses.medianDuration(totals),
+          ProfileAnalyses.medianDuration(totalsWR),
+          ProfileAnalyses.medianDuration(totalsNT)
+        ),
+        averagePercentageFiltering = TriValue(
+          percs.sum / percs.size,
+          percsWR.sum / percsWR.size,
+          percsNT.sum / percsNT.size
+        ),
+        longest = TriValue(
+          totals.max,
+          totalsWR.max,
+          totalsNT.max
+        ),
+        shortest = TriValue(
+          totals.min,
+          totalsWR.min,
+          totalsNT.min
+        )
+      )
 
 object ProfileAnalyses:
   def averageDuration(vs: List[Duration]): Duration =

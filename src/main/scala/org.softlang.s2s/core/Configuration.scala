@@ -177,8 +177,8 @@ object Configuration:
     // Therefore, the following defaults are only relevant
     // for development (testing) and analysis.
     activeReasoner = ActiveReasoner.Hermit,
-    timeout = 2000,
-    retry = 1,
+    timeout = 60000,
+    retry = 0,
     optimizeCandidates = true,
     renameToken = "٭",
     prefix = ":",

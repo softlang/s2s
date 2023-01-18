@@ -1,5 +1,6 @@
 package org.softlang.s2s.analysis
 
+import org.softlang.s2s.core.SimpleSHACLShape
 import scala.concurrent.duration.*
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -9,7 +10,10 @@ import scala.util.{Try, Success, Failure}
 type Profile = List[ProfileEntry]
 
 extension (profile: Profile)
-  def analyze(failure: Option[Throwable]): ProfileAnalysis =
+  def analyze(
+      result: Either[Throwable, (Set[SimpleSHACLShape], String)],
+      trialID: Int
+  ): ProfileAnalysis =
 
     val qs = profile
       .filter(_.isInstanceOf[ProfileEntry.Problem])
@@ -18,7 +22,7 @@ extension (profile: Profile)
 
     val p = (qs.q, qs.qS, qs.sin, qs.sinS)
 
-    if failure.isDefined then FailedAnalysis(p, failure.get)
+    if result.isLeft then FailedAnalysis(p, result.left.get, trialID)
     else
       val tstart = profile.find(_.isStart("algorithm")).get.time
       val tend = profile.find(_.isEnd("algorithm")).get.time
@@ -43,9 +47,11 @@ extension (profile: Profile)
 
       SuccessfulAnalysis(
         problem = p,
+        result = result.right.get,
         total = total,
         filtering = filter,
         timedOut = timedout,
         restartsCount = restarts,
-        timeSpentRestarting = spentRestarting
+        timeSpentRestarting = spentRestarting,
+        id = trialID
       )

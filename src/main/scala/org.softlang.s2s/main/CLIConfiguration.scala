@@ -52,15 +52,15 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
   val timeout =
     opt[Long](
       required = false,
-      default = Some(10000),
-      descr = "Timeout for reasoning attempt (def: 10000)"
+      default = Some(0),
+      descr = "Timeout for reasoning attempt (def: 0 -- disabled)"
     )
 
   val retry =
     opt[Int](
       required = false,
-      default = Some(1),
-      descr = "Retries after timeout (def: 1)"
+      default = Some(0),
+      descr = "Retries after timeout (def: 0)"
     )
 
   val debug =

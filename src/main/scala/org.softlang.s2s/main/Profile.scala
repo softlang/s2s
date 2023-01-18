@@ -11,12 +11,71 @@ import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
 
 /** Profiling for S2S from generated examples. */
 object Profile:
-  def run(): Unit =
 
+  def run(): Unit =
+    // experiment1()
+    test()
+    ()
+
+  private def test(): Unit =
     val config = Configuration.default.copy(
       activeReasoner = ActiveReasoner.Hermit,
-      retry = 5,
-      timeout = 10000
+      retry = 0,
+      timeout = 30000
+    )
+
+    val profiling = Profiling(
+      config,
+      noisy = true,
+      logTime = false,
+      logNoisy = false
+    )
+
+    val pgc = ProblemGeneratorConfig(
+      minPatternSize = 4,
+      maxPatternSize = 4,
+      minTemplateSize = 4,
+      maxTemplateSize = 4,
+      freshVariable = 0.8f,
+      variablesCount = (1, 5),
+      freshConcept = 0.8f,
+      conceptsCount = 10,
+      freshProperty = 0.8f,
+      propertiesCount = 10,
+      freshNominal = 0.0f,
+      nominalsCount = 0,
+      propertyConceptRatio = 0.9f,
+      variableToNominalRatio = 1.0f,
+      cyclicRedrawCount = 10,
+      minNumberOfShapes = 0,
+      maxNumberOfShapes = 0,
+      propertyConceptTargetRatio = -1.0f,
+      propertyConceptConstraintRatio = -1.0f,
+      includeForallConstraints = false,
+      seed = "minimal"
+    )
+
+    profiling.run(pgc, trials = 100, chunkCount = 10)
+
+  private def experiment1(): Unit =
+    experiment1Run(5, 10000, ActiveReasoner.Hermit)
+    experiment1Run(5, 10000, ActiveReasoner.Openllet)
+    experiment1Run(2, 30000, ActiveReasoner.Hermit)
+    experiment1Run(2, 30000, ActiveReasoner.Hermit)
+    experiment1Run(0, 60000, ActiveReasoner.Hermit)
+    experiment1Run(2, 30000, ActiveReasoner.Openllet)
+    experiment1Run(0, 60000, ActiveReasoner.Openllet)
+
+  private def experiment1Run(
+      retry: Int,
+      timeout: Int,
+      reasoner: ActiveReasoner
+  ): Unit =
+
+    val config = Configuration.default.copy(
+      activeReasoner = reasoner,
+      retry = retry,
+      timeout = timeout
     )
 
     val profiling = Profiling(
