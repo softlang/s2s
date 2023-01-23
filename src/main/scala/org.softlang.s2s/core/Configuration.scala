@@ -42,6 +42,9 @@ case class Configuration(
     // Generate UNA for template H.
     unaForTemplate: Boolean,
 
+    // Generate UNA for both template and pattern combined.
+    unaForBoth: Boolean,
+
     // Use the mapping method.
     useMappingMethod: Boolean,
 
@@ -84,9 +87,24 @@ case class Configuration(
     // Use subsumption instead of equality for the template.
     useSubsumptionInTemplateDCA: Boolean,
 
+    // Include the concept closure for the pattern.
+    includeConceptClosurePattern: Boolean,
+
+    // Include the variable closure for the pattern.
+    includeVariableClosurePattern: Boolean,
+
+    // Include the concept closure for the template.
+    includeConceptClosureTemplate: Boolean,
+
+    // Include the variable closure for the tempalte.
+    includeVariableClosureTemplate: Boolean,
+
     // ***********
     // *** CWA ***
     // ***********
+
+    // Alternative CWA.
+    alternativeCWA: Boolean,
 
     // Closure for concepts.
     closeConcepts: Boolean,
@@ -144,21 +162,49 @@ case class Configuration(
 /** Some preset configurations. */
 object Configuration:
 
-  /** Default configuration for Shapes2Shapes. */
-  def default: Configuration = Configuration(
+  /** Default configuration for Shapes2Shapes in accordance with the From Shapes
+    * to Shapes paper and reasonable defaults, otherwise.
+    */
+  def default: Configuration = og
+
+  def paper: Configuration = base.copy(
+    includeConceptClosurePattern = true, // Paper, old: false
+    includeConceptClosureTemplate = true, // Paper, old: false
+    includeVariableClosureTemplate = false, // Paper, old: true
+    cwaForPattern = true, // Paper: true, old: false
+    closeConcepts = false, // Paper: false, old: true
+    alternativeCWA = true // Paper: true, old: false
+  )
+
+  def og: Configuration = base.copy(
+    includeConceptClosurePattern = false,
+    includeConceptClosureTemplate = false,
+    includeVariableClosureTemplate = true,
+    cwaForPattern = false,
+    closeConcepts = true,
+    alternativeCWA = false
+  )
+
+  private def base: Configuration = Configuration(
     // Algorithm
     dcaForPattern = true,
     dcaForTemplate = true,
+    includeConceptClosurePattern = false,
+    includeVariableClosurePattern = true,
+    includeConceptClosureTemplate = false,
+    includeVariableClosureTemplate = true,
     cwaForPattern = false,
     cwaForTemplate = true,
     unaForPattern = false,
-    unaForTemplate = true,
+    unaForTemplate = false,
+    unaForBoth = true,
     useMappingMethod = true,
     addPropertySubsumptions = true,
     renamePatternInternalConcepts = true,
     renamePatternInternalProperties = true,
     useNamespacedTop = true,
     // DCA
+    alternativeCWA = false,
     erasePvariables = false,
     eraseHvariables = false,
     approximatePvariables = false,

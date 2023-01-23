@@ -16,6 +16,10 @@ trait Scopeable(implicit scopes: Scopes) extends Inference:
   /** Internal processing of the inference step. */
   protected def prepareAxioms: Set[Axiom]
 
+  protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] = axioms
+
+  protected def addAxioms: Set[Axiom] = Set()
+
   /** Apply scoping rules to the result axioms. */
   protected def scopeAxioms(ax: Set[Axiom]): Set[Axiom] =
     ax.map(_ match
@@ -32,4 +36,5 @@ trait Scopeable(implicit scopes: Scopes) extends Inference:
     ax.map(scopes.replaceTop(_, leftScope, rightScope))
 
   // Combines the above steps (automatically) for Scopeable inference methods.
-  def axioms: Set[Axiom] = scopedTop(scopeAxioms(prepareAxioms))
+  def axioms: Set[Axiom] =
+    extendAxioms(scopedTop(scopeAxioms(prepareAxioms))).union(addAxioms)

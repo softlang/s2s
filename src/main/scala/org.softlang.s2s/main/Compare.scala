@@ -7,24 +7,28 @@ import org.softlang.s2s.core.Configuration
 /** Compare two configurations of the algorithm on structured test cases. */
 object Compare:
   def run(): Unit =
-    // Common settings for both Configurations.
-    val common = Configuration.default.copy(
-      // ...
-    )
-
     val compare = ConfigurationComparison(
-      // Configuration 1:
-      common.copy(
-        activeReasoner = ActiveReasoner.Hermit
-      ),
-      // Configuration 2:
-      common.copy(
-        activeReasoner = ActiveReasoner.Jfact
-      ),
+      Configuration.paper,
+      Configuration.og,
       // Perform 1000 trials per generator configuration.
-      trials = 100,
+      trials = 1,
       // Generate multiple results.
-      stopAfterFirstResult = false
+      stopAfterFirstResult = false,
+      title1 = "Paper",
+      title2 = "Implementation OG"
     )
 
-    compare.structured()
+    compare.input(
+      """
+      |CONSTRUCT {
+      |  ?x a :B .
+      |  ?x :q ?y . 
+      |  ?y a :B
+      |} WHERE {
+      |  ?x a :A . 
+      |  ?x :r ?y . 
+      |  ?y a :A
+      |}
+    """.stripMargin('|'),
+      Set()
+    )

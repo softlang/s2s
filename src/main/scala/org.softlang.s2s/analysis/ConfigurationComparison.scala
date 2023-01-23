@@ -16,7 +16,9 @@ class ConfigurationComparison(
     c1: Configuration,
     c2: Configuration,
     trials: Int = 1000,
-    stopAfterFirstResult: Boolean = true
+    stopAfterFirstResult: Boolean = true,
+    title1: String = "",
+    title2: String = ""
 ):
 
   // Test S2S Instances.
@@ -75,6 +77,30 @@ class ConfigurationComparison(
     print(config)
     search(ProblemGenerator(config)(s1.scopes))
     println("done.")
+
+  /** Compare for specific input (String encoded). */
+  def input(q: String, sin: Set[String]): ShassTry[Boolean] =
+    for
+      qp <- s1.parseQuery(q)
+      sp <- s1.parseShapes(sin)
+    yield input(qp, sp)
+
+  /** Compare for specific input. */
+  def input(q: SCCQ, sin: Set[SimpleSHACLShape]): Boolean =
+
+    // Initialize logs.
+    val log1 = Log("T", debugging = true)
+    val log2 = Log("T", debugging = true)
+
+    val r = compare(q, sin, log1, log2)
+
+    println("Configuration (1) " ++ title1)
+    log1.print(true, true)
+
+    println("\nConfiguration (2) " ++ title2)
+    log2.print(true, true)
+
+    r
 
   def structured(): Unit =
     // Widen search with various configurations.
