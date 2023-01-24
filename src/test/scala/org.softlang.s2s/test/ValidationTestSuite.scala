@@ -22,14 +22,13 @@ abstract class ValidationTestSuite(
     disabled: Boolean = false,
     // Allways print full debugging for failures.
     verbose: Boolean = false
-):
+) extends Shapes2Shapes(
+      Configuration.default.copy(
+        activeReasoner = ActiveReasoner.Hermit
+      )
+    ):
 
   def name: TestName
-
-  val config = Configuration.default.copy(
-    activeReasoner = ActiveReasoner.Hermit
-  )
-  val s2s = Shapes2Shapes(config)
 
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()
@@ -55,7 +54,7 @@ abstract class ValidationTestSuite(
     """
 
   private def formatResults(s: Set[SimpleSHACLShape]): String =
-    s.map("  " ++ _.show(s2s.shar.state)).mkString("\n")
+    s.map("  " ++ _.show(shar.state)).mkString("\n")
 
   private def leading(s: String, width: Int): String =
     val i = s.size
@@ -80,7 +79,7 @@ abstract class ValidationTestSuite(
 
   /** Change scope of all (Top) in shapes to Scope.Template */
   private def replaceTop(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
-    shapes.map(s2s.scopes.replaceTop(_, Scope.Template, Scope.Template))
+    shapes.map(scopes.replaceTop(_, Scope.Template, Scope.Template))
 
   /** Defines a test case. */
   def test(
@@ -95,12 +94,15 @@ abstract class ValidationTestSuite(
     // Do not run test, if the suite is disabled.
     if disabled then return
 
-    val (actuallSout, log) = s2s.validate(q, sin)
+    val (actuallSoutS, log) = validate(q, sin)
+
+    // Remove internal scope.
+    val actuallSout = actuallSoutS.map(descope)
 
     // Parse the test case (and move T to Scope.Template).
-    val exactlyOut = s2s.parseShapes(exactly).map(replaceTop)
-    val atleastOut = s2s.parseShapes(atleast).map(replaceTop)
-    val notOut = s2s.parseShapes(not).map(replaceTop)
+    val exactlyOut = parseShapes(exactly)
+    val atleastOut = parseShapes(atleast)
+    val notOut = parseShapes(not)
 
     val success = for
       e <- exactlyOut

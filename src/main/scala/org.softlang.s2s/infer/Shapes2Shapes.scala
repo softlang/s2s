@@ -52,7 +52,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         )
       )
 
-  /** Run validation and format results (if enabled). */
+  /** Run validation and format logging results and output (if enabled). */
   def run(
       query: String,
       shapes: Set[String]
@@ -67,15 +67,17 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     if config.log || config.debug then
       resLog.print(config.hidecolon, config.prettyVariableConcepts)
 
+    // Remove internal scoping from output shapes.
+    val output = resShapes.map(descope)
+
     // Print results (if enabled).
     if config.printOutput then
-      for result <- resShapes
-      do result.map(_.show).foreach(println)
+      for o <- output
+      do o.map(_.show).foreach(println)
 
-    // Return output shapes.
-    resShapes
+    output
 
-  /** Run validation and return a Log. */
+  /** Run validation and return the Log. */
   def validate(
       query: String,
       shapes: Set[String]
@@ -117,11 +119,17 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val shapep = ShapeParser(shar)
 
   /** Attempt to parse a set of Simple SHACL shapes. */
-  def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
+  def parseShapes(
+      shapes: Set[String]
+  ): ShassTry[Set[SimpleSHACLShape]] =
     for s <- Util
         .flipEitherHead(shapes.map(shapep.parse(_)).toList)
         .map(_.toSet)
     yield s
+
+  /** Remove any scope-related renaming. */
+  protected def descope(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
+    shapes.map(_.dropScope).map(scopes.restoreTop)
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(

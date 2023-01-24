@@ -9,9 +9,9 @@ class Scopes(token: String, localTop: String):
 
   /** Rule for naming/appending for the differnt scopes. */
   private def makeScopeToken(scope: Scope): String = scope match
-    case Scope.Input    => token ++ token
+    case Scope.Input    => ""
     case Scope.Pattern  => token
-    case Scope.Template => ""
+    case Scope.Template => token ++ token
 
   /** Remove all scope tokens. */
   def removeScopeTokens(in: String): String =
@@ -41,8 +41,8 @@ class Scopes(token: String, localTop: String):
   def replaceTop(ax: Axiom, leftScope: Scope, rightScope: Scope): Axiom =
     ax match
       case s @ Subsumption(_, _) => replaceTop(s, leftScope, rightScope)
-      case e @ Equality(_, _) => replaceTop(e, leftScope, rightScope)
-      case a => a
+      case e @ Equality(_, _)    => replaceTop(e, leftScope, rightScope)
+      case a                     => a
 
   def replaceTop(
       sub: Subsumption,
@@ -64,6 +64,27 @@ class Scopes(token: String, localTop: String):
       rightScope: Scope
   ): SimpleSHACLShape =
     SimpleSHACLShape(replaceTop(shape.axiom, leftScope, rightScope))
+
+  def restoreTop(c: Concept): Concept =
+    Concept.map(
+      c =>
+        if c == top(Scope.Input) || c == top(Scope.Pattern) || c == top(
+            Scope.Template
+          )
+        then Top
+        else c,
+      c
+    )
+
+  def restoreTop(s: SimpleSHACLShape): SimpleSHACLShape =
+    SimpleSHACLShape(
+      Subsumption(restoreTop(s.axiom.c), restoreTop(s.axiom.d))
+    )
+
+  def restoreTop(ax: Axiom): Axiom = ax match
+    case Subsumption(c, d) => Subsumption(restoreTop(c), restoreTop(d))
+    case Equality(c, d)    => Equality(restoreTop(c), restoreTop(d))
+    case a                 => a
 
   /** Get top for this scope. */
   def top(scope: Scope): NamedConcept =

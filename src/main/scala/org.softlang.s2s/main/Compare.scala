@@ -32,3 +32,17 @@ object Compare:
     """.stripMargin('|'),
       Set()
     )
+
+    compare.input(
+      """
+      |CONSTRUCT {
+      |  ?x a :A .
+      |  ?y a :B .
+      |  ?z a :C 
+      |} WHERE {
+      |  ?x :p ?y . 
+      |  ?z :p ?z 
+      |}
+    """.stripMargin('|'),
+      Set()
+    )

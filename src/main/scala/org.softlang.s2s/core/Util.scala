@@ -41,6 +41,10 @@ extension (i: Iri)
           i.getBase(scopes)
             .append(scopes.inputScopeToken)
 
+  /** Drop all scoping for this IRI. */
+  def dropScope(implicit scopes: Scopes): Iri =
+    if i.isVariable then i else i.getBase(scopes)
+
 extension (c: Concept)
   def inScope(scope: Scope)(implicit scopes: Scopes): Concept = c match
     case NamedConcept(i) => NamedConcept(i.inScope(scope))
@@ -54,11 +58,30 @@ extension (c: Concept)
       Intersection(c1.inScope(scope), c2.inScope(scope))
     case c => c
 
+extension (c: Concept)
+  def dropScope(implicit scopes: Scopes): Concept = c match
+    case NamedConcept(i) => NamedConcept(i.dropScope)
+    case Existential(r, c) =>
+      Existential(r.dropScope, c.dropScope)
+    case Universal(r, c) =>
+      Universal(r.dropScope, c.dropScope)
+    case Union(c1, c2) =>
+      Union(c1.dropScope, c2.dropScope)
+    case Intersection(c1, c2) =>
+      Intersection(c1.dropScope, c2.dropScope)
+    case c => c
+
 extension (r: Role)
   def inScope(scope: Scope)(implicit scopes: Scopes): Role =
     r match
       case NamedRole(i) => NamedRole(i.inScope(scope))
       case Inverse(r)   => Inverse(r.inScope(scope))
+
+extension (r: Role)
+  def dropScope(implicit scopes: Scopes): Role =
+    r match
+      case NamedRole(i) => NamedRole(i.dropScope)
+      case Inverse(r)   => Inverse(r.dropScope)
 
 /** Basic utility functions. */
 object Util:

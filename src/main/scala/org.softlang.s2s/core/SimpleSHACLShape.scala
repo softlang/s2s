@@ -14,6 +14,11 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
       Subsumption(axiom.c.inScope(scope), axiom.d.inScope(scope))
     )
 
+  def dropScope(implicit scopes: Scopes): SimpleSHACLShape =
+    SimpleSHACLShape(
+      Subsumption(axiom.c.dropScope, axiom.d.dropScope)
+    )
+
   /** True, if the constraint contains universal quantification. */
   def isForallShape: Boolean = axiom.d match
     case Universal(_, _) => true
