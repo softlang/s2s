@@ -75,7 +75,7 @@ abstract class ValidationTestSuite(
       else if info then
         s"${GREEN}passed${RESET},${YELLOW} debugging info${RESET}:"
       else s"${GREEN}passed${RESET}."
-    s"Test case |${color} $c.$sc.$nn ${RESET}| in suite $suite ${msg}"
+    s"Test |${color} $c.$sc.$nn ${RESET}| in suite $suite ${msg}"
 
   /** Change scope of all (Top) in shapes to Scope.Template */
   private def replaceTop(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
