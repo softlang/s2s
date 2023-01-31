@@ -21,7 +21,7 @@ object Profile:
     val config = Configuration.default.copy(
       activeReasoner = ActiveReasoner.Hermit,
       retry = 0,
-      timeout = 30000
+      timeout = 60000
     )
 
     val profiling = Profiling(
@@ -32,10 +32,10 @@ object Profile:
     )
 
     val pgc = ProblemGeneratorConfig(
-      minPatternSize = 4,
-      maxPatternSize = 4,
-      minTemplateSize = 4,
-      maxTemplateSize = 4,
+      minPatternSize = 2,
+      maxPatternSize = 2,
+      minTemplateSize = 5,
+      maxTemplateSize = 5,
       freshVariable = 0.8f,
       variablesCount = (1, 5),
       freshConcept = 0.8f,
@@ -44,7 +44,7 @@ object Profile:
       propertiesCount = 10,
       freshNominal = 0.0f,
       nominalsCount = 0,
-      propertyConceptRatio = 0.9f,
+      propertyConceptRatio = 0.6f,
       variableToNominalRatio = 1.0f,
       cyclicRedrawCount = 10,
       minNumberOfShapes = 0,
@@ -55,7 +55,7 @@ object Profile:
       seed = "minimal"
     )
 
-    profiling.run(pgc, trials = 100, chunkCount = 10)
+    profiling.run(pgc, trials = 1000, chunkCount = 10, dropFirstX = 0)
 
   private def experiment1(): Unit =
     experiment1Run(5, 10000, ActiveReasoner.Hermit)

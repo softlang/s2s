@@ -128,6 +128,12 @@ class Log(
     if profiling then println(entry)
     PROFILE = entry :: PROFILE
 
+  def candidates(cand: Set[SimpleSHACLShape]): Unit =
+    val entry =
+      ProfileEntry.Candidates(cand, LocalDateTime.now())
+    if profiling then println(entry)
+    PROFILE = entry :: PROFILE
+
   def profile: List[ProfileEntry] = PROFILE.reverse
 
   // IO/Formatting

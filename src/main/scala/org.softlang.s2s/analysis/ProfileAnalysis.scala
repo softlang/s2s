@@ -22,13 +22,15 @@ case class FailedAnalysis(
   override def toString: String = s"Failed analysis: ${t.getLocalizedMessage}"
 
   def csv: String =
-    s"$id;${t.getLocalizedMessage()};0;0;0;0;0;${problem._2};${problem._4};Nil"
+    s"$id;${t.getLocalizedMessage()};0;0;0;0;0;${problem._2};${problem._4};0;Nil"
 
 case class SuccessfulAnalysis(
     // The problem of this run.
     problem: ProblemType,
     // Result of this analysis.
     result: (Set[SimpleSHACLShape], String),
+    // Number of candidates.
+    candidates: Int,
     // Total time.
     total: Duration,
     // Time spent filtering.
@@ -67,7 +69,7 @@ case class SuccessfulAnalysis(
 
   /** Format as CSV value. */
   def csv: String =
-    s"$id;success;${total.toMillis};${filtering.toMillis};$timedOut;$restartsCount;${timeSpentRestarting.toMillis};${problem._2};${problem._4};${result._2}"
+    s"$id;success;${total.toMillis};${filtering.toMillis};$timedOut;$restartsCount;${timeSpentRestarting.toMillis};${problem._2};${problem._4};$candidates;${result._2}"
 
   /** Total time not considering restarts (only successful run). */
   def totalWithoutRestats: Duration = total - timeSpentRestarting
@@ -86,4 +88,4 @@ case class SuccessfulAnalysis(
 
 object ProfileAnalysis:
   def header: String =
-    "ID;Failure;Total Time (ms);Time Filtering (ms);Timed Out;Restarts Count;Time Restarting (ms);Query;Input Shapes;Output Shapes"
+    "ID;Fail;Total (ms);Filtering (ms);Timeout;Restarts;Restarting (ms);Query;In;Candidates;Out"

@@ -20,6 +20,12 @@ extension (profile: Profile)
       .head
       .asInstanceOf[ProfileEntry.Problem]
 
+    val cand = profile
+      .filter(_.isInstanceOf[ProfileEntry.Candidates])
+      .head
+      .asInstanceOf[ProfileEntry.Candidates]
+      .cand
+
     val p = (qs.q, qs.qS, qs.sin, qs.sinS)
 
     if result.isLeft then FailedAnalysis(p, result.left.get, trialID)
@@ -48,6 +54,7 @@ extension (profile: Profile)
       SuccessfulAnalysis(
         problem = p,
         result = result.right.get,
+        candidates = cand.size,
         total = total,
         filtering = filter,
         timedOut = timedout,

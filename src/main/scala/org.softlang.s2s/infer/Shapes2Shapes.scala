@@ -152,6 +152,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     // Generate candidates.
     val cand = generateCandidates(preq, log)
 
+    log.candidates(cand)
+
     log.profileEnd("candidates")
     log.profileStart("filter")
 
@@ -389,6 +391,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   ): Option[(Log, Set[SimpleSHACLShape])] =
 
     var result: Option[Set[SimpleSHACLShape]] = None
+
+    import java.time.LocalDateTime
 
     val t = new Thread {
       override def run(): Unit =
