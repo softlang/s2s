@@ -10,13 +10,17 @@ class DomainClosureAssumptionForTemplate(
     a: AtomicPatterns,
     eraseVariables: Boolean,
     approximateVariables: Boolean,
-    useSubsumption: Boolean
+    useSubsumption: Boolean,
+    includeVariableClosure: Boolean,
+    includeConceptClosure: Boolean
 )(implicit scopes: Scopes)
     extends DomainClosureAssumption(
       a,
       eraseVariables,
       approximateVariables,
-      useSubsumption
+      useSubsumption,
+      includeVariableClosure,
+      includeConceptClosure
     )(scopes):
 
   val leftScope = Scope.Template
@@ -26,17 +30,30 @@ class DomainClosureAssumptionForPattern(
     a: AtomicPatterns,
     eraseVariables: Boolean,
     approximateVariables: Boolean,
-    useSubsumption: Boolean
+    useSubsumption: Boolean,
+    includeVariableClosure: Boolean,
+    includeConceptClosure: Boolean
 )(implicit scopes: Scopes)
     extends DomainClosureAssumption(
       a,
       eraseVariables,
       approximateVariables,
-      useSubsumption
+      useSubsumption,
+      includeVariableClosure,
+      includeConceptClosure
     )(scopes):
 
+  override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
+    if includeConceptClosure then
+      axioms.map(_ match
+        case Equality(l @ NamedConcept(_), r) if a.concepts.contains(l) =>
+          Equality(l, Intersection(l.inScope(Scope.Input), r))
+        case a => a
+      )
+    else axioms
+
   val leftScope = Scope.Pattern
-  val rightScope = Scope.Input
+  val rightScope = if includeConceptClosure then Scope.Pattern else Scope.Input
 
 /** Generate the domain closure assumption, given a set of atomic patterns. */
 abstract class DomainClosureAssumption(
@@ -46,11 +63,26 @@ abstract class DomainClosureAssumption(
     // Replace concept variables with an approximation.
     approximateVariables: Boolean,
     // Use subsumption instead of equality.
-    useSubsumption: Boolean
+    useSubsumption: Boolean,
+    // Include closure for variables.
+    includeVariableClosure: Boolean,
+    // Include closure for concepts.
+    includeConceptClosure: Boolean
 )(implicit scopes: Scopes)
     extends Scopeable:
 
   import AtomicPattern._
+
+  private def conceptClosure: Set[Axiom] = a.concepts.flatMap { c =>
+    val rhs = a.flatMap {
+      case LAC(is, d) if c == NamedConcept(d) => Set(NominalConcept(is))
+      case VAC(vs, d) if c == NamedConcept(d) => Set(vs.asConcept)
+      case _                                  => Set()
+    }
+
+    if rhs.isEmpty then Set()
+    else Set(Equality(c, Concept.unionOf(rhs.toList)))
+  }
 
   /** Generate the DCA for variables as a mapping. */
   private val variableClosure: Map[Concept, Concept] =
@@ -98,9 +130,22 @@ abstract class DomainClosureAssumption(
     vcs.mapValues(c => Concept.map(fn, c)).toMap
 
   protected def prepareAxioms: Set[Axiom] =
-    (if eraseVariables then updateVariables(variablesToTop, variableClosure)
-     else if approximateVariables then
-       updateVariables(variablesToApproximation, variableClosure)
-     else variableClosure) .map(
-      if useSubsumption then Subsumption.apply else Equality.apply
-    ).toSet
+
+    val vcm =
+      if includeVariableClosure then
+        if eraseVariables then
+          updateVariables(fn = variablesToTop, vcs = variableClosure)
+        else if approximateVariables then
+          updateVariables(fn = variablesToApproximation, variableClosure)
+        else variableClosure
+      else Map()
+
+    val vc =
+      vcm.map(if useSubsumption then Subsumption.apply else Equality.apply)
+
+    val cc =
+      if includeConceptClosure
+      then conceptClosure
+      else Set()
+
+    cc.union(vc.toSet)

@@ -52,7 +52,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         )
       )
 
-  /** Run validation and format results (if enabled). */
+  /** Run validation and format logging results and output (if enabled). */
   def run(
       query: String,
       shapes: Set[String]
@@ -67,15 +67,17 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     if config.log || config.debug then
       resLog.print(config.hidecolon, config.prettyVariableConcepts)
 
+    // Remove internal scoping from output shapes.
+    val output = resShapes.map(descope)
+
     // Print results (if enabled).
     if config.printOutput then
-      for result <- resShapes
-      do result.map(_.show).foreach(println)
+      for o <- output
+      do o.map(_.show).foreach(println)
 
-    // Return output shapes.
-    resShapes
+    output
 
-  /** Run validation and return a Log. */
+  /** Run validation and return the Log. */
   def validate(
       query: String,
       shapes: Set[String]
@@ -117,11 +119,17 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val shapep = ShapeParser(shar)
 
   /** Attempt to parse a set of Simple SHACL shapes. */
-  def parseShapes(shapes: Set[String]): ShassTry[Set[SimpleSHACLShape]] =
+  def parseShapes(
+      shapes: Set[String]
+  ): ShassTry[Set[SimpleSHACLShape]] =
     for s <- Util
         .flipEitherHead(shapes.map(shapep.parse(_)).toList)
         .map(_.toSet)
     yield s
+
+  /** Remove any scope-related renaming. */
+  protected def descope(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
+    shapes.map(_.dropScope).map(scopes.restoreTop)
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
@@ -225,7 +233,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           q.pattern,
           eraseVariables = config.erasePvariables,
           approximateVariables = config.approximatePvariables,
-          useSubsumption = config.useSubsumptionInPatternDCA
+          useSubsumption = config.useSubsumptionInPatternDCA,
+          includeConceptClosure = config.includeConceptClosurePattern,
+          includeVariableClosure = config.includeVariableClosurePattern
         ).axioms
       else Set()
 
@@ -242,7 +252,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           q.template,
           eraseVariables = config.eraseHvariables,
           approximateVariables = config.approximateHvariables,
-          useSubsumption = config.useSubsumptionInTemplateDCA
+          useSubsumption = config.useSubsumptionInTemplateDCA,
+          includeConceptClosure = config.includeConceptClosureTemplate,
+          includeVariableClosure = config.includeVariableClosureTemplate
         ).axioms
       else Set()
 
@@ -255,13 +267,19 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val cwaP =
       if config.cwaForPattern then
-        ClosedWorldAssumptionForPattern(
-          q.pattern,
-          config.closeConcepts,
-          config.closeProperties,
-          config.closeLiterals,
-          config.useSubsumptionInPatternCWA
-        ).axioms
+        if config.alternativeCWA then
+          AlternativeClosedWorldAssumption(
+            q.pattern,
+            Scope.Pattern
+          ).axioms
+        else
+          ClosedWorldAssumptionForPattern(
+            q.pattern,
+            config.closeConcepts,
+            config.closeProperties,
+            config.closeLiterals,
+            config.useSubsumptionInPatternCWA
+          ).axioms
       else Set()
 
     if config.cwaForPattern then log.debug("CWA(q.P)", cwaP)
@@ -273,13 +291,19 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val cwaH =
       if config.cwaForTemplate then
-        ClosedWorldAssumptionForTemplate(
-          q.template,
-          config.closeConcepts,
-          config.closeProperties,
-          config.closeLiterals,
-          config.useSubsumptionInTemplateCWA
-        ).axioms
+        if config.alternativeCWA then
+          AlternativeClosedWorldAssumption(
+            q.pattern,
+            Scope.Template
+          ).axioms
+        else
+          ClosedWorldAssumptionForTemplate(
+            q.template,
+            config.closeConcepts,
+            config.closeProperties,
+            config.closeLiterals,
+            config.useSubsumptionInTemplateCWA
+          ).axioms
       else Set()
 
     if config.cwaForTemplate then log.debug("CWA(q.H)", cwaH)
@@ -307,6 +331,18 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     if config.unaForTemplate then log.debug("UNA(q.H)", unaH)
 
     log.profileEnd("build-una-t")
+    log.profileStart("build-una")
+
+    // UNA for query template & pattern.
+
+    val una =
+      if config.unaForBoth then
+        UniqueNameAssumption(q.template.union(q.pattern)).axioms
+      else Set()
+
+    if config.unaForBoth then log.debug("UNA(q)", una)
+
+    log.profileEnd("build-una")
     log.profileStart("build-top")
 
     // Namespaced Top definitions.
@@ -331,6 +367,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         .union(unaP)
         .union(cwaH)
         .union(unaH)
+        .union(una)
         .union(tops)
     )
 

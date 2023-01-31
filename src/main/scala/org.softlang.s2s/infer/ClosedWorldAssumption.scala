@@ -161,7 +161,7 @@ abstract class ClosedWorldAssumption(
     }
 
   //// General closure T ⊑ X ⊔ ... ⊔ {a} ... ⊔ A ⊔ ...
-  //private val generalClosure =
+  // private val generalClosure =
   //  Subsumption(
   //    Top,
   //    Concept.unionOf(
@@ -191,5 +191,72 @@ abstract class ClosedWorldAssumption(
     (if closeConcepts then conceptClosure else Set())
       .union(if closeProperties then propertyClosure else Set())
       .union(if closeProperties then inversePropertyClosure else Set())
-      //.union(if closeTop then Set(generalClosure) else Set())
+      // .union(if closeTop then Set(generalClosure) else Set())
       .union(if closeLiterals then literalsClosure else Set())
+
+class AlternativeClosedWorldAssumption(
+    a: AtomicPatterns,
+    targetScope: Scope
+)(implicit
+    scopes: Scopes
+):
+
+  import AtomicPattern._
+
+  private def general: Set[Axiom] = a.properties.flatMap { p =>
+    Set(
+      Subsumption(
+        Existential(p.inScope(targetScope), Top),
+        scopes.top(targetScope)
+      ),
+      Subsumption(
+        Existential(Inverse(p.inScope(targetScope)), Top),
+        scopes.top(targetScope)
+      )
+    )
+  }
+
+  private def axiomize(
+      all: Set[Concept],
+      role: Role,
+      cs: List[(Concept, Concept)]
+  ): Set[Axiom] =
+    val maps = cs.groupBy((_._1))
+    all.map(c =>
+      val ex = Existential(role.inScope(targetScope), c)
+      if maps.contains(c) then
+        val rhs = maps(c).map(_._2)
+        Equality(ex, Concept.unionOf(rhs))
+      else Equality(ex, Bottom)
+    )
+
+  private def specific: Set[Axiom] = a.properties.flatMap { p =>
+    val vu = a.flatMap {
+      case LPL(u, ip, v) if NamedRole(ip) == p =>
+        Set((NominalConcept(v), NominalConcept(u)))
+      case VPL(u, ip, v) if NamedRole(ip) == p =>
+        Set((NominalConcept(v), u.asConcept))
+      case LPV(u, ip, v) if NamedRole(ip) == p =>
+        Set((v.asConcept, NominalConcept(u)))
+      case VPV(u, ip, v) if NamedRole(ip) == p =>
+        Set((v.asConcept, u.asConcept))
+      case _ => Set()
+    }
+
+    val vui = a.flatMap {
+      case LPL(v, ip, u) if NamedRole(ip) == p =>
+        Set((NominalConcept(v), NominalConcept(u)))
+      case VPL(v, ip, u) if NamedRole(ip) == p =>
+        Set((v.asConcept, NominalConcept(u)))
+      case LPV(v, ip, u) if NamedRole(ip) == p =>
+        Set((NominalConcept(v), u.asConcept))
+      case VPV(v, ip, u) if NamedRole(ip) == p =>
+        Set((v.asConcept, u.asConcept))
+      case _ => Set()
+    }
+
+    val all = a.concepts.toList.union(a.variables.map(_.asConcept).toList).toSet
+    axiomize(all, p, vu).union(axiomize(all, Inverse(p), vui))
+  }
+
+  def axioms: Set[Axiom] = general.union(specific)

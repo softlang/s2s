@@ -79,23 +79,23 @@ class GeneralSCCQTests extends ValidationTestSuite("General"):
     )
 
   @Test def general_3_1(): Unit =
-   test(
-     Set(
-       ":A ⊑ :B",
-       ":B ⊑ :A"
-     ),
-     q3,
-     Set(
-       ":C ⊑ ∃:q.:D",
-       ":D ⊑ ∃-:q.:C",
-       "∃:q.⊤ ⊑ :C",
-       "∃:q.⊤ ⊑ ∃:q.:D",
-       "∃:q.⊤ ⊑ ∀-:q.:C",
-       "∃-:q.⊤ ⊑ :D",
-       "∃-:q.⊤ ⊑ ∃-:q.:C",
-       "∃-:q.⊤ ⊑ ∀:q.:D"
-     )
-   )
+    test(
+      Set(
+        ":A ⊑ :B",
+        ":B ⊑ :A"
+      ),
+      q3,
+      Set(
+        ":C ⊑ ∃:q.:D",
+        ":D ⊑ ∃-:q.:C",
+        "∃:q.⊤ ⊑ :C",
+        "∃:q.⊤ ⊑ ∃:q.:D",
+        "∃:q.⊤ ⊑ ∀-:q.:C",
+        "∃-:q.⊤ ⊑ :D",
+        "∃-:q.⊤ ⊑ ∃-:q.:C",
+        "∃-:q.⊤ ⊑ ∀:q.:D"
+      )
+    )
 
   val q4 = query("?x :q ?x . ?x a :B", "?x :r ?x . ?x a :A")
 
