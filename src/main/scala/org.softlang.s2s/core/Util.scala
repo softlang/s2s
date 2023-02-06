@@ -18,7 +18,7 @@ extension (i: Iri)
   private def getBase(scopes: Scopes): Iri =
     Iri.makeFromRawIri(scopes.removeScopeTokens(i.getRaw)).toOption.get
 
-  private def isVariable: Boolean =
+  def isVariable: Boolean =
     // Only variables use the internal shar prefix.
     i.retracted(Iri.shar).isDefined
 

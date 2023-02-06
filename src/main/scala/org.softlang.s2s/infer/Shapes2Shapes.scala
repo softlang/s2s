@@ -235,7 +235,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           approximateVariables = config.approximatePvariables,
           useSubsumption = config.useSubsumptionInPatternDCA,
           includeConceptClosure = config.includeConceptClosurePattern,
-          includeVariableClosure = config.includeVariableClosurePattern
+          includeVariableClosure = config.includeVariableClosurePattern,
+          dcaFix = config.dcaFix
         ).axioms
       else Set()
 

@@ -156,4 +156,4 @@ class GeneralSCCQTests extends ValidationTestSuite("General"):
   val q10 = query("?x :l ?y . ?z a :D", "?x :l ?y . ?z a :D")
 
   @Test def general_10_0(): Unit =
-    test(Set(":D ⊑ ∃:l.:D"), q10, Set(":D ⊑ ∃:l.:D"))
+    test(Set(":D ⊑ ∃:l.:D"), q10, Set(":D ⊑ ∃:l.:D"), debug = true)

@@ -255,7 +255,11 @@ class AlternativeClosedWorldAssumption(
       case _ => Set()
     }
 
-    val all = a.concepts.toList.union(a.variables.map(_.asConcept).toList).toSet
+    val all = a.nominals
+      .map(NominalConcept(_))
+      .toList
+      .union(a.variables.map(_.asConcept).toList)
+      .toSet
     axiomize(all, p, vu).union(axiomize(all, Inverse(p), vui))
   }
 

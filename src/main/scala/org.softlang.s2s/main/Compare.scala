@@ -33,16 +33,29 @@ object Compare:
       Set()
     )
 
+    // compare.input(
+    //  """
+    //  |CONSTRUCT {
+    //  |  ?x a :A .
+    //  |  ?y a :B .
+    //  |  ?z a :C
+    //  |} WHERE {
+    //  |  ?x :p ?y .
+    //  |  ?z :p ?z
+    //  |}
+    // """.stripMargin('|'),
+    //  Set()
+    // )
+
     compare.input(
       """
-      |CONSTRUCT {
-      |  ?x a :A .
-      |  ?y a :B .
-      |  ?z a :C 
-      |} WHERE {
-      |  ?x :p ?y . 
-      |  ?z :p ?z 
-      |}
+     |CONSTRUCT {
+     |  ?x :r ?y .
+     |  ?z a :D
+     |} WHERE {
+     |  ?x :r ?y .
+     |  ?z a :D
+     |}
     """.stripMargin('|'),
-      Set()
+      Set(":D ⊑ ∃:l.:D")
     )

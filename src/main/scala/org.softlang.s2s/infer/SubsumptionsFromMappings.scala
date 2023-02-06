@@ -11,7 +11,7 @@ import org.softlang.s2s.query._
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape],
-    debug: Boolean = false
+    debug: Boolean = true
 )(implicit scopes: Scopes)
     extends Inference:
 

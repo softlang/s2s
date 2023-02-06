@@ -4,6 +4,7 @@ import de.pseifer.shar.dl._
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.inScope
+import org.softlang.s2s.core.isVariable
 import org.softlang.s2s.query._
 
 class DomainClosureAssumptionForTemplate(
@@ -32,7 +33,8 @@ class DomainClosureAssumptionForPattern(
     approximateVariables: Boolean,
     useSubsumption: Boolean,
     includeVariableClosure: Boolean,
-    includeConceptClosure: Boolean
+    includeConceptClosure: Boolean,
+    dcaFix: Boolean
 )(implicit scopes: Scopes)
     extends DomainClosureAssumption(
       a,
@@ -44,13 +46,28 @@ class DomainClosureAssumptionForPattern(
     )(scopes):
 
   override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
-    if includeConceptClosure then
-      axioms.map(_ match
-        case Equality(l @ NamedConcept(_), r) if a.concepts.contains(l) =>
-          Equality(l, Intersection(l.inScope(Scope.Input), r))
-        case a => a
-      )
-    else axioms
+    val a1 =
+      if includeConceptClosure then
+        axioms.map(_ match
+          case Equality(l @ NamedConcept(_), r) if a.concepts.contains(l) =>
+            Equality(l, Intersection(l.inScope(Scope.Input), r))
+          case a => a
+        )
+      else axioms
+
+    val a2 =
+      if dcaFix then
+        a1.flatMap(_ match
+          case Equality(NamedConcept(v), r) if v.isVariable =>
+            Set(
+              // Could be Equality?
+              Subsumption(NamedConcept(v), r.inScope(Scope.Pattern)),
+              Subsumption(r.inScope(Scope.Input), NamedConcept(v))
+            )
+          case a => Set(a)
+        )
+      else a1
+    a2
 
   val leftScope = Scope.Pattern
   val rightScope = if includeConceptClosure then Scope.Pattern else Scope.Input

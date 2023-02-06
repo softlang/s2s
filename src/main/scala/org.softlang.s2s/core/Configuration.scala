@@ -99,6 +99,9 @@ case class Configuration(
     // Include the variable closure for the tempalte.
     includeVariableClosureTemplate: Boolean,
 
+    // TBD
+    dcaFix: Boolean,
+
     // ***********
     // *** CWA ***
     // ***********
@@ -168,18 +171,26 @@ object Configuration:
   def default: Configuration = og
 
   def paper: Configuration = base.copy(
-    includeConceptClosurePattern = true, // Paper, old: false
-    includeConceptClosureTemplate = true, // Paper, old: false
-    includeVariableClosureTemplate = false, // Paper, old: true
-    cwaForPattern = true, // Paper: true, old: false
-    closeConcepts = false, // Paper: false, old: true
-    alternativeCWA = true // Paper: true, old: false
+    // includeConceptClosurePattern = true, // Paper: true, old: false
+    // includeConceptClosureTemplate = true, // Paper: true, old: false
+    // includeVariableClosureTemplate = false, // Paper: false, old: true
+    // cwaForPattern = true, // Paper: true, old: false
+    // closeConcepts = false, // Paper: false, old: true
+    // alternativeCWA = true // Paper: true, old: false
+    includeConceptClosurePattern = true,
+    includeConceptClosureTemplate = true,
+    includeVariableClosureTemplate = false,
+    dcaFix = true,
+    cwaForPattern = false,
+    closeConcepts = true,
+    alternativeCWA = false
   )
 
   def og: Configuration = base.copy(
     includeConceptClosurePattern = false,
     includeConceptClosureTemplate = false,
     includeVariableClosureTemplate = true,
+    dcaFix = false,
     cwaForPattern = false,
     closeConcepts = true,
     alternativeCWA = false
@@ -193,6 +204,7 @@ object Configuration:
     includeVariableClosurePattern = true,
     includeConceptClosureTemplate = false,
     includeVariableClosureTemplate = true,
+    dcaFix = false,
     cwaForPattern = false,
     cwaForTemplate = true,
     unaForPattern = false,
