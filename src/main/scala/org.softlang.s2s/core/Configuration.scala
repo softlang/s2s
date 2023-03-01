@@ -168,7 +168,7 @@ object Configuration:
   /** Default configuration for Shapes2Shapes in accordance with the From Shapes
     * to Shapes paper and reasonable defaults, otherwise.
     */
-  def default: Configuration = og
+  def default: Configuration = paper
 
   def paper: Configuration = base.copy(
     // includeConceptClosurePattern = true, // Paper: true, old: false
@@ -181,9 +181,10 @@ object Configuration:
     includeConceptClosureTemplate = true,
     includeVariableClosureTemplate = false,
     dcaFix = true,
-    cwaForPattern = false,
+    cwaForPattern = true,
     closeConcepts = true,
-    alternativeCWA = false
+    alternativeCWA = true
+    // useMappingMethod = false,
   )
 
   def og: Configuration = base.copy(

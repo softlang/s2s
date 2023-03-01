@@ -203,6 +203,21 @@ class AlternativeClosedWorldAssumption(
 
   import AtomicPattern._
 
+  private def fixScope(
+      ax: Set[Axiom],
+      leftScope: Scope,
+      rightScope: Scope
+  ): Set[Axiom] =
+    ax.map(_ match
+      case Subsumption(l, r) =>
+        Subsumption(l.inScope(leftScope), r.inScope(rightScope))
+      case Equality(l, r) =>
+        Equality(l.inScope(leftScope), r.inScope(rightScope))
+      case RoleSubsumption(l, r) =>
+        RoleSubsumption(l.inScope(leftScope), r.inScope(rightScope))
+      case a => a
+    )
+
   private def general: Set[Axiom] = a.properties.flatMap { p =>
     Set(
       Subsumption(
@@ -222,12 +237,12 @@ class AlternativeClosedWorldAssumption(
       cs: List[(Concept, Concept)]
   ): Set[Axiom] =
     val maps = cs.groupBy((_._1))
-    all.map(c =>
+    all.flatMap(c =>
       val ex = Existential(role.inScope(targetScope), c)
       if maps.contains(c) then
         val rhs = maps(c).map(_._2)
-        Equality(ex, Concept.unionOf(rhs))
-      else Equality(ex, Bottom)
+        Some(Equality(ex, Concept.unionOf(rhs)))
+      else None
     )
 
   private def specific: Set[Axiom] = a.properties.flatMap { p =>
@@ -263,4 +278,6 @@ class AlternativeClosedWorldAssumption(
     axiomize(all, p, vu).union(axiomize(all, Inverse(p), vui))
   }
 
-  def axioms: Set[Axiom] = general.union(specific)
+  def axioms: Set[Axiom] =
+    val og = ClosedWorldAssumptionForPattern(a, false, true, false, true).axioms
+    fixScope(og, targetScope, targetScope).union(general.union(specific))

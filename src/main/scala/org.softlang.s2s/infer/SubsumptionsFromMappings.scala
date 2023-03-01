@@ -11,11 +11,14 @@ import org.softlang.s2s.query._
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape],
-    debug: Boolean = true
+    debug: Boolean = false
 )(implicit scopes: Scopes)
     extends Inference:
 
   type Components = Map[Set[Var], Set[AtomicPattern]]
+
+  private def dbug(s: String): Unit =
+    if debug then println(s)
 
   /** All subsets of a required size. */
   private def subsets[T](s: Set[T], ofSize: Int): List[Set[T]] =
@@ -47,63 +50,69 @@ class SubsumptionsFromMappings(
     // (3)
     // Generate variable mappings and find subsumption.
     val ttt = for
-      // The sub-query-component (note: will be the super-pattern!)
-      sub <- extendedComps
-      // The super-query-component (note: will be the sub-pattern!)
-      sup <- comps
+      // The extended component.
+      pext <- extendedComps
+      // The sub-pattern component (will be mapped).
+      p1 <- comps
     yield
-      // The complete (including temporary) variables in sub and sup.
-      val subv = sub._2.toList.variables
-      val supv = sup._2.toList.variables
+      // The complete (including temporary) variables in pext and p1.
+      val pextv = pext._2.toList.variables
+      val p1v = p1._2.toList.variables
 
-      if debug then
-        println(sup._1.mkString(",") ++ "\n | " ++ sup._2.mkString("\n | "))
-      if debug then
-        println(
-          sub._1.mkString(",") ++ "\n | " ++ sub._2.mkString("\n | ") ++ "\n"
-        )
+      dbug("---- ---- ----")
+
+      dbug(
+        "[P1] " ++ p1._1.mkString(",") ++ "\n | " ++ p1._2.mkString("\n | ")
+      )
+      dbug(
+        "[Pext] " ++ pext._1.mkString(",") ++ "\n | " ++ pext._2.mkString(
+          "\n | "
+        ) ++ "\n"
+      )
+
+      dbug("[P1 Variables]\n  " ++ p1v.mkString(","))
 
       // C1 - All numbers of occurrences for variables.
       val c1 = for
-        v <- subv
-        i <- 0 to subv.size
+        v <- pextv
+        i <- 0 to p1v.size
       yield List.fill(i)(v)
 
-      if debug then
-        println(c1.size)
-        println(c1)
-
       // C2 - All possible RHS (in terms of occurring variables).
-      val c2 = subsets(c1.toList.flatten.toSet, supv.size)
-
-      if debug then
-        println(c2.size)
-        println(c2)
+      val c2 = subsets(c1.toList.flatten.toSet, p1v.size)
 
       // C3 - Finally, all permutations for the RHS of the mapping.
       val c3 = c2
         .flatMap(_.toList.permutations)
         .toList
+        .union(c1.toList) // Longer dublicates as well.
 
-      if debug then
-        println(c3.size)
-        println(c3)
+      dbug(
+        "[Mappings]\n" ++ c3
+          .map(_.mkString(","))
+          .map(s => s"  $s\n")
+          .mkString("")
+      )
+
+      dbug("[C1] " ++ c1.toString)
+      dbug("[C1'] " ++ c1.toList.flatten.toSet.toString)
+      dbug("[C2] " ++ c2.toString)
+      dbug("[C3] " ++ c3.toString)
 
       val axioms =
         for ci <- c3
         yield
-          // Mappings from sup variables to sub variables.
-          val mapping = supv.zip(ci).toMap
-          // If sup is subsumed by sub while using the current mapping
-          if sup._2.toList.mappedWith(mapping).subsumedBy(sub._2.toList) then
-            if debug then
-              mapping.foreach((k, v) => print(k.v ++ " -> " ++ v.v ++ ", "))
-              println()
+          // Mappings from P1 variables to Pext variables.
+          val mapping = p1v.zip(ci).toMap
+          // If P1 is subsumed by Pext under the current mapping:
+          if p1._2.toList.mappedWith(mapping).subsumedBy(pext._2.toList) then
+            dbug("[Mappings]")
+            mapping.foreach((k, v) => dbug(k.v ++ " -> " ++ v.v ++ ", "))
             mapping
               // we can filter vacously satisfied subsumptions (i.e., x -> x)
               .filter(_ != _)
               // filter out any temporary variables
-              .filter((x, y) => sup._1.contains(x) && sub._1.contains(y))
+              .filter((x, y) => p1._1.contains(x) && pext._1.contains(y))
               // then generate the subsumption axioms (reverse of mapping).
               .map((x, y) => Subsumption(y.asConcept, x.asConcept))
           else Set()
