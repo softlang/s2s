@@ -1,9 +1,0 @@
-CONSTRUCT { 
-  ?x :knows ?y .
-  ?x a :Person .
-  ?y a :Agent
-} WHERE { 
-  ?x :knows ?y .
-  ?x a :Person .
-  ?y a :Person
-}

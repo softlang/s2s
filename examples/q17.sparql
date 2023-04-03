@@ -1,5 +1,0 @@
-CONSTRUCT {
-  ?x :likes ?y . ?z a :Dog
-} WHERE { 
-  ?x :likes ?y . ?z a :Dog
-}
