@@ -9,29 +9,32 @@ object Compare:
   def run(): Unit =
     val compare = ConfigurationComparison(
       Configuration.paper,
-      Configuration.og,
+      Configuration.paper
+        .copy(
+          useNamespacedTop = true
+        ),
       // Perform 1000 trials per generator configuration.
-      trials = 1,
+      trials = 10000,
       // Generate multiple results.
-      stopAfterFirstResult = false,
+      stopAfterFirstResult = true,
       title1 = "Paper",
-      title2 = "Implementation OG"
+      title2 = "Paper + Namespaced Top"
     )
+
+    // compare.structured()
 
     compare.input(
       """
-      |CONSTRUCT {
-      |  ?x a :B .
-      |  ?x :q ?y . 
-      |  ?y a :B
-      |} WHERE {
-      |  ?x a :A . 
-      |  ?x :r ?y . 
-      |  ?y a :A
+      |CONSTRUCT { 
+      | ?v2 a :C4 . ?v2 :p4 ?v1 . ?v1 :p3 ?v2 . :a1 :p3 :a2 
+      |} WHERE { 
+      | ?v1 :p2 ?v2
       |}
     """.stripMargin('|'),
       Set()
     )
+
+    /*
 
     // compare.input(
     //  """
@@ -59,3 +62,4 @@ object Compare:
     """.stripMargin('|'),
       Set(":D ⊑ ∃:l.:D")
     )
+     */

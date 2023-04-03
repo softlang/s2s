@@ -183,7 +183,8 @@ object Configuration:
     dcaFix = true,
     cwaForPattern = true,
     closeConcepts = true,
-    alternativeCWA = true
+    alternativeCWA = true,
+    useNamespacedTop = false
     // useMappingMethod = false,
   )
 

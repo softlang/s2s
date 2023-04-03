@@ -52,6 +52,7 @@ class ConfigurationComparison(
           println("\nProblem:")
           println(q.show(s1.shar.state))
           s.map(_.show(s1.shar.state)).foreach(println)
+        else print(".")
 
         // Initialize logs.
         val log1 = Log("T", debugging = true)
@@ -132,9 +133,9 @@ class ConfigurationComparison(
 
     val rc = ProblemGeneratorConfig(
       minPatternSize = 2,
-      maxPatternSize = 3,
+      maxPatternSize = 6,
       minTemplateSize = 2,
-      maxTemplateSize = 3,
+      maxTemplateSize = 6,
       freshVariable = (0.0f, 1.0f),
       variablesCount = (1, 10),
       freshConcept = (0.0f, 1.0f),
@@ -142,11 +143,11 @@ class ConfigurationComparison(
       freshProperty = (0.0f, 1.0f),
       propertiesCount = (1, 10),
       freshNominal = 0.0f,
-      nominalsCount = 0,
+      nominalsCount = (0, 10),
       propertyConceptRatio = (0.0f, 1.0f),
-      variableToNominalRatio = 1.0f,
+      variableToNominalRatio = 0.8f,
       cyclicRedrawCount = 10,
-      minNumberOfShapes = 1,
+      minNumberOfShapes = 0,
       maxNumberOfShapes = 2,
       propertyConceptTargetRatio = -1.0f,
       propertyConceptConstraintRatio = -1.0f,
