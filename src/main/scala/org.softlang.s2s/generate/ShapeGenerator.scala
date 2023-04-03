@@ -59,17 +59,18 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean):
       case Existential(NamedRole(_), _) => true
       case _                            => false
 
-  /** Filter, that matches all shapes entailed, given that all other shapes are
-    * generated.
-    */
+  /** Matches all shapes entailed by other generated shapes. */
   private def entailed(target: Concept, constraint: Concept): Boolean =
-    target == constraint
-      || (isNC(target) && isU(constraint))
+    (isNC(target) && isU(constraint))
       || (isE(target) && hasR(target) && isU(constraint) && hasR(constraint))
       || (isE(target) && hasIR(target) && isU(constraint) && hasIR(constraint))
+
+  /** Matches all tautologies. */
+  private def tautology(target: Concept, constraint: Concept): Boolean =
+    target == constraint
 
   def generate: Set[SimpleSHACLShape] = for
     t <- generateTargets
     c <- generateConstraints
-    if !optimize || !entailed(t, c)
+    if (!optimize || !entailed(t, c)) && !tautology(t, c)
   yield SimpleSHACLShape(Subsumption(t, c))

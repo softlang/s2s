@@ -188,15 +188,15 @@ object Configuration:
     // useMappingMethod = false,
   )
 
-  def og: Configuration = base.copy(
-    includeConceptClosurePattern = false,
-    includeConceptClosureTemplate = false,
-    includeVariableClosureTemplate = true,
-    dcaFix = false,
-    cwaForPattern = false,
-    closeConcepts = true,
-    alternativeCWA = false
-  )
+  // def og: Configuration = base.copy(
+  //  includeConceptClosurePattern = false,
+  //  includeConceptClosureTemplate = false,
+  //  includeVariableClosureTemplate = true,
+  //  dcaFix = false,
+  //  cwaForPattern = false,
+  //  closeConcepts = true,
+  //  alternativeCWA = false
+  // )
 
   private def base: Configuration = Configuration(
     // Algorithm
@@ -235,7 +235,7 @@ object Configuration:
     // and are overwritten by standard settings of
     // the CLI framework!
     // Therefore, the following defaults are only relevant
-    // for development (testing) and analysis.
+    // for development, testing and analysis runs.
     activeReasoner = ActiveReasoner.Hermit,
     timeout = 60000,
     retry = 0,

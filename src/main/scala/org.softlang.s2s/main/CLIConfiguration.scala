@@ -27,26 +27,20 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
 
   val optimize =
     toggle(
-      default = Some(true),
-      descrYes = "Remove output shapes entailed by others (def: On)"
+      default = Some(false),
+      descrYes = "Remove output shapes entailed by others (def: Off)"
     )
 
   val log =
     toggle(
-      default = Some(true),
-      descrYes = "Print input and output as a log (def: On)"
+      default = Some(false),
+      descrYes = "Print input and output as a log (def: Off)"
     )
 
   val hidecolon =
     toggle(
       default = Some(true),
       descrYes = "Hide colon in prefixes in log (def: On)"
-    )
-
-  val usejfact =
-    toggle(
-      default = Some(false),
-      descrYes = "Use JFact over HermiT (def: Off)"
     )
 
   val timeout =
@@ -77,8 +71,8 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
 
   val output =
     toggle(
-      default = Some(false),
-      descrYes = "Print shapes as output (def: Off)"
+      default = Some(true),
+      descrYes = "Print shapes as output (def: On)"
     )
 
   val prefix =

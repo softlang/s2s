@@ -73,7 +73,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     // Print results (if enabled).
     if config.printOutput then
       for o <- output
-      do o.map(_.show).foreach(println)
+      do o.map(_.show).toList.sorted.foreach(println)
 
     output
 
