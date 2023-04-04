@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# Anonymizes an instance of this project.
+
+# The new build file.
+
+S=$(
+cat <<'EOF'
+import scala.sys.process._
+import sbt._
+
+val scala3Version = "3.2.0"
+
+// Name of fat jar produced via 'assembly' plugin.
+val jarName = "s2s.jar"
+
+lazy val root = project
+  .in(file("."))
+  .enablePlugins(Antlr4Plugin)
+  .settings(
+    // Project settings.
+    name := "shapes2shapes",
+    organization := "org.softlang",
+    version := "0.0.1",
+    Antlr4 / antlr4Version := "4.7.2",
+    Antlr4 / antlr4GenVisitor := true,
+    run / fork := true,
+    run / outputStrategy := Some(StdoutOutput),
+    run / javaOptions += "-Xmx4G",
+    run / javaOptions += "-Dfile.encoding=UTF-8",
+    scalaVersion := scala3Version,
+    // Settings for assembly (fat jar).
+    assembly / mainClass := Some("org.softlang.s2s.s2s"),
+    assembly / assemblyJarName := jarName,
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case _                        => MergeStrategy.first
+    },
+    // Dependencies.
+    libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
+    libraryDependencies += "net.sourceforge.owlapi" % "org.semanticweb.hermit" % "1.4.5.519",
+    // JFact reasoner support.
+    libraryDependencies += "net.sourceforge.owlapi" % "jfact" % "5.0.3",
+    libraryDependencies += "org.slf4j" % "slf4j-nop" % "2.0.6",
+    // Openllet reasoner support.
+    libraryDependencies += "com.github.galigator.openllet" % "openllet-owlapi" % "2.6.5",
+    // JSON-LD
+    libraryDependencies += "com.apicatalog" % "titanium-json-ld" % "1.3.1",
+    libraryDependencies += "org.glassfish" % "jakarta.json" % "2.0.1",
+    // CLI Application.
+    libraryDependencies += "org.rogach" %% "scallop" % "4.1.0",
+    // Testing
+    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
+    // Parsing
+    // ANTLR
+    libraryDependencies ++= Seq(
+      "org.antlr" % "antlr4" % "4.7.2",
+      "org.antlr" % "antlr4-runtime" % "4.7.2"
+    ),
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0"
+  )
+EOF
+)
+
+# Create folder for submission.
+mkdir submission
+
+# Copy relevant files.
+
+cp -r src Submission
+touch Submission/build.sbt
+echo "$S" >> Submission/build.sbt
+cp s2s Submission
+cp s2s.bat Submission
+cp README.md Submission
+cp -r paper_examples Submission
+mkdir Submission/project
+cp project/build.properties Submission/project
+cp project/plugins.sbt Submission/project
+
+cd Submission
+
+# Download download SHAR project.
+
+git clone https://github.com/pseifer/shar
+
+# Rename the folder structure.
+
+mv src/main/scala/org.softlang.s2s src/main/scala/anon.ymous.s2s
+mv src/test/scala/org.softlang.s2s src/test/scala/anon.ymous.s2s
+
+# Merge content from SHAR.
+
+mv shar/src/main/antlr4 src/main
+mv shar/src/main/scala/de.pseifer.shar src/main/scala/anon.ymous.dlib
+echo -e "\n" >> "project/plugins.sbt"
+cat "shar/project/plugins.sbt" >> "project/plugins.sbt"
+
+# Rename file structure.
+
+mv src/main/scala/anon.ymous.dlib/util/Shar.scala src/main/scala/anon.ymous.dlib/util/Dlib.scala
+mv src/main/scala/anon.ymous.dlib/util/SharDSL.scala src/main/scala/anon.ymous.dlib/util/DlibDSL.scala
+mv src/main/scala/anon.ymous.dlib/error/SharError.scala src/main/scala/anon.ymous.dlib/error/DlibError.scala
+
+# Remove everything else from shar.
+
+rm -rf shar
+
+# Find all files, that need renaming
+# and apply multiple mappings to rename them.
+find . -type f -a \( -name "*.scala" -o\
+                     -name "build.sbt" -o\
+		     -name "README.md" -o\
+		     -name "DescriptionLogics.g4" -o\
+		     -name "s2s" -o\
+		     -name "s2s.bat" \) -a \
+		     -exec sed -i -e 's/org\.softlang\./anon\.ymous\./g' \
+                                  -e 's/de\.pseifer\.shar/anon\.ymous\.dlib/g' \
+                                  -e 's/shar/dlib/g' \
+                                  -e 's/Shar/Dlib/g' \
+                                  -e 's/org\.softlang/anon\.ymous/g' \
+                                  -e 's/Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab/ANONYMOUS/g' \
+                                  -e 's/Philipp Seifer/ANONYMOUS/g' \
+                                  -e 's/Softlang/ANONYMOUS/g' \
+                                  -e 's/University of Koblenz/ANONYMOUS/g' \
+				  -e 's/github\.com\/softlang/anon.ymous\/anonymous/g' \
+				  -e 's/github\.com\/pseifer/anon.ymous\/anonymous/g' \
+                     {} +
+
+# Finally, create an archive for submission.
+cd ..
+rm -rf submission.zip
+zip -r submission.zip submission/
+rm -rf submission
