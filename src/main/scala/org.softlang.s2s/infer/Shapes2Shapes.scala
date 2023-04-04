@@ -3,6 +3,8 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Prefix
+import de.pseifer.shar.dl.Equality
+import de.pseifer.shar.dl.Subsumption
 import de.pseifer.shar.reasoning._
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
@@ -244,7 +246,21 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.dcaForPattern then log.debug("CWA(q.P), steps 1. and 3.", dcaP)
+    // Step 1 (in the Paper), relevant for (debug) info only.
+    val dcaP1 = dcaP.filter(a =>
+      a match
+        case Equality(_, _) => true
+        case _              => false
+    )
+
+    // Step 3 (in the Paper), relevant for (debug) info only.
+    val dcaP3 = dcaP.filter(a =>
+      a match
+        case Subsumption(_, _) => true
+        case _                 => false
+    )
+
+    if config.dcaForPattern then log.debug("CWA(q.P), step 1", dcaP1)
 
     log.profileEnd("build-dca-p")
     log.profileStart("build-dca-t")
@@ -264,6 +280,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       else Set()
 
     if config.dcaForTemplate then log.debug("CWA(q.H), step 2.", dcaH)
+
+    if config.dcaForPattern then log.debug("CWA(q.P), step 3.", dcaP3)
 
     log.profileEnd("build-dca-t")
     log.profileStart("build-cwa-p")
