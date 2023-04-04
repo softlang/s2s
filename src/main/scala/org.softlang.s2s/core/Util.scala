@@ -114,13 +114,15 @@ object Util:
       .replaceAll("⊔", "|")
 
   def formatSet(
-      s: Set[String],
+      sin: Set[String],
       oneline: Boolean = true,
       prefix: String = "",
       postfix: String = "",
       token: String = ",",
-      indent: String = "  "
+      indent: String = "  ",
+      sorted: Boolean = false
   ): String =
+    val s = if sorted then sin.toList.sorted else sin.toList
     if s.isEmpty then prefix ++ "∅"
     else if s.size == 1 then prefix ++ s.head ++ postfix
     else if oneline then prefix ++ s.map(_.trim).mkString(token) ++ postfix

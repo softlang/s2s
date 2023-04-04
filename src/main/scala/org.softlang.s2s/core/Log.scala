@@ -54,8 +54,19 @@ class Log(
     info(title.trim ++ " = " ++ s.trim)
 
   /** Log list of information with label. */
-  def info(title: String, s: List[String]): Unit =
-    info(Util.formatSet(s.toSet, prefix = title.trim ++ " = ", oneline = false))
+  def info(title: String, s: List[String], sorted: Boolean = false): Unit =
+    info(
+      Util.formatSet(
+        s.toSet,
+        prefix = title.trim ++ " = ",
+        oneline = false,
+        sorted = sorted
+      )
+    )
+
+  /** Log set of information with label. */
+  def info(title: String, s: Set[String]): Unit =
+    info(title, s.toList, sorted = true)
 
   /** Log information (in debugging mode). */
   def debug(s: String): Unit = if debugging then info(s)
@@ -64,18 +75,18 @@ class Log(
   def debug(title: String, s: String): Unit = if debugging then info(title, s)
 
   /** Log list of information (in debugging mode) with label. */
-  def debug(title: String, s: List[String]): Unit =
-    if debugging then info(title, s)
+  def debug(title: String, s: List[String], sorted: Boolean): Unit =
+    if debugging then info(title, s, sorted)
 
   /** Log set of axioms (in debugging mode) with label. */
   def debug(title: String, s: Set[Axiom])(implicit
       state: BackendState
   ): Unit =
-    debug(title, s.map(_.show).toList.sorted)
+    debug(title, s.map(_.show).toList, sorted = true)
 
   /** Log set of axioms (in debugging mode) with label. */
   def debug(title: String, s: Set[String]): Unit =
-    debug(title, s.toList.sorted)
+    debug(title, s.toList, sorted = true)
 
   /** Debug information only if in noisy mode. */
   def debugNoisy(content: String): Unit =

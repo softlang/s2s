@@ -447,5 +447,5 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     t.join(timeout.toMillis)
     t.stop()
 
-    if result.isDefined then log.info("S_out", result.get.map(_.show).toList)
+    if result.isDefined then log.info("S_out", result.get.map(_.show))
     result.map((log, _))
