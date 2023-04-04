@@ -39,6 +39,8 @@ class ShapePropertySubsumption(
                 .size == 1 && pattern
                 .filter(_.variables.contains(ci._2))
                 .size == 1
+              // Since loop is always tigher than the expressed shape:
+                && ci._1 != ci._2
             )
             // then the role is unconstrained.
           then

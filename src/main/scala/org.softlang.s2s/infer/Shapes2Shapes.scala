@@ -271,7 +271,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         if config.alternativeCWA then
           AlternativeClosedWorldAssumption(
             q.pattern,
-            Scope.Pattern
+            Scope.Pattern,
+            config.useNamespacedTop
           ).axioms
         else
           ClosedWorldAssumptionForPattern(
@@ -295,7 +296,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         if config.alternativeCWA then
           AlternativeClosedWorldAssumption(
             q.template,
-            Scope.Template
+            Scope.Template,
+            config.useNamespacedTop
           ).axioms
         else
           ClosedWorldAssumptionForTemplate(

@@ -196,7 +196,8 @@ abstract class ClosedWorldAssumption(
 
 class AlternativeClosedWorldAssumption(
     a: AtomicPatterns,
-    targetScope: Scope
+    targetScope: Scope,
+    namespacedTop: Boolean
 )(implicit
     scopes: Scopes
 ):
@@ -280,4 +281,7 @@ class AlternativeClosedWorldAssumption(
 
   def axioms: Set[Axiom] =
     val og = ClosedWorldAssumptionForPattern(a, false, true, false, true).axioms
-    fixScope(og, targetScope, targetScope).union(general.union(specific))
+    if namespacedTop then
+      fixScope(og, targetScope, targetScope).union(general.union(specific))
+    // General closures are trivial when not using namespaced top.
+    else fixScope(og, targetScope, targetScope).union(specific)
