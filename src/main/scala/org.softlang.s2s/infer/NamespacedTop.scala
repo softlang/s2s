@@ -19,7 +19,7 @@ class NamespacedTop(
     extends Inference:
 
   /** Definition of a specific Top-replacement over a set of atomic patterns. */
-  private def aClosure(top: NamedConcept, ap: AtomicPatterns): Set[Axiom] = Set(
+  private def aClosure(top: Concept, ap: AtomicPatterns): Set[Axiom] = Set(
     Equality(
       top,
       Concept.unionOf(
@@ -60,9 +60,4 @@ class NamespacedTop(
   def axioms: Set[Axiom] =
     if namespacedTop then
       generalClosure.union(templateClosure).union(patternClosure)
-    else
-      Set(
-        Equality(Top, scopes.top(Scope.Input)),
-        Equality(Top, scopes.top(Scope.Pattern)),
-        Equality(Top, scopes.top(Scope.Template))
-      )
+    else Set()

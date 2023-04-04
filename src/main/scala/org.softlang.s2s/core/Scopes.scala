@@ -5,7 +5,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl.NamedConcept
 
 /** Encoding of available scopes. */
-class Scopes(token: String, localTop: String):
+class Scopes(token: String, localTop: String, includeTop: Boolean):
 
   /** Rule for naming/appending for the differnt scopes. */
   private def makeScopeToken(scope: Scope): String = scope match
@@ -87,10 +87,12 @@ class Scopes(token: String, localTop: String):
     case a                 => a
 
   /** Get top for this scope. */
-  def top(scope: Scope): NamedConcept =
-    NamedConcept(
-      Iri
-        .fromString(Iri.shar.expanded(localTop ++ getToken(scope)))
-        .toOption
-        .get
-    )
+  def top(scope: Scope): Concept =
+    if includeTop then
+      NamedConcept(
+        Iri
+          .fromString(Iri.shar.expanded(localTop ++ getToken(scope)))
+          .toOption
+          .get
+      )
+    else Top

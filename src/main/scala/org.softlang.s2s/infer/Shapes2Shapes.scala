@@ -33,7 +33,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   // The scope encoding (implicit) needed for renaming.
   implicit val scopes: Scopes =
-    Scopes(config.renameToken, config.namespacedTopName)
+    Scopes(
+      config.renameToken,
+      config.namespacedTopName,
+      config.useNamespacedTop
+    )
 
   /** Create a fresh log. */
   private def createLog: Log =
@@ -201,7 +205,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         SubsumptionsFromMappings(q.pattern, s).axioms
       else Set()
 
-    if config.useMappingMethod then log.debug("Map(q.P)", mappingSubs)
+    if config.useMappingMethod then log.debug("MA(S_in, q.P)", mappingSubs)
 
     log.profileEnd("build-mapping")
     log.profileStart("build-properties")
@@ -213,14 +217,14 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
       else Set()
 
-    if config.addPropertySubsumptions then log.debug("Prop(q)", props)
+    if config.addPropertySubsumptions then log.debug("RS(q)", props)
 
     val shapeProps =
       if config.addPropertySubsumptions then
         ShapePropertySubsumption(q.pattern, s).axioms
       else Set()
 
-    if config.addPropertySubsumptions then log.debug("Prop(q,s)", shapeProps)
+    if config.addPropertySubsumptions then log.debug("RS(q, S_in)", shapeProps)
 
     log.profileEnd("build-properties")
     log.profileStart("build-dca-p")
@@ -240,7 +244,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.dcaForPattern then log.debug("DCA(q.P)", dcaP)
+    if config.dcaForPattern then log.debug("CWA(q.P), steps 1. and 3.", dcaP)
 
     log.profileEnd("build-dca-p")
     log.profileStart("build-dca-t")
@@ -259,7 +263,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         ).axioms
       else Set()
 
-    if config.dcaForTemplate then log.debug("DCA(q.H)", dcaH)
+    if config.dcaForTemplate then log.debug("CWA(q.H), step 2.", dcaH)
 
     log.profileEnd("build-dca-t")
     log.profileStart("build-cwa-p")
@@ -284,7 +288,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           ).axioms
       else Set()
 
-    if config.cwaForPattern then log.debug("CWA(q.P)", cwaP)
+    if config.cwaForPattern then log.debug("CWA(q.P), step 4.", cwaP)
 
     log.profileEnd("build-cwa-p")
     log.profileStart("build-cwa-t")
@@ -309,7 +313,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           ).axioms
       else Set()
 
-    if config.cwaForTemplate then log.debug("CWA(q.H)", cwaH)
+    if config.cwaForTemplate then log.debug("CWA(q.H), step 5.", cwaH)
 
     log.profileEnd("build-cwa-t")
     log.profileStart("build-una-p")
@@ -320,7 +324,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       if config.unaForPattern then UniqueNameAssumption(q.pattern).axioms
       else Set()
 
-    if config.unaForPattern then log.debug("UNA(q.P)", unaP)
+    if config.unaForPattern then log.debug("UNA for q.P", unaP)
 
     log.profileEnd("build-una-p")
     log.profileStart("build-una-t")
@@ -331,7 +335,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       if config.unaForTemplate then UniqueNameAssumption(q.template).axioms
       else Set()
 
-    if config.unaForTemplate then log.debug("UNA(q.H)", unaH)
+    if config.unaForTemplate then log.debug("UNA for q.H", unaH)
 
     log.profileEnd("build-una-t")
     log.profileStart("build-una")
@@ -352,8 +356,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val tops =
       NamespacedTop(q.pattern, q.template, config.useNamespacedTop).axioms
-    log.debug("T", tops)
 
+    if config.useNamespacedTop then log.debug("T", tops)
     log.profileEnd("build-top")
     log.profileStart("build-add")
 
@@ -384,7 +388,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       optimize = config.optimizeCandidates
     )(scopes).axioms
 
-    log.debug("S_can", cand.map(_.show).toList)
+    log.debug("S_can", cand.map(_.show))
     log.debugNoisy(s"(${cand.size})")
 
     cand

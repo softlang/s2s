@@ -168,46 +168,18 @@ object Configuration:
   /** Default configuration for Shapes2Shapes in accordance with the From Shapes
     * to Shapes paper and reasonable defaults, otherwise.
     */
-  def default: Configuration = paper
-
-  def paper: Configuration = base.copy(
-    // includeConceptClosurePattern = true, // Paper: true, old: false
-    // includeConceptClosureTemplate = true, // Paper: true, old: false
-    // includeVariableClosureTemplate = false, // Paper: false, old: true
-    // cwaForPattern = true, // Paper: true, old: false
-    // closeConcepts = false, // Paper: false, old: true
-    // alternativeCWA = true // Paper: true, old: false
-    includeConceptClosurePattern = true,
-    includeConceptClosureTemplate = true,
-    includeVariableClosureTemplate = false,
-    dcaFix = true,
-    cwaForPattern = true,
-    closeConcepts = true,
-    alternativeCWA = true,
-    useNamespacedTop = false
-    // useMappingMethod = false,
-  )
-
-  // def og: Configuration = base.copy(
-  //  includeConceptClosurePattern = false,
-  //  includeConceptClosureTemplate = false,
-  //  includeVariableClosureTemplate = true,
-  //  dcaFix = false,
-  //  cwaForPattern = false,
-  //  closeConcepts = true,
-  //  alternativeCWA = false
-  // )
+  def default: Configuration = base
 
   private def base: Configuration = Configuration(
     // Algorithm
     dcaForPattern = true,
     dcaForTemplate = true,
-    includeConceptClosurePattern = false,
+    includeConceptClosurePattern = true,
     includeVariableClosurePattern = true,
-    includeConceptClosureTemplate = false,
-    includeVariableClosureTemplate = true,
-    dcaFix = false,
-    cwaForPattern = false,
+    includeConceptClosureTemplate = true,
+    includeVariableClosureTemplate = false,
+    dcaFix = true,
+    cwaForPattern = true,
     cwaForTemplate = true,
     unaForPattern = false,
     unaForTemplate = false,
@@ -216,9 +188,9 @@ object Configuration:
     addPropertySubsumptions = true,
     renamePatternInternalConcepts = true,
     renamePatternInternalProperties = true,
-    useNamespacedTop = true,
+    useNamespacedTop = false,
     // DCA
-    alternativeCWA = false,
+    alternativeCWA = true,
     erasePvariables = false,
     eraseHvariables = false,
     approximatePvariables = false,

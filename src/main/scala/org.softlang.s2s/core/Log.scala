@@ -68,8 +68,14 @@ class Log(
     if debugging then info(title, s)
 
   /** Log set of axioms (in debugging mode) with label. */
-  def debug(title: String, s: Set[Axiom])(implicit state: BackendState): Unit =
-    debug(title, s.map(_.show).toList)
+  def debug(title: String, s: Set[Axiom])(implicit
+      state: BackendState
+  ): Unit =
+    debug(title, s.map(_.show).toList.sorted)
+
+  /** Log set of axioms (in debugging mode) with label. */
+  def debug(title: String, s: Set[String]): Unit =
+    debug(title, s.toList.sorted)
 
   /** Debug information only if in noisy mode. */
   def debugNoisy(content: String): Unit =

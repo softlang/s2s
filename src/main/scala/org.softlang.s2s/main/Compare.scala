@@ -8,8 +8,8 @@ import org.softlang.s2s.core.Configuration
 object Compare:
   def run(): Unit =
     val compare = ConfigurationComparison(
-      Configuration.paper,
-      Configuration.paper
+      Configuration.default,
+      Configuration.default
         .copy(
           useNamespacedTop = true
         ),
