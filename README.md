@@ -44,7 +44,7 @@ Another relevant command-line option is `--debug`. While by default, the program
 
 ## Further Reading
 
-Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines. Publication. Year. URL.
+Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Publication. Year. URL.
 
 ```BibTeX
 TBD: bibtex-citation
