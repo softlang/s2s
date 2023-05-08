@@ -7,7 +7,12 @@ import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
+import scala.collection.mutable.ListBuffer
 
+// TODO: This is rather inefficient. Optimizations:
+// - Generate only relevant expansions more aggressively.
+// - Oprimize detection of subsumptions via more efficient data structure.
+//   - e.g., turn components into primitive array, check for equality.
 class SubsumptionsFromMappings(
     a: AtomicPatterns,
     shapes: Set[SimpleSHACLShape],
@@ -79,45 +84,33 @@ class SubsumptionsFromMappings(
       yield List.fill(i)(v)
 
       // C2 - All possible RHS (in terms of occurring variables).
-      val c2 = subsets(c1.toList.flatten.toSet, p1v.size)
+      // Must have at least one non-fresh variable to infer relevant mapping.
+      val c2 =
+        subsets(c1.toList.flatten.toSet, p1v.size).filter(_.exists(!_.isFresh))
 
-      // C3 - Finally, all permutations for the RHS of the mapping.
-      val c3 = c2
-        .flatMap(_.toList.permutations)
-        .toList
-        .union(c1.toList) // Longer dublicates as well.
+      val axioms = ListBuffer[Subsumption]()
 
-      dbug(
-        "[Mappings]\n" ++ c3
-          .map(_.mkString(","))
-          .map(s => s"  $s\n")
-          .mkString("")
-      )
+      def test(ci: List[Var]): Unit =
+        // Mappings from P1 variables to Pext variables.
+        val mapping = p1v.zip(ci).toMap
+        // If P1 is subsumed by Pext under the current mapping:
+        if p1._2.toList.mappedWith(mapping).subsumedBy(pext._2.toList) then
+          dbug("[Mappings]")
+          mapping.foreach((k, v) => dbug(k.v ++ " -> " ++ v.v ++ ", "))
+          mapping
+            // we can filter vacously satisfied subsumptions (i.e., x -> x)
+            .filter(_ != _)
+            // filter out any temporary variables
+            .filter((x, y) => p1._1.contains(x) && pext._1.contains(y))
+            // then generate the subsumption axioms (reverse of mapping).
+            .map((x, y) => Subsumption(y.asConcept, x.asConcept))
+            // Add to axioms.
+            .foreach(axioms.addOne)
 
-      dbug("[C1] " ++ c1.toString)
-      dbug("[C1'] " ++ c1.toList.flatten.toSet.toString)
-      dbug("[C2] " ++ c2.toString)
-      dbug("[C3] " ++ c3.toString)
-
-      val axioms =
-        for ci <- c3
-        yield
-          // Mappings from P1 variables to Pext variables.
-          val mapping = p1v.zip(ci).toMap
-          // If P1 is subsumed by Pext under the current mapping:
-          if p1._2.toList.mappedWith(mapping).subsumedBy(pext._2.toList) then
-            dbug("[Mappings]")
-            mapping.foreach((k, v) => dbug(k.v ++ " -> " ++ v.v ++ ", "))
-            mapping
-              // we can filter vacously satisfied subsumptions (i.e., x -> x)
-              .filter(_ != _)
-              // filter out any temporary variables
-              .filter((x, y) => p1._1.contains(x) && pext._1.contains(y))
-              // then generate the subsumption axioms (reverse of mapping).
-              .map((x, y) => Subsumption(y.asConcept, x.asConcept))
-          else Set()
+      for ci <- c1.toList do test(ci)
+      for c <- c2 do for ci <- c.toList.permutations do test(ci)
 
       // Return all subsumption axioms.
-      axioms.flatten
+      axioms
 
     ttt.toList.flatten.toSet

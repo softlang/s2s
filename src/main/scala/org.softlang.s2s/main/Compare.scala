@@ -17,49 +17,21 @@ object Compare:
       trials = 10000,
       // Generate multiple results.
       stopAfterFirstResult = true,
-      title1 = "Paper",
-      title2 = "Paper + Namespaced Top"
+      title1 = "Paper Configuration",
+      title2 = "Paper including namespaced T"
     )
 
+    // (1) Compare on generated test cases.
     // compare.structured()
 
-    compare.input(
-      """
-      |CONSTRUCT { 
-      | ?v2 a :C4 . ?v2 :p4 ?v1 . ?v1 :p3 ?v2 . :a1 :p3 :a2 
-      |} WHERE { 
-      | ?v1 :p2 ?v2
-      |}
-    """.stripMargin('|'),
-      Set()
-    )
-
-    /*
-
+    // (2) Compare on given input case.
     // compare.input(
-    //  """
-    //  |CONSTRUCT {
-    //  |  ?x a :A .
-    //  |  ?y a :B .
-    //  |  ?z a :C
-    //  |} WHERE {
-    //  |  ?x :p ?y .
-    //  |  ?z :p ?z
-    //  |}
+    //   """
+    //   |CONSTRUCT {
+    //   | ?x a :A
+    //   |} WHERE {
+    //   | ?x a :B
+    //   |}
     // """.stripMargin('|'),
-    //  Set()
+    //   Set(":A ⊑ :B")
     // )
-
-    compare.input(
-      """
-     |CONSTRUCT {
-     |  ?x :r ?y .
-     |  ?z a :D
-     |} WHERE {
-     |  ?x :r ?y .
-     |  ?z a :D
-     |}
-    """.stripMargin('|'),
-      Set(":D ⊑ ∃:l.:D")
-    )
-     */
