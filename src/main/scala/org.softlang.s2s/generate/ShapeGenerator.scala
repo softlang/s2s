@@ -29,17 +29,17 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
     voc.concepts.toList
       .union(
         voc.properties.toList.flatMap { p =>
-          voc.concepts.flatMap { c =>
-            val temp = Set(
+          val temp = voc.concepts.flatMap { c =>
+            Set(
               Existential(p, c),
               Existential(Inverse(p), c),
               Universal(p, c),
               Universal(Inverse(p), c)
             )
-            if proxyFamily then temp.union(Set(
-              Universal(p, proxy), 
-              Universal(Inverse(p), proxy))) else temp
           }
+          if proxyFamily then temp.union(Set(
+            Universal(p, proxy), 
+            Universal(Inverse(p), proxy))) else temp
         }
       )
       .toSet
