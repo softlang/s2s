@@ -36,7 +36,9 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
               Universal(p, c),
               Universal(Inverse(p), c)
             )
-            if proxyFamily then temp + Universal(p, proxy) else temp
+            if proxyFamily then temp.union(Set(
+              Universal(p, proxy), 
+              Universal(Inverse(p), proxy))) else temp
           }
         }
       )
