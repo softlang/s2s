@@ -189,7 +189,10 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   def sampleShapes(q: SCCQ): Set[SimpleSHACLShape] =
 
     // The complete set of posible shapes.
-    val initial = ShapeGenerator(q.pattern.vocabulary, true).generate
+    val initial = ShapeGenerator(
+      q.pattern.vocabulary, 
+      optimize = true, 
+      proxyFamily = false).generate
 
     // Remove forall shapes, if they are not allowed.
     val allowed =

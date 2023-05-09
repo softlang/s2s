@@ -1,11 +1,20 @@
 package org.softlang.s2s.generate
 
 import de.pseifer.shar.dl._
+import de.pseifer.shar.core.Iri
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 
 /** Generate all shapes over a vocabulary. */
-class ShapeGenerator(voc: Vocabulary, optimize: Boolean):
+class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
+
+  /** Find a proxy axiom. */
+  private def findProxy(s: String): Concept = 
+    val ci = NamedConcept(Iri.fromString("<https://github.com/softlang/s2s/" + s + ">").toOption.get)
+    if voc.contains(ci) then findProxy(s ++ "'")
+    else ci
+
+  val proxy = findProxy("P")
 
   /** Generate all target queries (Concepts). */
   private def generateTargets: Set[Concept] =
@@ -21,12 +30,13 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean):
       .union(
         voc.properties.toList.flatMap { p =>
           voc.concepts.flatMap { c =>
-            Set(
+            val temp = Set(
               Existential(p, c),
               Existential(Inverse(p), c),
               Universal(p, c),
               Universal(Inverse(p), c)
             )
+            if proxyFamily then temp + Universal(p, proxy) else temp
           }
         }
       )

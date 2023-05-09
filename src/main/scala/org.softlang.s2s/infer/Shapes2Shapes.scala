@@ -403,7 +403,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   ): Set[SimpleSHACLShape] =
     val cand = CandidateGenerator(
       q.template.vocabulary,
-      optimize = config.optimizeCandidates
+      optimize = config.optimizeCandidates,
+      proxyFamily = config.proxyFamily
     )(scopes).axioms
 
     log.debug("S_can", cand.map(_.show))

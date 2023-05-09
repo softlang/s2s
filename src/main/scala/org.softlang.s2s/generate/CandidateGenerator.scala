@@ -7,9 +7,9 @@ import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 import org.softlang.s2s.core.inScope
 
-class CandidateGenerator(voc: Vocabulary, optimize: Boolean)(implicit
+class CandidateGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean)(implicit
     scopes: Scopes
-) extends ShapeGenerator(voc, optimize):
+) extends ShapeGenerator(voc, optimize, proxyFamily):
 
   def axioms: Set[SimpleSHACLShape] =
     generate.map(scopes.replaceTop(_, Scope.Template, Scope.Template))

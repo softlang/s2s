@@ -63,6 +63,9 @@ case class Configuration(
     // Name for the namespaced T.
     namespacedTopName: String,
 
+    // Use a proxy for the family of form C ⊑ ∀p.P.
+    proxyFamily: Boolean,
+
     // ***********
     // *** DCA ***
     // ***********
@@ -189,6 +192,7 @@ object Configuration:
     renamePatternInternalConcepts = true,
     renamePatternInternalProperties = true,
     useNamespacedTop = false,
+    proxyFamily = true,
     // DCA
     alternativeCWA = true,
     erasePvariables = false,
