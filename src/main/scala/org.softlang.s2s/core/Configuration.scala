@@ -71,17 +71,16 @@ case class Configuration(
 /** Some preset configurations. */
 object Configuration:
 
-  /** Default configuration for Shapes2Shapes in accordance with the From Shapes
-    * to Shapes paper and reasonable defaults, otherwise.
+  /** Default configuration.
+    * This is mainly for internal use.
     */
   def default: Configuration = Configuration(
-    // Algorithm
-    proxyFamily = true,
     // The following can be set by users via CLI
     // and are overwritten by standard settings of
     // the CLI framework!
     // Therefore, the following defaults are only relevant
     // for development, testing and analysis runs.
+    // CLI-override.
     activeReasoner = ActiveReasoner.Hermit,
     timeout = 60000,
     retry = 0,
@@ -92,5 +91,7 @@ object Configuration:
     debug = true,
     hidecolon = true,
     prettyVariableConcepts = true,
-    printOutput = false
+    printOutput = false,
+    // No CLI-override (...yet)
+    proxyFamily = true
   )
