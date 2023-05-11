@@ -18,7 +18,6 @@ import scala.concurrent.duration.Duration
   *   - `noisy`: Print all (active) logs during execution.
   */
 class Log(
-    topToken: String,
     info: Boolean = true,
     debugging: Boolean = false,
     profiling: Boolean = false,
@@ -162,9 +161,7 @@ class Log(
   ): Unit =
     val t1 =
       if prettyVariableConcepts then
-        LOG
-          .replaceAll(s"shar:${topToken}", s"${topToken}")
-          .replaceAll("shar", "?")
+        LOG.replaceAll("shar", "?")
       else LOG
 
     val t2 =

@@ -11,7 +11,7 @@ object Compare:
       Configuration.default,
       Configuration.default
         .copy(
-          useNamespacedTop = true
+          // useNamespacedTop = true
         ),
       // Perform 1000 trials per generator configuration.
       trials = 10000,

@@ -60,12 +60,12 @@ case class Vocabulary(
     Vocabulary(
       variables,
       concepts.map(
-        _.inScope(Scope.Pattern)(Scopes("_triv", "T", true))
+        _.inScope(Scope.Pattern)(Scopes("_triv"))
           .asInstanceOf[NamedConcept]
       ),
       properties.map(
-        _.inScope(Scope.Pattern)(Scopes("_triv", "T", true))
+        _.inScope(Scope.Pattern)(Scopes("_triv"))
           .asInstanceOf[NamedRole]
       ),
-      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv", "T", true)))
+      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv")))
     )

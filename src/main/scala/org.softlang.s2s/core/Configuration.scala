@@ -13,119 +13,22 @@ enum ActiveReasoner:
     case Openllet => "openllet"
 
 object ActiveReasoner:
-  def fromString(s: String): ActiveReasoner = s match
+
+  /** Construct active reasoner from string, default to Hermit. */
+  def fromString(s: String): ActiveReasoner = s.toLowerCase() match
     case "jfact"    => ActiveReasoner.Jfact
     case "openllet" => ActiveReasoner.Openllet
     case _          => ActiveReasoner.Hermit
 
 /** A set of configurations for S2S. */
 case class Configuration(
+
     // *****************
     // *** Algorithm ***
     // *****************
 
-    // Generate DCA for pattern P.
-    dcaForPattern: Boolean,
-
-    // Generate DCA for template H.
-    dcaForTemplate: Boolean,
-
-    // Generate CWA for pattern P.
-    cwaForPattern: Boolean,
-
-    // Generate CWA for template H.
-    cwaForTemplate: Boolean,
-
-    // Generate UNA for pattern P.
-    unaForPattern: Boolean,
-
-    // Generate UNA for template H.
-    unaForTemplate: Boolean,
-
-    // Generate UNA for both template and pattern combined.
-    unaForBoth: Boolean,
-
-    // Use the mapping method.
-    useMappingMethod: Boolean,
-
-    // Generate property subsumption axioms.
-    addPropertySubsumptions: Boolean,
-
-    // Rename internal pattern concepts.
-    renamePatternInternalConcepts: Boolean,
-
-    // Rename internal pattern Properties.
-    renamePatternInternalProperties: Boolean,
-
-    // Use namespace-specific concepts for T.
-    useNamespacedTop: Boolean,
-
-    // Name for the namespaced T.
-    namespacedTopName: String,
-
-    // Use a proxy for the family of form C ⊑ ∀p.P.
+    // Use a proxy for the family of form C ⊑ ∀p.P, instead of ignoring them.
     proxyFamily: Boolean,
-
-    // ***********
-    // *** DCA ***
-    // ***********
-
-    // In the DCA of pattern P, replace variables with T.
-    erasePvariables: Boolean,
-
-    // In the DCA of tempalte H, replace variables with T.
-    eraseHvariables: Boolean,
-
-    // In the DCA of pattern P, replace variables with an approximation.
-    // Overriden by erasePvariables.
-    approximatePvariables: Boolean,
-
-    // In the DCA of tempalte H, replace variables with an approximation.
-    // Overriden by eraseHvariables.
-    approximateHvariables: Boolean,
-
-    // Use subsumption instead of equality for the pattern.
-    useSubsumptionInPatternDCA: Boolean,
-
-    // Use subsumption instead of equality for the template.
-    useSubsumptionInTemplateDCA: Boolean,
-
-    // Include the concept closure for the pattern.
-    includeConceptClosurePattern: Boolean,
-
-    // Include the variable closure for the pattern.
-    includeVariableClosurePattern: Boolean,
-
-    // Include the concept closure for the template.
-    includeConceptClosureTemplate: Boolean,
-
-    // Include the variable closure for the tempalte.
-    includeVariableClosureTemplate: Boolean,
-
-    // TBD
-    dcaFix: Boolean,
-
-    // ***********
-    // *** CWA ***
-    // ***********
-
-    // Alternative CWA.
-    alternativeCWA: Boolean,
-
-    // Closure for concepts.
-    closeConcepts: Boolean,
-
-    // Closure for properties.
-    closeProperties: Boolean,
-
-    // Closure for literals {a}.
-    closeLiterals: Boolean,
-
-    // Use subsumption instead of equality for the pattern.
-    useSubsumptionInPatternCWA: Boolean,
-
-    // Use subsumption instead of equality for the template.
-    useSubsumptionInTemplateCWA: Boolean,
 
     // ********************
     // *** User Options ***
@@ -171,42 +74,9 @@ object Configuration:
   /** Default configuration for Shapes2Shapes in accordance with the From Shapes
     * to Shapes paper and reasonable defaults, otherwise.
     */
-  def default: Configuration = base
-
-  private def base: Configuration = Configuration(
+  def default: Configuration = Configuration(
     // Algorithm
-    dcaForPattern = true,
-    dcaForTemplate = true,
-    includeConceptClosurePattern = true,
-    includeVariableClosurePattern = true,
-    includeConceptClosureTemplate = true,
-    includeVariableClosureTemplate = false,
-    dcaFix = true,
-    cwaForPattern = true,
-    cwaForTemplate = true,
-    unaForPattern = false,
-    unaForTemplate = false,
-    unaForBoth = true,
-    useMappingMethod = true,
-    addPropertySubsumptions = true,
-    renamePatternInternalConcepts = true,
-    renamePatternInternalProperties = true,
-    useNamespacedTop = false,
     proxyFamily = true,
-    // DCA
-    alternativeCWA = true,
-    erasePvariables = false,
-    eraseHvariables = false,
-    approximatePvariables = false,
-    approximateHvariables = false,
-    useSubsumptionInPatternDCA = false,
-    useSubsumptionInTemplateDCA = true,
-    // CWA
-    closeConcepts = true,
-    closeProperties = true,
-    closeLiterals = false,
-    useSubsumptionInPatternCWA = false,
-    useSubsumptionInTemplateCWA = false,
     // The following can be set by users via CLI
     // and are overwritten by standard settings of
     // the CLI framework!
@@ -222,6 +92,5 @@ object Configuration:
     debug = true,
     hidecolon = true,
     prettyVariableConcepts = true,
-    printOutput = false,
-    namespacedTopName = "T"
+    printOutput = false
   )

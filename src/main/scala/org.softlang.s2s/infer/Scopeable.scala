@@ -32,9 +32,6 @@ trait Scopeable(implicit scopes: Scopes) extends Inference:
       case a => a
     )
 
-  protected def scopedTop(ax: Set[Axiom]): Set[Axiom] =
-    ax.map(scopes.replaceTop(_, leftScope, rightScope))
-
   // Combines the above steps (automatically) for Scopeable inference methods.
   def axioms: Set[Axiom] =
-    extendAxioms(scopedTop(scopeAxioms(prepareAxioms))).union(addAxioms)
+    extendAxioms(scopeAxioms(prepareAxioms)).union(addAxioms)

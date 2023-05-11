@@ -77,10 +77,6 @@ abstract class ValidationTestSuite(
       else s"${GREEN}passed${RESET}."
     s"Test |${color} $c.$sc.$nn ${RESET}| in suite $suite ${msg}"
 
-  /** Change scope of all (Top) in shapes to Scope.Template */
-  private def replaceTop(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
-    shapes.map(scopes.replaceTop(_, Scope.Template, Scope.Template))
-
   /** Defines a test case. */
   def test(
       sin: Set[String],

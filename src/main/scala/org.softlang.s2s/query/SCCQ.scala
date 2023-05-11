@@ -35,13 +35,6 @@ extension (aps: AtomicPatterns)
   def inScope(scope: Scope)(implicit scopes: Scopes): AtomicPatterns =
     aps.map(_.inScope(scope))
 
-  /// ** Rename in all atomic patterns in this set of patterns. */
-  // def rename(token: String): AtomicPatterns = aps.map(_.rename(token))
-
-  /// ** Rename in all atomic patterns in this set of patterns. */
-  // def renameProperties(token: String): AtomicPatterns =
-  //  aps.map(_.renameProperties(token))
-
   /** Get the vocabulary of this set of patterns. */
   def vocabulary: Vocabulary =
     Vocabulary(aps.variables, aps.concepts, aps.properties, aps.nominals)
@@ -121,9 +114,7 @@ object SCCQ:
     */
   def validate(
       q: SCCQ,
-      rename: Boolean,
-      renameToken: String,
-      topSymbol: String
+      renameToken: String
   ): ShassTry[SCCQ] =
     def vocP = q.pattern.vocabulary
     def vocH = q.template.vocabulary
@@ -134,34 +125,13 @@ object SCCQ:
       Left(
         UnsupportedQueryError(q, details = "Template has undefined variables.")
       )
-    // Invalid: Shared concepts and properties in H and P (and no auto-rename).
-    else if (!rename && vocP.intersect(vocH).concepts.nonEmpty)
-      || (!rename && vocP.intersect(vocH).properties.nonEmpty)
-    then
-      Left(
-        UnsupportedQueryError(
-          q,
-          details =
-            "Pattern and Temlate share concept or property names. Try enabling --rename or rename them manually."
-        )
-      )
-    else if vocP.contains(renameToken) || vocH.contains(topSymbol)
+    else if vocP.contains(renameToken)
     then
       Left(
         UnsupportedQueryError(
           q,
           details =
             s"The query uses the restricted symbol $renameToken. Use --renameToken to change this symbol, or change the offending IRI."
-        )
-      )
-    else if vocP.variables.exists(v => v.v == topSymbol)
-      || vocH.variables.exists(v => v.v == topSymbol)
-    then
-      Left(
-        UnsupportedQueryError(
-          q,
-          details =
-            s"The query uses the restricted symbol $topSymbol as a variable name. Use --topSymbol to change this symbol, or change the offending variable."
         )
       )
     else Right(q)

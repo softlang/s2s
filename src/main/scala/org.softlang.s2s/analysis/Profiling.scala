@@ -74,7 +74,6 @@ class Profiling(
     // Create a log and run algorithm on that log.
 
     val log = Log(
-      "T",
       info = true,
       debugging = true,
       profiling = logTime,

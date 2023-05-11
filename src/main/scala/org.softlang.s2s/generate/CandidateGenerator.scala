@@ -11,5 +11,4 @@ class CandidateGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolea
     scopes: Scopes
 ) extends ShapeGenerator(voc, optimize, proxyFamily):
 
-  def axioms: Set[SimpleSHACLShape] =
-    generate.map(scopes.replaceTop(_, Scope.Template, Scope.Template))
+  def axioms: Set[SimpleSHACLShape] = generate

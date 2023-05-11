@@ -89,12 +89,12 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
       descr = "Use this String for internal renaming (def: *)"
     )
 
-  val topSymbol =
-    opt[String](
-      required = false,
-      default = Some("T"),
-      descr = "Use this String for internal Top (def: T)"
-    )
+  // val topSymbol =
+  //   opt[String](
+  //     required = false,
+  //     default = Some("T"),
+  //     descr = "Use this String for internal Top (def: T)"
+  //   )
 
   val queryFile = trailArg[String](descr = "File containing input query")
 
@@ -119,7 +119,7 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
     activeReasoner = ActiveReasoner.fromString(reasoner()),
     retry = retry(),
     timeout = timeout(),
-    namespacedTopName = topSymbol(),
+    //namespacedTopName = topSymbol(),
     prefix = prefix(),
     log = log(),
     debug = debug(),

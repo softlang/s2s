@@ -34,16 +34,10 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   do shar.state.prefixes.add(p, i)
 
   // The scope encoding (implicit) needed for renaming.
-  implicit val scopes: Scopes =
-    Scopes(
-      config.renameToken,
-      config.namespacedTopName,
-      config.useNamespacedTop
-    )
+  implicit val scopes: Scopes = Scopes(config.renameToken)
 
   /** Create a fresh log. */
-  private def createLog: Log =
-    Log(debugging = config.debug, topToken = config.namespacedTopName)
+  private def createLog = Log(debugging = config.debug)
 
   /** Create a fresh reasoner. */
   private def createReasoner: DLReasoner =
@@ -113,12 +107,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def parseQuery(query: String): ShassTry[SCCQ] =
     for
       qi <- sccqp.parse(query)
-      q <- SCCQ.validate(
-        qi,
-        rename = true,
-        config.renameToken,
-        config.namespacedTopName
-      )
+      q <- SCCQ.validate(qi, config.renameToken)
     yield q
 
   /** The shape parser. */
@@ -135,7 +124,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   /** Remove any scope-related renaming. */
   protected def descope(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
-    shapes.map(_.dropScope).map(scopes.restoreTop)
+    shapes.map(_.dropScope)
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
@@ -202,49 +191,26 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     // Axioms from mapping method.
 
-    val mappingSubs =
-      if config.useMappingMethod then
-        SubsumptionsFromMappings(q.pattern, s).axioms
-      else Set()
-
-    if config.useMappingMethod then log.debug("MA(S_in, q.P)", mappingSubs)
+    val mappingSubs = SubsumptionsFromMappings(q.pattern, s).axioms
+    log.debug("MA(S_in, q.P)", mappingSubs)
 
     log.profileEnd("build-mapping")
     log.profileStart("build-properties")
 
     // Add property subsumptions within query, and between query and shapes.
 
-    val props =
-      if config.addPropertySubsumptions then
-        PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
-      else Set()
+    val props = PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
+    log.debug("RS(q)", props)
 
-    if config.addPropertySubsumptions then log.debug("RS(q)", props)
-
-    val shapeProps =
-      if config.addPropertySubsumptions then
-        ShapePropertySubsumption(q.pattern, s).axioms
-      else Set()
-
-    if config.addPropertySubsumptions then log.debug("RS(q, S_in)", shapeProps)
+    val shapeProps = ShapePropertySubsumption(q.pattern, s).axioms
+    log.debug("RS(q, S_in)", shapeProps)
 
     log.profileEnd("build-properties")
     log.profileStart("build-dca-p")
 
     // DCA for query pattern.
 
-    val dcaP =
-      if config.dcaForPattern then
-        DomainClosureAssumptionForPattern(
-          q.pattern,
-          eraseVariables = config.erasePvariables,
-          approximateVariables = config.approximatePvariables,
-          useSubsumption = config.useSubsumptionInPatternDCA,
-          includeConceptClosure = config.includeConceptClosurePattern,
-          includeVariableClosure = config.includeVariableClosurePattern,
-          dcaFix = config.dcaFix
-        ).axioms
-      else Set()
+    val dcaP = ClosedConceptAssumptionPattern(q.pattern).axioms
 
     // Step 1 (in the Paper), relevant for (debug) info only.
     val dcaP1 = dcaP.filter(a =>
@@ -260,124 +226,44 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         case _                 => false
     )
 
-    if config.dcaForPattern then log.debug("CWA(q.P), step 1", dcaP1)
+    log.debug("CWA(q.P), step 1", dcaP1)
 
     log.profileEnd("build-dca-p")
     log.profileStart("build-dca-t")
 
     // DCA for query template.
 
-    val dcaH =
-      if config.dcaForTemplate then
-        DomainClosureAssumptionForTemplate(
-          q.template,
-          eraseVariables = config.eraseHvariables,
-          approximateVariables = config.approximateHvariables,
-          useSubsumption = config.useSubsumptionInTemplateDCA,
-          includeConceptClosure = config.includeConceptClosureTemplate,
-          includeVariableClosure = config.includeVariableClosureTemplate
-        ).axioms
-      else Set()
+    val dcaH = ClosedConceptAssumptionTemplate(q.template).axioms
 
-    if config.dcaForTemplate then log.debug("CWA(q.H), step 2.", dcaH)
-
-    if config.dcaForPattern then log.debug("CWA(q.P), step 3.", dcaP3)
+    log.debug("CWA(q.H), step 2.", dcaH)
+    log.debug("CWA(q.P), step 3.", dcaP3)
 
     log.profileEnd("build-dca-t")
     log.profileStart("build-cwa-p")
 
     // CWA for query pattern.
 
-    val cwaP =
-      if config.cwaForPattern then
-        if config.alternativeCWA then
-          AlternativeClosedWorldAssumption(
-            q.pattern,
-            Scope.Pattern,
-            config.useNamespacedTop
-          ).axioms
-        else
-          ClosedWorldAssumptionForPattern(
-            q.pattern,
-            config.closeConcepts,
-            config.closeProperties,
-            config.closeLiterals,
-            config.useSubsumptionInPatternCWA
-          ).axioms
-      else Set()
-
-    if config.cwaForPattern then log.debug("CWA(q.P), step 4.", cwaP)
+    val cwaP = ClosedPropertyAssumption(q.pattern, Scope.Pattern).axioms
+    log.debug("CWA(q.P), step 4.", cwaP)
 
     log.profileEnd("build-cwa-p")
     log.profileStart("build-cwa-t")
 
     // CWA for query template.
 
-    val cwaH =
-      if config.cwaForTemplate then
-        if config.alternativeCWA then
-          AlternativeClosedWorldAssumption(
-            q.template,
-            Scope.Template,
-            config.useNamespacedTop
-          ).axioms
-        else
-          ClosedWorldAssumptionForTemplate(
-            q.template,
-            config.closeConcepts,
-            config.closeProperties,
-            config.closeLiterals,
-            config.useSubsumptionInTemplateCWA
-          ).axioms
-      else Set()
-
-    if config.cwaForTemplate then log.debug("CWA(q.H), step 5.", cwaH)
+    val cwaH = ClosedPropertyAssumption(q.template, Scope.Template).axioms
+    log.debug("CWA(q.H), step 5.", cwaH)
 
     log.profileEnd("build-cwa-t")
     log.profileStart("build-una-p")
 
-    // UNA for query pattern.
-
-    val unaP =
-      if config.unaForPattern then UniqueNameAssumption(q.pattern).axioms
-      else Set()
-
-    if config.unaForPattern then log.debug("UNA for q.P", unaP)
-
-    log.profileEnd("build-una-p")
-    log.profileStart("build-una-t")
-
-    // UNA for query template.
-
-    val unaH =
-      if config.unaForTemplate then UniqueNameAssumption(q.template).axioms
-      else Set()
-
-    if config.unaForTemplate then log.debug("UNA for q.H", unaH)
-
-    log.profileEnd("build-una-t")
-    log.profileStart("build-una")
-
     // UNA for query template & pattern.
 
-    val una =
-      if config.unaForBoth then
-        UniqueNameAssumption(q.template.union(q.pattern)).axioms
-      else Set()
-
-    if config.unaForBoth then log.debug("UNA(q)", una)
+    val una = UniqueNameAssumption(q.template.union(q.pattern)).axioms
+    log.debug("UNA(q)", una)
 
     log.profileEnd("build-una")
     log.profileStart("build-top")
-
-    // Namespaced Top definitions.
-
-    val tops =
-      NamespacedTop(q.pattern, q.template, config.useNamespacedTop).axioms
-
-    if config.useNamespacedTop then log.debug("T", tops)
-    log.profileEnd("build-top")
-    log.profileStart("build-add")
 
     // Return the complete set of axioms.
 
@@ -389,11 +275,8 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
         .union(dcaP)
         .union(dcaH)
         .union(cwaP)
-        .union(unaP)
         .union(cwaH)
-        .union(unaH)
         .union(una)
-        .union(tops)
     )
 
   /** Perform the candidate generation step of the algorithm. */
