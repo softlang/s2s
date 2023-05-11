@@ -56,7 +56,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def run(
       query: String,
       shapes: Set[String]
-  ): ShassTry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SimpleSHACLShape]] =
 
     // Run validation with query and shapes.
     val res = validate(query, shapes)
@@ -81,7 +81,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def validate(
       query: String,
       shapes: Set[String]
-  ): (ShassTry[Set[SimpleSHACLShape]], Log) =
+  ): (S2STry[Set[SimpleSHACLShape]], Log) =
 
     // Initialize the log.
     val log: Log = createLog
@@ -104,7 +104,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val sccqp = SCCQParser(shar)
 
   /** Attempt to parse a SCCQ query. */
-  def parseQuery(query: String): ShassTry[SCCQ] =
+  def parseQuery(query: String): S2STry[SCCQ] =
     for
       qi <- sccqp.parse(query)
       q <- SCCQ.validate(qi, config.renameToken)
@@ -116,7 +116,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   /** Attempt to parse a set of Simple SHACL shapes. */
   def parseShapes(
       shapes: Set[String]
-  ): ShassTry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SimpleSHACLShape]] =
     for s <- Util
         .flipEitherHead(shapes.map(shapep.parse(_)).toList)
         .map(_.toSet)
@@ -131,7 +131,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       qi: SCCQ,
       si: Set[SimpleSHACLShape],
       log: Log
-  ): ShassTry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SimpleSHACLShape]] =
 
     log.profileStart("algorithm")
 
@@ -303,7 +303,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       retry: Int,
       timeout: Duration,
       currentTry: Int = 1
-  ): ShassTry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SimpleSHACLShape]] =
 
     // A fresh log.
     val plog = createLog

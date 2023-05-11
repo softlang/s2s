@@ -4,7 +4,7 @@ import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import org.softlang.s2s.core.NotAtomicError
-import org.softlang.s2s.core.ShassTry
+import org.softlang.s2s.core.S2STry
 import org.softlang.s2s.core.Var
 
 enum GeneralAtomicPattern extends Showable:
@@ -47,7 +47,7 @@ enum GeneralAtomicPattern extends Showable:
   case VVV(vs: Var, vp: Var, vo: Var) // ?x ?p ?y
 
   /** Convert to an atomic pattern. */
-  def toAtomicPattern: ShassTry[AtomicPattern] =
+  def toAtomicPattern: S2STry[AtomicPattern] =
     this match
       case LAC(is, io)     => Right(AtomicPattern.LAC(is, io))
       case VAC(vs, io)     => Right(AtomicPattern.VAC(vs, io))

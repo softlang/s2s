@@ -80,7 +80,7 @@ class ConfigurationComparison(
     println("done.")
 
   /** Compare for specific input (String encoded). */
-  def input(q: String, sin: Set[String]): ShassTry[Boolean] =
+  def input(q: String, sin: Set[String]): S2STry[Boolean] =
     for
       qp <- s1.parseQuery(q)
       sp <- s1.parseShapes(sin)

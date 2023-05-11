@@ -9,7 +9,7 @@ import de.pseifer.shar.Shar
 class SCCQParser(shar: Shar):
 
   private object QP extends SPARQLParser:
-    def parse(in: String): ShassTry[SCCQ] =
+    def parse(in: String): S2STry[SCCQ] =
       parse(Query, in) match {
         case Success(q, _) =>
           q.toQuery(shar) match {
@@ -25,4 +25,4 @@ class SCCQParser(shar: Shar):
       }
 
   /** Parse a SCCQ query. */
-  def parse(in: String): ShassTry[SCCQ] = QP.parse(in)
+  def parse(in: String): S2STry[SCCQ] = QP.parse(in)

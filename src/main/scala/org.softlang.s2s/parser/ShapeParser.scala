@@ -10,13 +10,13 @@ class ShapeParser(shar: Shar):
 
   private val cp = ConceptParser(shar.state)
 
-  private def doParse(s: String): ShassTry[Concept] =
+  private def doParse(s: String): S2STry[Concept] =
     cp.parse(s) match
       case Left(p)           => Left(UnparsableShapeError(p.show))
       case Right(c: Concept) => Right(c)
       case Right(c)          => Left(NotAShapeError(c))
 
-  def parse(in: String): ShassTry[SimpleSHACLShape] =
+  def parse(in: String): S2STry[SimpleSHACLShape] =
     val inn = Util.compatMap(in)
     if inn.contains("⊑") then
       val target = inn.splitAt(inn.indexOf("⊑"))._1.trim

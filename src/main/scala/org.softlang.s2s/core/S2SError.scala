@@ -3,16 +3,16 @@ package org.softlang.s2s.core
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Showable
 
-type ShassTry[T] = Either[ShassError, T]
+type S2STry[T] = Either[S2SError, T]
 
-trait ShassError:
+trait S2SError:
   protected def format(tag: String, msg: String, details: String = ""): String =
-    "[Shass] " ++ tag ++ ": " ++ msg.toString ++ (if details != "" then
-                                                    " - " ++ details
-                                                  else "")
+    "[s2s] " ++ tag ++ ": " ++ msg.toString ++ (if details != "" 
+                                                then " - " ++ details
+                                                else "")
   def show(implicit state: BackendState): String
 
-abstract class BasicShassError(tag: String, val msg: String) extends ShassError:
+abstract class BasicShassError(tag: String, val msg: String) extends S2SError:
   def show(implicit state: BackendState): String = format(tag, msg)
   override def toString: String = format(tag, msg)
 
@@ -26,7 +26,7 @@ abstract class ShowableShassError(
     tag: String,
     val msg: Showable,
     details: String = ""
-) extends ShassError:
+) extends S2SError:
   def show(implicit state: BackendState): String =
     format(tag, msg.show(state), details)
   override def toString: String = format(tag, msg.toString, details)

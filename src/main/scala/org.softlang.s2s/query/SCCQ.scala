@@ -7,7 +7,7 @@ import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
-import org.softlang.s2s.core.ShassTry
+import org.softlang.s2s.core.S2STry
 import org.softlang.s2s.core.UnsupportedQueryError
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.Vocabulary
@@ -115,7 +115,7 @@ object SCCQ:
   def validate(
       q: SCCQ,
       renameToken: String
-  ): ShassTry[SCCQ] =
+  ): S2STry[SCCQ] =
     def vocP = q.pattern.vocabulary
     def vocH = q.template.vocabulary
 

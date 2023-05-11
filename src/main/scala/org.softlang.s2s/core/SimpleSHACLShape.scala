@@ -87,7 +87,7 @@ object SimpleSHACLShape:
   /** Construct a shape from an axioms. */
   def fromAxiom(
       axiom: Subsumption
-  ): ShassTry[SimpleSHACLShape] =
+  ): S2STry[SimpleSHACLShape] =
     if validTarget(axiom.c) && validConstraint(axiom.d) then
       Right(SimpleSHACLShape(axiom))
     else Left(NotSimpleError(axiom))
