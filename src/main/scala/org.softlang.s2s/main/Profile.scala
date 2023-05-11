@@ -17,35 +17,35 @@ object Profile:
     val trials = 1000
     val seed = "sub"
 
-    helper(
-      retry = 0,
-      timeout = 60000,
-      reasoner = ActiveReasoner.Hermit,
-      trials = trials,
-      pgc = ProblemGeneratorConfig(
-        minPatternSize = 2,
-        maxPatternSize = 3,
-        minTemplateSize = 2,
-        maxTemplateSize = 3,
-        freshVariable = 0.8f,
-        variablesCount = (1, 4),
-        freshConcept = 0.9f,
-        conceptsCount = (1, 10),
-        freshProperty = 0.9f,
-        propertiesCount = (1, 10),
-        freshNominal = 0.9f,
-        nominalsCount = (0, 3),
-        propertyConceptRatio = 0.3f,
-        variableToNominalRatio = 0.9f,
-        cyclicRedrawCount = 10,
-        minNumberOfShapes = 1,
-        maxNumberOfShapes = 4,
-        propertyConceptTargetRatio = -1.0f,
-        propertyConceptConstraintRatio = -1.0f,
-        includeForallConstraints = true,
-        seed = seed
-      )
-    )
+    // helper(
+    //   retry = 0,
+    //   timeout = 60000,
+    //   reasoner = ActiveReasoner.Hermit,
+    //   trials = trials,
+    //   pgc = ProblemGeneratorConfig(
+    //     minPatternSize = 2,
+    //     maxPatternSize = 3,
+    //     minTemplateSize = 2,
+    //     maxTemplateSize = 3,
+    //     freshVariable = 0.8f,
+    //     variablesCount = (1, 4),
+    //     freshConcept = 0.9f,
+    //     conceptsCount = (1, 10),
+    //     freshProperty = 0.9f,
+    //     propertiesCount = (1, 10),
+    //     freshNominal = 0.9f,
+    //     nominalsCount = (0, 3),
+    //     propertyConceptRatio = 0.3f,
+    //     variableToNominalRatio = 0.9f,
+    //     cyclicRedrawCount = 10,
+    //     minNumberOfShapes = 1,
+    //     maxNumberOfShapes = 4,
+    //     propertyConceptTargetRatio = -1.0f,
+    //     propertyConceptConstraintRatio = -1.0f,
+    //     includeForallConstraints = true,
+    //     seed = seed
+    //   )
+    // )
 
     helper(
       retry = 0,
@@ -53,12 +53,12 @@ object Profile:
       reasoner = ActiveReasoner.Hermit,
       trials = trials,
       pgc = ProblemGeneratorConfig(
-        minPatternSize = 1,
-        maxPatternSize = 10,
-        minTemplateSize = 1,
-        maxTemplateSize = 10,
+        minPatternSize = 9,
+        maxPatternSize = 11,
+        minTemplateSize = 9,
+        maxTemplateSize = 11,
         freshVariable = 0.8f,
-        variablesCount = (1, 4),
+        variablesCount = (9, 11),
         freshConcept = 0.9f,
         conceptsCount = (1, 10),
         freshProperty = 0.9f,
@@ -97,7 +97,7 @@ object Profile:
         retry = retry,
         timeout = timeout
       ),
-      noisy = true,
+      noisy = false,
       logTime = false,
       logNoisy = false
     ).run(pgc, trials = trials, chunkCount = 10)
