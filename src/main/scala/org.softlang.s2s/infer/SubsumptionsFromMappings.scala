@@ -141,6 +141,7 @@ class SubsumptionsFromMappings(
       p1: (Set[Var], Set[AtomicPattern]),
       pext: (Set[Var], Set[AtomicPattern])
   ): Set[Subsumption] =
+
     // The complete (including temporary) variables in pext and p1.
     val pextv = pext._2.toList.variables
     val p1v = p1._2.toList.variables
@@ -189,21 +190,16 @@ class SubsumptionsFromMappings(
     // (1) Detect all components.
     val comps = a.components
 
-    // (2)
-    // For each shape & component->variable, test if it is a target.
-    // If so, extend the pattern by translating the shape to a constraint.
-    val extendedComps =
-      SimpleSHACLShape.extendComponentsWithShapes(
-        comps,
-        // Map shapes to pattern scope first.
-        shapes.map(_.inScope(Scope.Pattern)),
-        a.depth
-      )
+    // (2) Construct all extended components.
+    val extended = QueryExtensionOptimized(
+      comps,
+      shapes.map(_.inScope(Scope.Pattern))
+    ).extended
 
     // (3) Generate component mappings and find subsumption.
     (for
-      // The extended component.
-      pext <- extendedComps
-      // The sub-pattern component (will be mapped).
+      // For each sub-pattern component (will be mapped).
       p1 <- comps
+      // Test for each extended component, whether there is a mapping.
+      pext <- extended
     yield componentMap(p1, pext)).flatten.toSet

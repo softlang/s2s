@@ -5,6 +5,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
+import de.pseifer.shar.dl.Role
 import de.pseifer.shar.dl.NominalConcept
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
@@ -44,7 +45,7 @@ enum AtomicPattern extends Showable:
     case LPV(is, ip, vo) => LPV(is, ip.inScope(scope), vo)
     case VPV(vs, ip, vo) => VPV(vs, ip.inScope(scope), vo)
 
-  /** */
+  /** Is a property pattern. */
   def isPropertyPattern: Boolean =
     this match
       case LAC(is, io) => false

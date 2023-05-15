@@ -40,7 +40,7 @@ extension (aps: AtomicPatterns)
     Vocabulary(aps.variables, aps.concepts, aps.properties, aps.nominals)
 
   /** Get all connected components of this set of patterns. */
-  def components: Map[Set[Var], Set[AtomicPattern]] =
+  def components: List[(Set[Var], Set[AtomicPattern])] =
     // Function to find all components in a query pattern.
     def doComponents(
         p: List[AtomicPattern],
@@ -63,7 +63,7 @@ extension (aps: AtomicPatterns)
         doComponents(next, thiss)
       // Processed all patterns.
       case Nil => partial
-    doComponents(aps, Map())
+    doComponents(aps, Map()).toList
 
   /** Apply a variable mapping to a set of patterns. */
   def mappedWith(mapping: Map[Var, Var]): AtomicPatterns =

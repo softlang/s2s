@@ -49,27 +49,27 @@ object Profile:
 
     helper(
       retry = 0,
-      timeout = 60000,
+      timeout = 100, // skip reasoning
       reasoner = ActiveReasoner.Hermit,
       trials = trials,
       pgc = ProblemGeneratorConfig(
-        minPatternSize = 9,
-        maxPatternSize = 11,
-        minTemplateSize = 9,
-        maxTemplateSize = 11,
+        minPatternSize = 10,
+        maxPatternSize = 20,
+        minTemplateSize = 10,
+        maxTemplateSize = 20,
         freshVariable = 0.8f,
-        variablesCount = (9, 11),
+        variablesCount = (10, 100),
         freshConcept = 0.9f,
-        conceptsCount = (1, 10),
+        conceptsCount = (100, 200),
         freshProperty = 0.9f,
-        propertiesCount = (1, 10),
+        propertiesCount = (100, 200),
         freshNominal = 0.9f,
-        nominalsCount = (0, 3),
+        nominalsCount = (0, 10),
         propertyConceptRatio = 0.3f,
         variableToNominalRatio = 0.9f,
         cyclicRedrawCount = 10,
-        minNumberOfShapes = 1,
-        maxNumberOfShapes = 10,
+        minNumberOfShapes = 10,
+        maxNumberOfShapes = 100,
         propertyConceptTargetRatio = -1.0f,
         propertyConceptConstraintRatio = -1.0f,
         includeForallConstraints = true,
@@ -97,7 +97,7 @@ object Profile:
         retry = retry,
         timeout = timeout
       ),
-      noisy = false,
+      noisy = true,
       logTime = false,
       logNoisy = false
     ).run(pgc, trials = trials, chunkCount = 10)
