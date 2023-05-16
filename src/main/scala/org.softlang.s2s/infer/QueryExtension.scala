@@ -56,13 +56,13 @@ class QueryExtensionOptimized(
 
   private def pIsTarget(r: Iri): IsTarget = (a, vo) =>
     a match
-      case AtomicPattern.VPL(vi, ri, _) if ri == r && vi == vo => true
+      // case AtomicPattern.VPL(vi, ri, _) if ri == r && vi == vo => true
       case AtomicPattern.VPV(vi, ri, _) if ri == r && vi == vo => true
       case _                                                   => false
 
   private def piIsTarget(r: Iri): IsTarget = (a, vo) =>
     a match
-      case AtomicPattern.LPV(_, ri, vi) if ri == r && vi == vo => true
+      // case AtomicPattern.LPV(_, ri, vi) if ri == r && vi == vo => true
       case AtomicPattern.VPV(_, ri, vi) if ri == r && vi == vo => true
       case _                                                   => false
 
@@ -141,8 +141,8 @@ class QueryExtensionOptimized(
       case Existential(NamedRole(r), NamedConcept(c)) =>
         component.flatMap { comp =>
           comp match
-            case p @ VPL(vs, ip, l) if ip == r && vs == v =>
-              Set(p, LAC(l, c))
+            // case p @ VPL(vs, ip, l) if ip == r && vs == v =>
+            //   Set(p, LAC(l, c))
             case p @ VPV(vs, ip, v2) if ip == r && vs == v =>
               handle(vs, v2, p, ip, c)
             case _ => Set()
@@ -150,8 +150,8 @@ class QueryExtensionOptimized(
       case Existential(Inverse(NamedRole(r)), NamedConcept(c)) =>
         component.flatMap { comp =>
           comp match
-            case p @ LPV(l, ip, vs) if ip == r && vs == v =>
-              Set(p, LAC(l, c))
+            // case p @ LPV(l, ip, vs) if ip == r && vs == v =>
+            //   Set(p, LAC(l, c))
             case p @ VPV(v2, ip, vs) if ip == r && vs == v =>
               handle(vs, v2, p, ip, c)
             case _ => Set()
@@ -212,4 +212,3 @@ class QueryExtensionOptimized(
     // Then, we apply forall shapes once (on original variables) and then
     // extend with targets.
     components.map(applyForall).map(extend(_, templates))
-    // .map(applyForall) not required (?)
