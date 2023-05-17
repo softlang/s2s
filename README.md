@@ -1,4 +1,4 @@
-# From Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines
+# From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries
 
 ## Requirements
 
