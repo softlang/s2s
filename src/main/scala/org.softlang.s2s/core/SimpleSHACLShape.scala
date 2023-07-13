@@ -40,31 +40,6 @@ class SimpleSHACLShape(axiom: Subsumption) extends SHACLShape(axiom):
     case Existential(_, _) => true
     case _                 => false
 
-  /** Test, whether `candidate` is a target of this shape `inPattern`. */
-  def hasTarget(
-      candidate: Var,
-      inPattern: Set[AtomicPattern]
-  ): Boolean =
-    import AtomicPattern._
-    axiom.c match
-      case NamedConcept(c) =>
-        inPattern.exists(_ match
-          case VAC(v, d) => v == candidate && d == c
-          case _         => false
-        )
-      case Existential(NamedRole(r), Top) =>
-        inPattern.exists(_ match
-          case VPL(v, p, _) => v == candidate && p == r
-          case VPV(v, p, _) => v == candidate && p == r
-          case _            => false
-        )
-      case Existential(Inverse(NamedRole(r)), Top) =>
-        inPattern.exists(_ match
-          case VPV(_, p, v) => v == candidate && p == r
-          case _            => false
-        )
-      case _ => false
-
 object SimpleSHACLShape:
 
   /** Test, whether Concept c is a valid target query. */

@@ -22,55 +22,6 @@ case class SHACLShape(val axiom: Subsumption) extends Showable {
       Subsumption(axiom.c.dropScope, axiom.d.dropScope)
     )
 
-  /** Convert to SimpleSHACLShape, if possible. */
-  def toSimple: Option[SimpleSHACLShape] =
-    SimpleSHACLShape.fromAxiom(axiom) match
-      case Right(s) => Some(s)
-      case Left(_)  => None
-
-  // override def equals(other: Any): Boolean =
-  //  if other.isInstanceOf[SHACLShape]
-  //  then other.asInstanceOf[SHACLShape].axiom == axiom
-  //  else false
-
-}
-
-object SHACLShape:
-
-  /** Test, whether Concept c is a valid target query. */
-  private def validTarget(c: Concept): Boolean = true
-
-  /** Test, whether Concept c is a valid constraint. */
-  private def validConstraint(c: Concept): Boolean = true
-
-  /** Construct a shape from an axioms. */
-  def fromAxiom(axiom: Subsumption): S2STry[SHACLShape] =
-    Right(SHACLShape(axiom))
-
-/*
-
-case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
-
-  /** True, if the constraint contains universal quantification. */
-  def isForallShape: Boolean = axiom.d match
-    case Universal(_, _) => true
-    case _               => false
-
-  /** True, if the constraint contains existential quantification. */
-  def isExistsShape: Boolean = axiom.d match
-    case Existential(_, _) => true
-    case _                 => false
-
-  /** True, if the constraint contains existential quantification. */
-  def isConceptShape: Boolean = axiom.d match
-    case NamedConcept(_) => true
-    case _               => false
-
-  /** True, if the target contains existential quantification. */
-  def hasExistentialTarget: Boolean = axiom.c match
-    case Existential(_, _) => true
-    case _                 => false
-
   /** Test, whether `candidate` is a target of this shape `inPattern`. */
   def hasTarget(
       candidate: Var,
@@ -96,32 +47,29 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
         )
       case _ => false
 
-object SimpleSHACLShape:
+  /** Convert to SimpleSHACLShape, if possible. */
+  def toSimple: Option[SimpleSHACLShape] =
+    SimpleSHACLShape.fromAxiom(axiom) match
+      case Right(s) => Some(s)
+      case Left(_)  => None
+
+}
+
+object SHACLShape:
 
   /** Test, whether Concept c is a valid target query. */
   private def validTarget(c: Concept): Boolean =
     c match
-      case Existential(Inverse(NamedRole(_)), Top) => true
       case Existential(NamedRole(_), Top)          => true
+      case Existential(Inverse(NamedRole(_)), Top) => true
       case NamedConcept(_)                         => true
-      case _                                       => false
+      // TBD: Node targets.
+      case _ => false
 
   /** Test, whether Concept c is a valid constraint. */
-  private def validConstraint(c: Concept): Boolean =
-    c match
-      case NamedConcept(_)                                     => true
-      case Existential(NamedRole(_), NamedConcept(_))          => true
-      case Existential(Inverse(NamedRole(_)), NamedConcept(_)) => true
-      case Universal(NamedRole(_), NamedConcept(_))            => true
-      case Universal(Inverse(NamedRole(_)), NamedConcept(_))   => true
-      case _                                                   => false
+  private def validConstraint(c: Concept): Boolean = true
 
   /** Construct a shape from an axioms. */
-  def fromAxiom(
-      axiom: Subsumption
-  ): S2STry[SimpleSHACLShape] =
-    if validTarget(axiom.c) && validConstraint(axiom.d) then
-      Right(SimpleSHACLShape(axiom))
+  def fromAxiom(axiom: Subsumption): S2STry[SHACLShape] =
+    if validTarget(axiom.c) then Right(SimpleSHACLShape(axiom))
     else Left(NotSimpleError(axiom))
-
- */
