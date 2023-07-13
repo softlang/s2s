@@ -58,7 +58,7 @@ case class SHACLShape(val axiom: Subsumption) extends Showable {
 object SHACLShape:
 
   /** Test, whether Concept c is a valid target query. */
-  private def validTarget(c: Concept): Boolean =
+  def validTarget(c: Concept): Boolean =
     c match
       case Existential(NamedRole(_), Top)          => true
       case Existential(Inverse(NamedRole(_)), Top) => true
@@ -67,7 +67,7 @@ object SHACLShape:
       case _ => false
 
   /** Test, whether Concept c is a valid constraint. */
-  private def validConstraint(c: Concept): Boolean = true
+  def validConstraint(c: Concept): Boolean = true
 
   /** Construct a shape from an axioms. */
   def fromAxiom(axiom: Subsumption): S2STry[SHACLShape] =

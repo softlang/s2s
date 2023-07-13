@@ -42,16 +42,8 @@ class SimpleSHACLShape(axiom: Subsumption) extends SHACLShape(axiom):
 
 object SimpleSHACLShape:
 
-  /** Test, whether Concept c is a valid target query. */
-  private def validTarget(c: Concept): Boolean =
-    c match
-      case Existential(Inverse(NamedRole(_)), Top) => true
-      case Existential(NamedRole(_), Top)          => true
-      case NamedConcept(_)                         => true
-      case _                                       => false
-
   /** Test, whether Concept c is a valid constraint. */
-  private def validConstraint(c: Concept): Boolean =
+  def validConstraint(c: Concept): Boolean =
     c match
       case NamedConcept(_)                                     => true
       case Existential(NamedRole(_), NamedConcept(_))          => true
@@ -64,6 +56,6 @@ object SimpleSHACLShape:
   def fromAxiom(
       axiom: Subsumption
   ): S2STry[SimpleSHACLShape] =
-    if validTarget(axiom.c) && validConstraint(axiom.d) then
+    if SHACLShape.validTarget(axiom.c) && validConstraint(axiom.d) then
       Right(SimpleSHACLShape(axiom))
     else Left(NotSimpleError(axiom))
