@@ -32,8 +32,8 @@ class ShapeGenerator(
       })
       .toSet
 
-  /** Generate all constraints (Concepts). */
-  private def generateConstraints: Set[Concept] =
+  /** Generate all Simple SHACL constraints (Concepts). */
+  private def generateSimpleConstraints: Set[Concept] =
     voc.concepts.toList
       .union(
         voc.properties.toList.flatMap { p =>
@@ -51,6 +51,10 @@ class ShapeGenerator(
         }
       )
       .toSet
+
+  /** Generate all constraints (Concepts). */
+  private def generateConstraints: Set[Concept] =
+    generateSimpleConstraints // TODO!
 
   private def isNC(c: Concept): Boolean =
     c match
@@ -90,13 +94,16 @@ class ShapeGenerator(
     target == constraint
 
   def generate: Set[SHACLShape] =
-    if simple then generateSimple.toSet else generateGeneral.toSet
+    if simple then generateSimple.toSet else generateGeneral
 
-  private def generateSimple: List[SimpleSHACLShape] = (for
+  private def generateSimple: Set[SimpleSHACLShape] = for
+    t <- generateTargets
+    c <- generateSimpleConstraints
+    if (!optimize || !entailed(t, c)) && !tautology(t, c)
+  yield SimpleSHACLShape(Subsumption(t, c))
+
+  private def generateGeneral: Set[SHACLShape] = for
     t <- generateTargets
     c <- generateConstraints
     if (!optimize || !entailed(t, c)) && !tautology(t, c)
-  yield SimpleSHACLShape(Subsumption(t, c))).toList
-
-  private def generateGeneral: List[SHACLShape] =
-    throw RuntimeException("Not implemented!")
+  yield SHACLShape(Subsumption(t, c))

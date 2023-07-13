@@ -95,5 +95,5 @@ object Configuration:
     printOutput = false,
     // No CLI-override (...yet)
     proxyFamily = true,
-    arbitraryShapes = false
+    arbitraryShapes = true
   )
