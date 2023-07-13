@@ -28,7 +28,7 @@ class ConfigurationComparison(
   /** Compare results for one set of query and shapes. */
   private def compare(
       q: SCCQ,
-      s: Set[SimpleSHACLShape],
+      s: Set[SHACLShape],
       log1: Log,
       log2: Log
   ): Boolean = s1.algorithm(q, s, log1) == s2.algorithm(q, s, log2)
@@ -37,8 +37,8 @@ class ConfigurationComparison(
   private def search(
       qg: ProblemGenerator,
       verbose: Boolean = true
-  ): List[(SCCQ, Set[SimpleSHACLShape])] =
-    def doSearch(trial: Int): List[(SCCQ, Set[SimpleSHACLShape])] =
+  ): List[(SCCQ, Set[SHACLShape])] =
+    def doSearch(trial: Int): List[(SCCQ, Set[SHACLShape])] =
       if trial <= 0 then Nil
       else
 
@@ -59,16 +59,16 @@ class ConfigurationComparison(
         val log2 = Log(debugging = true)
 
         // If results are different
-        if !compare(q, s, log1, log2) then
+        if !compare(q, s.toList.toSet, log1, log2) then
           // print the logs.
           println()
           log1.print(true, true)
           log2.print(true, true)
           // Return this result, or continue (if allowed).
-          if stopAfterFirstResult then List((q, s))
+          if stopAfterFirstResult then List((q, s.toList.toSet))
           else
             println(List.fill(80)("-").mkString(""))
-            (q, s) :: doSearch(trial - 1)
+            (q, s.toList.toSet) :: doSearch(trial - 1)
         // If there was no difference, continue with next trial.
         else doSearch(trial - 1)
     doSearch(trials)
@@ -84,10 +84,10 @@ class ConfigurationComparison(
     for
       qp <- s1.parseQuery(q)
       sp <- s1.parseShapes(sin)
-    yield input(qp, sp)
+    yield input(qp, sp.toList.toSet)
 
   /** Compare for specific input. */
-  def input(q: SCCQ, sin: Set[SimpleSHACLShape]): Boolean =
+  def input(q: SCCQ, sin: Set[SHACLShape]): Boolean =
 
     // Initialize logs.
     val log1 = Log(debugging = true)

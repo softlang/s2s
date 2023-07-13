@@ -1,11 +1,11 @@
 package org.softlang.s2s.analysis
 
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.query.SCCQ
 
 import scala.concurrent.duration.Duration
 
-type ProblemType = (SCCQ, String, Set[SimpleSHACLShape], String)
+type ProblemType = (SCCQ, String, Set[SHACLShape], String)
 
 /** Analysis of a single-run Profile. */
 sealed trait ProfileAnalysis(problem: ProblemType, id: Int):
@@ -28,7 +28,7 @@ case class SuccessfulAnalysis(
     // The problem of this run.
     problem: ProblemType,
     // Result of this analysis.
-    result: (Set[SimpleSHACLShape], String),
+    result: (Set[SHACLShape], String),
     // Number of candidates.
     candidates: Int,
     // Total time.

@@ -2,15 +2,23 @@ package org.softlang.s2s.generate
 
 import de.pseifer.shar.dl._
 import de.pseifer.shar.core.Iri
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 
 /** Generate all shapes over a vocabulary. */
-class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
+class ShapeGenerator(
+    voc: Vocabulary,
+    optimize: Boolean,
+    proxyFamily: Boolean,
+    simple: Boolean
+):
 
   /** Find a proxy axiom. */
-  private def findProxy(s: String): Concept = 
-    val ci = NamedConcept(Iri.fromString("<https://github.com/softlang/s2s/" + s + ">").toOption.get)
+  private def findProxy(s: String): Concept =
+    val ci = NamedConcept(
+      Iri.fromString("<https://github.com/softlang/s2s/" + s + ">").toOption.get
+    )
     if voc.contains(ci) then findProxy(s ++ "'")
     else ci
 
@@ -37,9 +45,9 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
               Universal(Inverse(p), c)
             )
           }
-          if proxyFamily then temp.union(Set(
-            Universal(p, proxy), 
-            Universal(Inverse(p), proxy))) else temp
+          if proxyFamily then
+            temp.union(Set(Universal(p, proxy), Universal(Inverse(p), proxy)))
+          else temp
         }
       )
       .toSet
@@ -81,8 +89,14 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
   private def tautology(target: Concept, constraint: Concept): Boolean =
     target == constraint
 
-  def generate: Set[SimpleSHACLShape] = for
+  def generate: Set[SHACLShape] =
+    if simple then generateSimple.toSet else generateGeneral.toSet
+
+  private def generateSimple: List[SimpleSHACLShape] = (for
     t <- generateTargets
     c <- generateConstraints
     if (!optimize || !entailed(t, c)) && !tautology(t, c)
-  yield SimpleSHACLShape(Subsumption(t, c))
+  yield SimpleSHACLShape(Subsumption(t, c))).toList
+
+  private def generateGeneral: List[SHACLShape] =
+    throw RuntimeException("Not implemented!")

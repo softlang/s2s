@@ -57,7 +57,7 @@ class Profiling(
 
   private def runStep(
       q: SCCQ,
-      s: Set[SimpleSHACLShape],
+      s: Set[SHACLShape],
       trialID: Int
   ): ProfileAnalysis =
 
@@ -158,7 +158,7 @@ class Profiling(
 
         val qs = gen.sample()
         bar.update(trial)
-        results = results ++ List(runStep(qs._1, qs._2, trial))
+        results = results ++ List(runStep(qs._1, qs._2.toList.toSet, trial))
 
       val actualResults = results.drop(dropFirstX)
 

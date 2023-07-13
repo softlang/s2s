@@ -5,7 +5,7 @@ import org.junit.rules.TestName
 import org.softlang.s2s.core.ActiveReasoner
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.Scope
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.infer.Shapes2Shapes
 import org.stringtemplate.v4.compiler.STParser.notConditional_return
 
@@ -53,7 +53,7 @@ abstract class ValidationTestSuite(
     }
     """
 
-  private def formatResults(s: Set[SimpleSHACLShape]): String =
+  private def formatResults(s: Set[SHACLShape]): String =
     s.map("  " ++ _.show(shar.state)).mkString("\n")
 
   private def leading(s: String, width: Int): String =
@@ -108,6 +108,18 @@ abstract class ValidationTestSuite(
     yield
       if a.isEmpty && n.isEmpty then aout == e
       else aout.intersect(n).isEmpty && a.diff(aout).isEmpty
+
+    if debug then
+      println("----------- SHOULD")
+      println(formatResults(exactlyOut.getOrElse(Set())))
+      val s1 = exactlyOut.getOrElse(Set()).map(s => s.show(shar.state))
+      println("----------- IS")
+      println(formatResults(actuallSout.getOrElse(Set())))
+      val s2 = actuallSout.getOrElse(Set()).map(s => s.show(shar.state))
+      println("----------- SUCCESS")
+      println(exactlyOut.getOrElse(Set()) == actuallSout.getOrElse(Set()))
+      println("----------- ?")
+      println(s1 == s2)
 
     // Print full log if failure.
     for

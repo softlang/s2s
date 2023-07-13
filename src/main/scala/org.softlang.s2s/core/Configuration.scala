@@ -22,13 +22,15 @@ object ActiveReasoner:
 
 /** A set of configurations for S2S. */
 case class Configuration(
-
     // *****************
     // *** Algorithm ***
     // *****************
 
     // Use a proxy for the family of form C ⊑ ∀p.P, instead of ignoring them.
     proxyFamily: Boolean,
+
+    // Allow arbitrary (ALCHOI) SHACL shapes, instead of just SimpleSHACL.
+    arbitraryShapes: Boolean,
 
     // ********************
     // *** User Options ***
@@ -71,8 +73,7 @@ case class Configuration(
 /** Some preset configurations. */
 object Configuration:
 
-  /** Default configuration.
-    * This is mainly for internal use.
+  /** Default configuration. This is mainly for internal use.
     */
   def default: Configuration = Configuration(
     // The following can be set by users via CLI
@@ -93,5 +94,6 @@ object Configuration:
     prettyVariableConcepts = true,
     printOutput = false,
     // No CLI-override (...yet)
-    proxyFamily = true
+    proxyFamily = true,
+    arbitraryShapes = false
   )

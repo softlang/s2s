@@ -5,20 +5,51 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 import org.softlang.s2s.query.AtomicPattern
 
-/** A restricted, simple SHACL shape. */
-class SimpleSHACLShape(axiom: Subsumption) extends SHACLShape(axiom):
+/** An arbitrary SHACL shape, expressed by an Subsumption axiom. */
+case class SHACLShape(val axiom: Subsumption) extends Showable {
+
+  def show(implicit state: BackendState): String = axiom.show(state)
 
   /** Put shape in specific scope. */
-  def inScopeS(scope: Scope)(implicit scopes: Scopes): SimpleSHACLShape =
-    SimpleSHACLShape(
+  def inScope(scope: Scope)(implicit scopes: Scopes): SHACLShape =
+    SHACLShape(
       Subsumption(axiom.c.inScope(scope), axiom.d.inScope(scope))
     )
 
   /** Drop all scopes from this shape. */
-  def dropScopeS(implicit scopes: Scopes): SimpleSHACLShape =
-    SimpleSHACLShape(
+  def dropScope(implicit scopes: Scopes): SHACLShape =
+    SHACLShape(
       Subsumption(axiom.c.dropScope, axiom.d.dropScope)
     )
+
+  /** Convert to SimpleSHACLShape, if possible. */
+  def toSimple: Option[SimpleSHACLShape] =
+    SimpleSHACLShape.fromAxiom(axiom) match
+      case Right(s) => Some(s)
+      case Left(_)  => None
+
+  // override def equals(other: Any): Boolean =
+  //  if other.isInstanceOf[SHACLShape]
+  //  then other.asInstanceOf[SHACLShape].axiom == axiom
+  //  else false
+
+}
+
+object SHACLShape:
+
+  /** Test, whether Concept c is a valid target query. */
+  private def validTarget(c: Concept): Boolean = true
+
+  /** Test, whether Concept c is a valid constraint. */
+  private def validConstraint(c: Concept): Boolean = true
+
+  /** Construct a shape from an axioms. */
+  def fromAxiom(axiom: Subsumption): S2STry[SHACLShape] =
+    Right(SHACLShape(axiom))
+
+/*
+
+case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
 
   /** True, if the constraint contains universal quantification. */
   def isForallShape: Boolean = axiom.d match
@@ -92,3 +123,5 @@ object SimpleSHACLShape:
     if validTarget(axiom.c) && validConstraint(axiom.d) then
       Right(SimpleSHACLShape(axiom))
     else Left(NotSimpleError(axiom))
+
+ */

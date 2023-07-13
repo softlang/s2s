@@ -56,7 +56,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def run(
       query: String,
       shapes: Set[String]
-  ): S2STry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SHACLShape]] =
 
     // Run validation with query and shapes.
     val res = validate(query, shapes)
@@ -81,7 +81,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   def validate(
       query: String,
       shapes: Set[String]
-  ): (S2STry[Set[SimpleSHACLShape]], Log) =
+  ): (S2STry[Set[SHACLShape]], Log) =
 
     // Initialize the log.
     val log: Log = createLog
@@ -116,22 +116,22 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   /** Attempt to parse a set of Simple SHACL shapes. */
   def parseShapes(
       shapes: Set[String]
-  ): S2STry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SHACLShape]] =
     for s <- Util
         .flipEitherHead(shapes.map(shapep.parse(_)).toList)
         .map(_.toSet)
-    yield s
+    yield s.toList.toSet
 
   /** Remove any scope-related renaming. */
-  protected def descope(shapes: Set[SimpleSHACLShape]): Set[SimpleSHACLShape] =
+  protected def descope(shapes: Set[SHACLShape]): Set[SHACLShape] =
     shapes.map(_.dropScope)
 
   /** Run algorithm with formal input (given a log). */
   def algorithm(
       qi: SCCQ,
-      si: Set[SimpleSHACLShape],
+      si: Set[SHACLShape],
       log: Log
-  ): S2STry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SHACLShape]] =
 
     log.profileStart("algorithm")
 
@@ -175,7 +175,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     result
 
   /** Add input query and shapes to log. */
-  private def logInput(q: SCCQ, s: Set[SimpleSHACLShape], log: Log): Unit =
+  private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
     log.info("q", q.show)
     log.debug("Σ(q)", q.vocabulary.show)
     log.info("S_in", s.map(_.show).toList)
@@ -183,7 +183,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   /** Perform the KB construction set of the algorithm. */
   private def buildAxioms(
       q: SCCQ,
-      s: Set[SimpleSHACLShape],
+      s: Set[SHACLShape],
       log: Log
   ): AxiomSet =
 
@@ -191,7 +191,10 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     // Axioms from mapping method.
 
-    val mappingSubs = SubsumptionsFromMappings(q.pattern, s).axioms
+    val mappingSubs = SubsumptionsFromMappings(
+      q.pattern,
+      s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+    ).axioms
     log.debug("MA(S_in, q.P)", mappingSubs)
 
     log.profileEnd("build-mapping")
@@ -202,7 +205,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val props = PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
     log.debug("RS(q)", props)
 
-    val shapeProps = ShapePropertySubsumption(q.pattern, s).axioms
+    val shapeProps = ShapePropertySubsumption(q.pattern).axioms
     log.debug("RS(q, S_in)", shapeProps)
 
     log.profileEnd("build-properties")
@@ -283,11 +286,12 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private def generateCandidates(
       q: SCCQ,
       log: Log
-  ): Set[SimpleSHACLShape] =
+  ): Set[SHACLShape] =
     val cand = CandidateGenerator(
       q.template.vocabulary,
       optimize = config.optimizeCandidates,
-      proxyFamily = config.proxyFamily
+      proxyFamily = config.proxyFamily,
+      simple = !config.arbitraryShapes
     )(scopes).axioms
 
     log.debug("S_can", cand.map(_.show))
@@ -297,13 +301,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   /** Perform the filtering step of the algorithm. */
   private def filter(
-      candidates: Set[SimpleSHACLShape],
+      candidates: Set[SHACLShape],
       axioms: AxiomSet,
       log: Log,
       retry: Int,
       timeout: Duration,
       currentTry: Int = 1
-  ): S2STry[Set[SimpleSHACLShape]] =
+  ): S2STry[Set[SHACLShape]] =
 
     // A fresh log.
     val plog = createLog
@@ -330,13 +334,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
           Left(TimeoutError(config.timeout, config.retry))
 
   private def filterWithTimeout(
-      candidates: Set[SimpleSHACLShape],
+      candidates: Set[SHACLShape],
       reasoner: DLReasoner,
       log: Log,
       timeout: Duration
-  ): Option[(Log, Set[SimpleSHACLShape])] =
+  ): Option[(Log, Set[SHACLShape])] =
 
-    var result: Option[Set[SimpleSHACLShape]] = None
+    var result: Option[Set[SHACLShape]] = None
 
     import java.time.LocalDateTime
 

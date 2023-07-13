@@ -1,6 +1,6 @@
 package org.softlang.s2s.analysis
 
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.query.SCCQ
 
 import java.time.LocalDateTime
@@ -12,14 +12,14 @@ enum ProfileEntry(val activity: String, val time: LocalDateTime):
   // The problem.
   case Problem(
       q: SCCQ,
-      sin: Set[SimpleSHACLShape],
+      sin: Set[SHACLShape],
       qS: String,
       sinS: String,
       t: LocalDateTime
   ) extends ProfileEntry("problem", t)
 
-  case Candidates(cand: Set[SimpleSHACLShape], t: LocalDateTime) 
-    extends ProfileEntry("candidates", t)
+  case Candidates(cand: Set[SHACLShape], t: LocalDateTime)
+      extends ProfileEntry("candidates", t)
 
   // Start of a process.
   case Start(a: String, t: LocalDateTime) extends ProfileEntry(a, t)

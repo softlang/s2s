@@ -1,6 +1,6 @@
 package org.softlang.s2s.analysis
 
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import scala.concurrent.duration.*
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -11,7 +11,7 @@ type Profile = List[ProfileEntry]
 
 extension (profile: Profile)
   def analyze(
-      result: Either[Throwable, (Set[SimpleSHACLShape], String)],
+      result: Either[Throwable, (Set[SHACLShape], String)],
       trialID: Int
   ): ProfileAnalysis =
 

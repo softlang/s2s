@@ -4,7 +4,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl._
 import de.pseifer.shar.reasoning.AxiomSet
 import de.pseifer.shar.reasoning.HermitReasoner
-import org.softlang.s2s.core.SimpleSHACLShape
+//import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
@@ -13,9 +13,9 @@ import org.softlang.s2s.query._
 
 class ShapePropertySubsumption(
     // The input pattern.
-    pattern: AtomicPatterns,
+    pattern: AtomicPatterns
     // Input shapes.
-    shapes: Set[SimpleSHACLShape]
+    // shapes: Set[SimpleSHACLShape]
 )(implicit scopes: Scopes)
     extends PropertySubsumptionCommon(pattern):
 
