@@ -16,10 +16,6 @@ import org.softlang.s2s.query.vocabulary
 
 import scala.concurrent.duration.*
 
-import uk.ac.manchester.cs.jfact.JFactFactory
-import openllet.owlapi.OpenlletReasonerFactory
-import org.antlr.v4.parse.ANTLRParser.finallyClause_return
-
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(config: Configuration = Configuration.default):
 
@@ -38,19 +34,6 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   /** Create a fresh log. */
   private def createLog = Log(debugging = config.debug)
-
-  /** Create a fresh reasoner. */
-  private def createReasoner: DLReasoner =
-    if config.activeReasoner == ActiveReasoner.Jfact then
-      OwlApiReasoner(JFactFactory())
-    else if config.activeReasoner == ActiveReasoner.Openllet then
-      OwlApiReasoner(OpenlletReasonerFactory())
-    else
-      HermitReasoner(
-        configuration = HermitConfiguration(
-          existentialStrategy = HermitExistentialStrategy.IndividualReuse
-        )
-      )
 
   /** Run validation and format logging results and output (if enabled). */
   def run(
@@ -289,9 +272,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   ): Set[SHACLShape] =
     val cand = CandidateGenerator(
       q.template.vocabulary,
-      optimize = config.optimizeCandidates,
-      proxyFamily = config.proxyFamily,
-      simple = !config.arbitraryShapes
+      heuristic = config.shapeHeuristic
     )(scopes).axioms
 
     log.debug("S_can", cand.map(_.show))
@@ -313,7 +294,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     val plog = createLog
 
     // A fresh reasoner.
-    val reasoner = createReasoner
+    val reasoner = config.reasoner.create
 
     reasoner.addAxioms(axioms)
     val result = filterWithTimeout(candidates, reasoner, plog, timeout)

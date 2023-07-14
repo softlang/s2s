@@ -3,15 +3,14 @@ package org.softlang.s2s.generate
 import de.pseifer.shar.dl._
 import de.pseifer.shar.core.Iri
 import org.softlang.s2s.core.SHACLShape
+import org.softlang.s2s.core.ShapeHeuristic
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 
 /** Generate all shapes over a vocabulary. */
 class ShapeGenerator(
     voc: Vocabulary,
-    optimize: Boolean,
-    proxyFamily: Boolean,
-    simple: Boolean
+    heuristic: ShapeHeuristic
 ):
 
   /** Find a proxy axiom. */
@@ -32,8 +31,17 @@ class ShapeGenerator(
       })
       .toSet
 
-  /** Generate all constraints (Concepts). */
-  private def generateConstraints: Set[Concept] =
+  /** Generate constraints (i.e., concepts). */
+  private def generateConstraints: Set[Concept] = if heuristic.simpleShapes then
+    generateConstraintsSimple
+  else generateConstraintsFull
+
+  /** Generate all constraints allowed by heuristic. */
+  private def generateConstraintsFull: Set[Concept] =
+    generateConstraintsSimple // TODO
+
+  /** Generate exactly simple SHACL constraints. */
+  private def generateConstraintsSimple: Set[Concept] =
     voc.concepts.toList
       .union(
         voc.properties.toList.flatMap { p =>
@@ -45,7 +53,7 @@ class ShapeGenerator(
               Universal(Inverse(p), c)
             )
           }
-          if proxyFamily then
+          if heuristic.proxyFamily then
             temp.union(Set(Universal(p, proxy), Universal(Inverse(p), proxy)))
           else temp
         }
@@ -89,14 +97,9 @@ class ShapeGenerator(
   private def tautology(target: Concept, constraint: Concept): Boolean =
     target == constraint
 
-  def generate: Set[SHACLShape] =
-    if simple then generateSimple.toSet else generateGeneral.toSet
-
-  private def generateSimple: List[SimpleSHACLShape] = (for
+  /** Generate a set of shapes over a vocabulary, according to a heuristic. */
+  def generate: Set[SHACLShape] = for
     t <- generateTargets
     c <- generateConstraints
-    if (!optimize || !entailed(t, c)) && !tautology(t, c)
-  yield SimpleSHACLShape(Subsumption(t, c))).toList
-
-  private def generateGeneral: List[SHACLShape] =
-    throw RuntimeException("Not implemented!")
+    if (!heuristic.optimize || !entailed(t, c)) && !tautology(t, c)
+  yield SHACLShape(Subsumption(t, c))

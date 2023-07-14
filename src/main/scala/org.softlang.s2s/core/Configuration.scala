@@ -1,52 +1,15 @@
 package org.softlang.s2s.core
 
-import uk.ac.manchester.cs.jfact.JFactFactory
-
-enum ActiveReasoner:
-  case Hermit
-  case Jfact
-  case Openllet
-
-  override def toString: String = this match
-    case Hermit   => "hermit"
-    case Jfact    => "jfact"
-    case Openllet => "openllet"
-
-object ActiveReasoner:
-
-  /** Construct active reasoner from string, default to Hermit. */
-  def fromString(s: String): ActiveReasoner = s.toLowerCase() match
-    case "jfact"    => ActiveReasoner.Jfact
-    case "openllet" => ActiveReasoner.Openllet
-    case _          => ActiveReasoner.Hermit
-
 /** A set of configurations for S2S. */
 case class Configuration(
-    // *****************
-    // *** Algorithm ***
-    // *****************
-
-    // Use a proxy for the family of form C ⊑ ∀p.P, instead of ignoring them.
-    proxyFamily: Boolean,
-
-    // Allow arbitrary (ALCHOI) SHACL shapes, instead of just SimpleSHACL.
-    arbitraryShapes: Boolean,
-
-    // ********************
-    // *** User Options ***
-    // ********************
-
-    // Use the JFact reasoner, instead of HermiT.
-    activeReasoner: ActiveReasoner,
+    // Set the reasoner to be used.
+    reasoner: ActiveReasoner,
 
     // Timeout for reasoning attempts (in milliseconds).
     timeout: Long,
 
     // Times the reasoning is allowed to restart after timeout.
     retry: Int,
-
-    // Optimize candidate generation.
-    optimizeCandidates: Boolean,
 
     // Token to append (if autoRename is set).
     renameToken: String,
@@ -67,7 +30,10 @@ case class Configuration(
     prettyVariableConcepts: Boolean,
 
     // Print output shapes (outside of log) to output.
-    printOutput: Boolean
+    printOutput: Boolean,
+
+    // Settings for candidate generation.
+    shapeHeuristic: ShapeHeuristic
 )
 
 /** Some preset configurations. */
@@ -82,10 +48,9 @@ object Configuration:
     // Therefore, the following defaults are only relevant
     // for development, testing and analysis runs.
     // CLI-override.
-    activeReasoner = ActiveReasoner.Hermit,
+    reasoner = ActiveReasoner.Hermit,
     timeout = 60000,
     retry = 0,
-    optimizeCandidates = true,
     renameToken = "٭",
     prefix = ":",
     log = true,
@@ -93,7 +58,6 @@ object Configuration:
     hidecolon = true,
     prettyVariableConcepts = true,
     printOutput = false,
-    // No CLI-override (...yet)
-    proxyFamily = true,
-    arbitraryShapes = false
+    // No (complete) CLI-override (...yet)
+    shapeHeuristic = ShapeHeuristic.default
   )

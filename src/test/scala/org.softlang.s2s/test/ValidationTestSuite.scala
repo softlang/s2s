@@ -24,7 +24,7 @@ abstract class ValidationTestSuite(
     verbose: Boolean = false
 ) extends Shapes2Shapes(
       Configuration.default.copy(
-        activeReasoner = ActiveReasoner.Hermit
+        reasoner = ActiveReasoner.Hermit
       )
     ):
 
