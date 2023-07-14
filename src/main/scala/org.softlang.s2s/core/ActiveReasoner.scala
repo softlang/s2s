@@ -14,6 +14,7 @@ enum ActiveReasoner:
     case Jfact    => "jfact"
     case Openllet => "openllet"
 
+  /** Instantiate the active reasoner. */
   def create: DLReasoner = this match
     case Hermit =>
       HermitReasoner(
@@ -28,8 +29,8 @@ enum ActiveReasoner:
 
 object ActiveReasoner:
 
-  /** Construct active reasoner from string, default to Hermit. */
+  /** Guess reasoner from string, default to HermiT. */
   def fromString(s: String): ActiveReasoner = s.toLowerCase() match
-    case "jfact"    => ActiveReasoner.Jfact
-    case "openllet" => ActiveReasoner.Openllet
-    case _          => ActiveReasoner.Hermit
+    case "jfact" | "fact" | "fact++"       => ActiveReasoner.Jfact
+    case "openllet" | "openlet" | "pellet" => ActiveReasoner.Openllet
+    case _                                 => ActiveReasoner.Hermit
