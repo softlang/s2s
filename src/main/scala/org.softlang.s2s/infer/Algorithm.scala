@@ -48,22 +48,26 @@ class Algorithm(
     log.profileEnd("build")
     log.profileStart("candidates")
 
-    // Generate candidates.
-    val cand = generateCandidates(preq, log)
+    val canGen = CandidateGenerator(
+      preq.template.vocabulary,
+      heuristic = config.shapeHeuristic
+    )(scopes)
+    var result: S2STry[Set[SHACLShape]] = Right(Set())
+    var current = canGen.getNext()
 
-    log.candidates(cand)
+    while (current.nonEmpty) do
+      log.candidates(current)
+      log.profileStart("filter")
+      val previous =
+        filter(current, axioms, log, config.retry, config.timeout.millis)
+      log.profileEnd("filter")
+      result = for
+        p <- previous
+        r <- result
+      yield r.union(p)
+      current = canGen.getNext(previous)
 
     log.profileEnd("candidates")
-    log.profileStart("filter")
-
-    // Filter candidates.
-    val result = filter(
-      cand,
-      axioms,
-      log,
-      config.retry,
-      config.timeout.millis
-    )
 
     log.profileEnd("filter")
     log.profileEnd("algorithm")
@@ -179,19 +183,19 @@ class Algorithm(
     )
 
   /** Perform the candidate generation step of the algorithm. */
-  private def generateCandidates(
-      q: SCCQ,
-      log: Log
-  ): Set[SHACLShape] =
-    val cand = CandidateGenerator(
-      q.template.vocabulary,
-      heuristic = config.shapeHeuristic
-    )(scopes).axioms
+  // private def generateCandidates(
+  //    q: SCCQ,
+  //    log: Log
+  // ): Set[SHACLShape] =
+  //  val cand = CandidateGenerator(
+  //    q.template.vocabulary,
+  //    heuristic = config.shapeHeuristic
+  //  )(scopes).axioms
 
-    log.debug("S_can", cand.map(_.show))
-    log.debugNoisy(s"(${cand.size})")
+  //  log.debug("S_can", cand.map(_.show))
+  //  log.debugNoisy(s"(${cand.size})")
 
-    cand
+  //  cand
 
   /** Perform the filtering step of the algorithm. */
   private def filter(

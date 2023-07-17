@@ -101,6 +101,10 @@ object Util:
   ): Either[T1, List[T2]] =
     flipEither(eithers).left.map(_.head)
 
+  /** Construct IRI for testing purposes. */
+  def forceIriUnsave(s: String): Iri =
+    Iri.fromString(s"<https://github.com/softlang/s2s/testing/$s>").toOption.get
+
   /** Compatbility mapping of characters, since ANTLR is somewhat system
     * dependent with it's encodings.
     */

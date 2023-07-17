@@ -38,7 +38,46 @@ class ShapeGenerator(
 
   /** Generate all constraints allowed by heuristic. */
   private def generateConstraintsFull: Set[Concept] =
-    generateConstraintsSimple // TODO
+
+    // Generate all constraints, according to the following simplified syntax.
+    // Nesting depth: Limited by factor n.
+
+    val n = 1 // TODO: Take from query.
+
+    // ϕ := A | ¬A | {a} | ¬{a}
+    //    | ∃r.ϕ ⊓ ... ⊓ ϕ | ¬∃r.ϕ ⊔ ... ⊔ ϕ | ∃r.T | ¬∃r.T
+    // r := p | p^-
+
+    // Concepts and negated concepts.
+    val cwn =
+      voc.concepts.toList
+        .union(voc.concepts.toList.map(Complement(_)))
+        .toSet
+
+    // Closed existential (i.e., ∃r.T).
+    val ce: Set[Concept] = voc.properties.toList
+      .flatMap(r => Set(Existential(r, Top), Existential(Inverse(r), Top)))
+      .toSet
+
+    // Leaf-existential quantification (i.e., no recursive exists); depth 0.
+    val leq = cwn
+      .union(ce)
+      .subsets
+      .toSet
+      .flatMap(cs =>
+        val ucs = Concept.unionOf(cs.toList)
+        val ics = Concept.intersectionOf(cs.toList)
+        voc.properties.toList.flatMap(r =>
+          Set(
+            Existential(r, ics),
+            Existential(Inverse(r), ics),
+            Complement(Existential(r, ucs)),
+            Complement(Existential(Inverse(r), ucs))
+          )
+        )
+      )
+
+    leq.union(ce).union(cwn)
 
   /** Generate exactly simple SHACL constraints. */
   private def generateConstraintsSimple: Set[Concept] =

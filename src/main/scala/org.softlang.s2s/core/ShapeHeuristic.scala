@@ -19,5 +19,5 @@ object ShapeHeuristic:
     optimize = true,
     // No CLI override available:
     proxyFamily = true,
-    simpleShapes = false
+    simpleShapes = true // TOGGLE HERE <<<<
   )
