@@ -89,13 +89,6 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
       descr = "Use this String for internal renaming (def: *)"
     )
 
-  // val topSymbol =
-  //   opt[String](
-  //     required = false,
-  //     default = Some("T"),
-  //     descr = "Use this String for internal Top (def: T)"
-  //   )
-
   val queryFile = trailArg[String](descr = "File containing input query")
 
   val shapesFile = trailArg[String](
@@ -114,16 +107,17 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
 
   /** Convert to a S2S configuration. */
   def toConfiguration: Configuration = baseConfiguration.copy(
-    optimizeCandidates = optimize(),
     renameToken = renameToken(),
-    activeReasoner = ActiveReasoner.fromString(reasoner()),
+    reasoner = ActiveReasoner.fromString(reasoner()),
     retry = retry(),
     timeout = timeout(),
-    //namespacedTopName = topSymbol(),
     prefix = prefix(),
     log = log(),
     debug = debug(),
     hidecolon = hidecolon(),
     prettyVariableConcepts = prettyVars(),
-    printOutput = output()
+    printOutput = output(),
+    shapeHeuristic = baseConfiguration.shapeHeuristic.copy(
+      optimize = optimize()
+    )
   )

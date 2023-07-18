@@ -20,11 +20,11 @@ abstract class ValidationTestSuite(
     suite: String,
     // Do not run this test siute.
     disabled: Boolean = false,
-    // Allways print full debugging for failures.
+    // Always print full debugging for failures.
     verbose: Boolean = false
 ) extends Shapes2Shapes(
       Configuration.default.copy(
-        activeReasoner = ActiveReasoner.Hermit
+        reasoner = ActiveReasoner.Hermit
       )
     ):
 
@@ -108,18 +108,6 @@ abstract class ValidationTestSuite(
     yield
       if a.isEmpty && n.isEmpty then aout == e
       else aout.intersect(n).isEmpty && a.diff(aout).isEmpty
-
-    if debug then
-      println("----------- SHOULD")
-      println(formatResults(exactlyOut.getOrElse(Set())))
-      val s1 = exactlyOut.getOrElse(Set()).map(s => s.show(shar.state))
-      println("----------- IS")
-      println(formatResults(actuallSout.getOrElse(Set())))
-      val s2 = actuallSout.getOrElse(Set()).map(s => s.show(shar.state))
-      println("----------- SUCCESS")
-      println(exactlyOut.getOrElse(Set()) == actuallSout.getOrElse(Set()))
-      println("----------- ?")
-      println(s1 == s2)
 
     // Print full log if failure.
     for

@@ -168,7 +168,7 @@ class Profiling(
       val meta = List(
         s"Time: ${time}",
         s"Trials: ${trials}",
-        s"Reasoner: ${config.activeReasoner}",
+        s"Reasoner: ${config.reasoner}",
         s"Max Retries: ${config.retry}",
         s"Timeout: ${config.timeout}",
         s"--Configuration--\n${genConfig.formatLong}",
