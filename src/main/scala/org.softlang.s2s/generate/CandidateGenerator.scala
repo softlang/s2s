@@ -24,4 +24,4 @@ class CandidateGenerator(
     if heuristic.simpleShapes && count == 0 then
       count += 1
       generate
-    else generate // TODO: Multiple phases depending on input.
+    else Set() // TODO: Multiple phases depending on input.

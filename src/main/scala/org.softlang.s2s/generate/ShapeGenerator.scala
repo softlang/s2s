@@ -99,10 +99,6 @@ class ShapeGenerator(
       )
       .toSet
 
-  /** Generate all constraints (Concepts). */
-  private def generateConstraints: Set[Concept] =
-    generateSimpleConstraints // TODO!
-
   private def isNC(c: Concept): Boolean =
     c match
       case NamedConcept(_) => true

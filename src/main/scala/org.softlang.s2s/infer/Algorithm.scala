@@ -55,7 +55,7 @@ class Algorithm(
     var result: S2STry[Set[SHACLShape]] = Right(Set())
     var current = canGen.getNext()
 
-    while (current.nonEmpty) do
+    while current.nonEmpty do
       log.candidates(current)
       log.profileStart("filter")
       val previous =
