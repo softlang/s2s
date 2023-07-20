@@ -32,24 +32,24 @@ class Algorithm(
     log.profileStart("algorithm")
 
     // Pre-process query and shapes, by setting scopes.
-    val preq = SCCQ(
+    val preQ = SCCQ(
       query.template.inScope(Scope.Template),
       query.pattern.inScope(Scope.Pattern)
     )
     val pres = shapes.map(_.inScope(Scope.Input))
 
     // Log input.
-    logInput(preq, pres, log)
+    logInput(preQ, pres, log)
     log.profileStart("build")
 
     // Infer axioms from query and shapes.
-    val axioms = buildAxioms(preq, pres, log)
+    val axioms = buildAxioms(preQ, pres, log)
 
     log.profileEnd("build")
     log.profileStart("candidates")
 
     val canGen = CandidateGenerator(
-      preq.template.vocabulary,
+      preQ.template.vocabulary,
       heuristic = config.shapeHeuristic
     )(scopes)
     var result: S2STry[Set[SHACLShape]] = Right(Set())
@@ -187,15 +187,15 @@ class Algorithm(
   //    q: SCCQ,
   //    log: Log
   // ): Set[SHACLShape] =
-  //  val cand = CandidateGenerator(
+  //  val can = CandidateGenerator(
   //    q.template.vocabulary,
   //    heuristic = config.shapeHeuristic
   //  )(scopes).axioms
 
-  //  log.debug("S_can", cand.map(_.show))
-  //  log.debugNoisy(s"(${cand.size})")
+  //  log.debug("S_can", can.map(_.show))
+  //  log.debugNoisy(s"(${can.size})")
 
-  //  cand
+  //  can
 
   /** Perform the filtering step of the algorithm. */
   private def filter(
@@ -208,13 +208,13 @@ class Algorithm(
   ): S2STry[Set[SHACLShape]] =
 
     // A fresh log.
-    val plog = Log(debugging = config.debug)
+    val pLog = Log(debugging = config.debug)
 
     // A fresh reasoner.
     val reasoner = config.reasoner.create
 
     reasoner.addAxioms(axioms)
-    val result = filterWithTimeout(candidates, reasoner, plog, timeout)
+    val result = filterWithTimeout(candidates, reasoner, pLog, timeout)
 
     // Wait configured timeout for completion.
     result match
