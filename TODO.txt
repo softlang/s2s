@@ -11,9 +11,9 @@ r := p | p^-
 Note: Can not include recursive shape references (independence required).
 Non-recursive shape references are syntactic sugar.
 
-Note: Could also include qualified number restrictions, though this is not very promising in terms of proveable properties, so maybe omit.
+Note: Could also include qualified number restrictions, though this is not very promising in terms of provable properties, so maybe omit.
 
-
+=== contraint logic programming ===
 
 Finite Property of Shapes
 -------------------------
@@ -50,7 +50,7 @@ The set of relevant shapes is finite:
         More efficient way: Consider only paths according to variables, while
         considering that different variables can form a part under inclusion.
 
-        What about cycles? Limitation: No cylces; could be shown 
+        What about cycles? Limitation: No cycles; could be shown 
         via representative?
 
 
@@ -64,7 +64,7 @@ unless the algorithm can be easily adapted to take the KB as input (which I don'
 
 (2) Generation of shapes for persistent result graphs. Consider data integration, or similar use cases, where we want to infer some shapes to use for validation. Here, a user likely wants to select shapes based on the underlying domain model, perhaps starting with the input shapes. This process is inherently interactive and herusitics based, where suggested shapes can depend on selected shapes.
 
-(3) Informative use case. A user wants to be informed about the structure of result graphs of their query, in the general case. Here, simple shapes are preferrable, and many entailed shapes are not required. Redundant shapes make it more difficult to comprehend the types over the graph, whereas entailed shapes can be implicitly understood (e.g., Professor is a Person, and Professor is a Researcher, we do not also need Professor is a Person and Researcher).
+(3) Informative use case. A user wants to be informed about the structure of result graphs of their query, in the general case. Here, simple shapes are preferable, and many entailed shapes are not required. Redundant shapes make it more difficult to comprehend the types over the graph, whereas entailed shapes can be implicitly understood (e.g., Professor is a Person, and Professor is a Researcher, we do not also need Professor is a Person and Researcher).
 
 
 
