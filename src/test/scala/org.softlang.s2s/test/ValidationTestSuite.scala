@@ -18,7 +18,7 @@ import Console.{GREEN, RED, RESET, YELLOW, RED_B, WHITE}
 abstract class ValidationTestSuite(
     // Name of the test suite.
     suite: String,
-    // Do not run this test siute.
+    // Do not run this test suite.
     disabled: Boolean = false,
     // Always print full debugging for failures.
     verbose: Boolean = false
@@ -90,10 +90,10 @@ abstract class ValidationTestSuite(
     // Do not run test, if the suite is disabled.
     if disabled then return
 
-    val (actuallSoutS, log) = validate(q, sin)
+    val (actualSOutS, log) = validate(q, sin)
 
     // Remove internal scope.
-    val actuallSout = actuallSoutS.map(descope)
+    val actualSOut = actualSOutS.map(descope)
 
     // Parse the test case (and move T to Scope.Template).
     val exactlyOut = parseShapes(exactly)
@@ -104,7 +104,7 @@ abstract class ValidationTestSuite(
       e <- exactlyOut
       a <- atleastOut
       n <- notOut
-      aout <- actuallSout
+      aout <- actualSOut
     yield
       if a.isEmpty && n.isEmpty then aout == e
       else aout.intersect(n).isEmpty && a.diff(aout).isEmpty
@@ -114,7 +114,7 @@ abstract class ValidationTestSuite(
       e <- exactlyOut
       a <- atleastOut
       n <- notOut
-      aout <- actuallSout
+      aout <- actualSOut
       b <- success
     do
       // If failure or debugging enabled...
@@ -136,14 +136,14 @@ abstract class ValidationTestSuite(
           val mi = e.union(a).diff(aout)
           if mi.nonEmpty then println("Missing results:\n" ++ formatResults(mi))
       else
-        // Successfull test:
+        // Successful test:
         println(formatName(true, false))
 
     // Parsing and input error assertions.
     assert(exactlyOut.isRight)
     assert(atleastOut.isRight)
     assert(notOut.isRight)
-    assert(actuallSout.isRight)
+    assert(actualSOut.isRight)
 
     // Test Assertion.
     for b <- success do assert(b == true)
