@@ -2,16 +2,18 @@
 
 ## Requirements
 
-Building Shapes2Shapes requires the Scala build tool [SBT](https://www.scala-sbt.org/) and Java.
+Building Shapes2Shapes requires the Scala build tool [SBT](https://www.scala-sbt.org/), as well as Java.
 
 ## Quick Start
 
 0. Install the requirements.
-1. Clone or download this repository.
+1. Clone this repository.
 2. Run an example (building automatically via SBT)
-    * Windows: `.\s2s.bat --debug .\paper_examples\example_2.sparql .\paper_examples\example_2.shacl`
-    * GNU/Linux or macOS: `./s2s --debug paper_examples/example_2.sparql paper_examples/example_2.shacl`
-    * From a `sbt` session: `runMain org.softlang.s2s.s2s --debug paper_examples/example_2.sparql paper_examples/example_2.shacl`
+    * Windows: `.\s2s.bat .\paper_examples\q1.sparql .\paper_examples\S1.shacl`
+    * GNU/Linux or macOS: `./s2s paper_examples/q1.sparql paper_examples/S1.shacl`
+    * From a `sbt` session: `runMain org.softlang.s2s.s2s paper_examples/q1.sparql paper_examples/S1.shacl`
+
+Note, that running from a SBT session is much faster, due to SBT startup time.
 
 ## Usage
 
@@ -23,24 +25,30 @@ Basic usage is as follows: `s2s [OPTIONS] ... [query-file] [shapes-file?]`. Full
 
 ```sparql
 CONSTRUCT {
-    ?x a :C . ?y a :D
-} WHERE { 
-    ?x a :A . ?y a :B
+    ?y a :E .
+    ?z a :B .
+    ?y :p ?z
+} WHERE {
+    ?w :p ?y .
+    ?x :p ?z .
+    ?y a :B .
+    ?z a :E
 }
 ```
 
-Prefix definitions are allowed. By default, the prefix `:` is defined for examples and bound to a system specific IRI. Various standard prefixes, such as RDF, are predefined. The standard prefix (internal IRI) can be redefined via `--prefix <prefix>`, such that, for example, `:` can be rebound with another standard prefix definition.
+Prefix definitions are allowed. By default, the prefix `:` is defined (for usage in examples) and bound to a S2S specific IRI. Various standard prefixes, such as RDF, are predefined. The standard prefix can be redefined via `--prefix <prefix>`, such that, for example, `:` can be rebound for a required domain (without requiring explicit prefix definitions in each query file).
 
 Simple SHACL shapes are encoded as description logic axioms (one per line), where the target is the left-hand-side of a subsumption axiom, and the constraint is on the right-hand-side:
 
 ```
-:B ⊑ :A
-:A ⊑ :B
+:A ⊑ ∃:p.:B
+∃:r.⊤ ⊑ :B
+:B ⊑ :E
 ```
 
-More examples are available in the [examples](examples/) or [paper_examples](paper_examples/) folder.
+More examples are available in the [paper_examples](paper_examples/) folder, or in test cases.
 
-Another relevant command-line option is `--debug`. While by default, the program outputs only the result shapes, including the `--debug` option will print detailed information about the internals of the method, including input, output, vocabulary, all inferred axioms, as well as all candidate shapes.
+Another relevant command-line option is `--debug`. While by default, the program outputs only the result shapes, including the `--debug` option will print detailed information about the internals of our method, including the input, output, vocabulary, all inferred axioms (annotated with the respective step of the method specification in the paper), as well as all generated candidate shapes.
 
 ## Further Reading
 
