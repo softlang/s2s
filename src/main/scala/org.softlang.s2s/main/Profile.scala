@@ -112,7 +112,7 @@ object Profile:
         retry = retry,
         timeout = timeout
       ),
-      noisy = false,
+      noisy = true,
       logTime = false,
       logNoisy = false
     ).run(pgc, trials = trials, chunkCount = 10, dropFirstX = drop)

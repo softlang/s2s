@@ -47,28 +47,29 @@ class Algorithm(
 
     log.profileEnd("build")
     log.profileStart("candidates")
+    log.profileStart("filter")
 
     val canGen = CandidateGenerator(
       preQ.template.vocabulary,
       heuristic = config.shapeHeuristic
     )(scopes)
     var result: S2STry[Set[SHACLShape]] = Right(Set())
+    var all: Set[SHACLShape] = Set()
     var current = canGen.getNext()
 
     while current.nonEmpty do
-      log.candidates(current)
-      log.profileStart("filter")
       val previous =
         filter(current, axioms, log, config.retry, config.timeout.millis)
-      log.profileEnd("filter")
       result = for
         p <- previous
         r <- result
       yield r.union(p)
+      all = all.union(current)
       current = canGen.getNext(previous)
 
-    log.profileEnd("candidates")
+    log.candidates(current)
 
+    log.profileEnd("candidates")
     log.profileEnd("filter")
     log.profileEnd("algorithm")
 
