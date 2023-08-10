@@ -4,7 +4,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 import org.softlang.s2s.core.Scopes
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.core._
 import org.softlang.s2s.query._
 
@@ -173,11 +173,11 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   def visualize: String = config.toString
 
   /** Sample a problem instance from this generator. */
-  def sample(): (SCCQ, Set[SimpleSHACLShape]) =
+  def sample(): (SCCQ, Set[SHACLShape]) =
     if config.inputFile.isDefined then fileSample()
     else doSample(0)
 
-  private def fileSample(): (SCCQ, Set[SimpleSHACLShape]) =
+  private def fileSample(): (SCCQ, Set[SHACLShape]) =
     val q =
       if loader.isLoaded then loader.getSample()
       else
@@ -186,7 +186,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
     val s = sampleShapes(q)
     (q, s)
 
-  private def doSample(failure: Int): (SCCQ, Set[SimpleSHACLShape]) =
+  private def doSample(failure: Int): (SCCQ, Set[SHACLShape]) =
     val q = sampleQuery()
     val s = sampleShapes(q)
 
@@ -196,15 +196,14 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
     if s.size >= config.minNumberOfShapes.min || failure >= 10 then (q, s)
     else doSample(failure + 1)
 
-  /** Sample a set of SimpleSHACLShapes */
-  def sampleShapes(q: SCCQ): Set[SimpleSHACLShape] =
+  /** Sample a set of SHACLShapes */
+  def sampleShapes(q: SCCQ): Set[SHACLShape] =
 
     // The complete set of possible shapes.
     val initial = ShapeGenerator(
       q.pattern.vocabulary.union(q.template.vocabulary),
-      optimize = true,
-      proxyFamily = false
-    ).generate
+      ShapeHeuristic.default
+    ).generate.map(_.toSimple).filter(_.nonEmpty).map(_.get)
 
     // Remove forall shapes, if they are not allowed.
     val allowed =

@@ -2,15 +2,22 @@ package org.softlang.s2s.generate
 
 import de.pseifer.shar.dl._
 import de.pseifer.shar.core.Iri
+import org.softlang.s2s.core.SHACLShape
+import org.softlang.s2s.core.ShapeHeuristic
 import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.core.Vocabulary
 
 /** Generate all shapes over a vocabulary. */
-class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
+class ShapeGenerator(
+    voc: Vocabulary,
+    heuristic: ShapeHeuristic
+):
 
   /** Find a proxy axiom. */
-  private def findProxy(s: String): Concept = 
-    val ci = NamedConcept(Iri.fromString("<https://github.com/softlang/s2s/" + s + ">").toOption.get)
+  private def findProxy(s: String): Concept =
+    val ci = NamedConcept(
+      Iri.fromString("<https://github.com/softlang/s2s/" + s + ">").toOption.get
+    )
     if voc.contains(ci) then findProxy(s ++ "'")
     else ci
 
@@ -24,8 +31,56 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
       })
       .toSet
 
-  /** Generate all constraints (Concepts). */
-  private def generateConstraints: Set[Concept] =
+  /** Generate constraints (i.e., concepts). */
+  private def generateConstraints: Set[Concept] = if heuristic.simpleShapes then
+    generateConstraintsSimple
+  else generateConstraintsFull
+
+  /** Generate all constraints allowed by heuristic. */
+  private def generateConstraintsFull: Set[Concept] =
+
+    // Generate all constraints, according to the following simplified syntax.
+    // Nesting depth: Limited by factor n.
+
+    val n = 1 // TODO: Take from query.
+
+    // ϕ := A | ¬A | {a} | ¬{a}
+    //    | ∃r.ϕ ⊓ ... ⊓ ϕ | ¬∃r.ϕ ⊔ ... ⊔ ϕ | ∃r.T | ¬∃r.T
+    // r := p | p^-
+
+    // Concepts and negated concepts.
+    val cwn =
+      voc.concepts.toList
+        .union(voc.concepts.toList.map(Complement(_)))
+        .toSet
+
+    // Closed existential (i.e., ∃r.T).
+    val ce: Set[Concept] = voc.properties.toList
+      .flatMap(r => Set(Existential(r, Top), Existential(Inverse(r), Top)))
+      .toSet
+
+    // Leaf-existential quantification (i.e., no recursive exists); depth 0.
+    val leq = cwn
+      .union(ce)
+      .subsets
+      .toSet
+      .flatMap(cs =>
+        val ucs = Concept.unionOf(cs.toList)
+        val ics = Concept.intersectionOf(cs.toList)
+        voc.properties.toList.flatMap(r =>
+          Set(
+            Existential(r, ics),
+            Existential(Inverse(r), ics),
+            Complement(Existential(r, ucs)),
+            Complement(Existential(Inverse(r), ucs))
+          )
+        )
+      )
+
+    leq.union(ce).union(cwn)
+
+  /** Generate exactly simple SHACL constraints. */
+  private def generateConstraintsSimple: Set[Concept] =
     voc.concepts.toList
       .union(
         voc.properties.toList.flatMap { p =>
@@ -37,9 +92,9 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
               Universal(Inverse(p), c)
             )
           }
-          if proxyFamily then temp.union(Set(
-            Universal(p, proxy), 
-            Universal(Inverse(p), proxy))) else temp
+          if heuristic.proxyFamily then
+            temp.union(Set(Universal(p, proxy), Universal(Inverse(p), proxy)))
+          else temp
         }
       )
       .toSet
@@ -81,8 +136,9 @@ class ShapeGenerator(voc: Vocabulary, optimize: Boolean, proxyFamily: Boolean):
   private def tautology(target: Concept, constraint: Concept): Boolean =
     target == constraint
 
-  def generate: Set[SimpleSHACLShape] = for
+  /** Generate a set of shapes over a vocabulary, according to a heuristic. */
+  def generate: Set[SHACLShape] = for
     t <- generateTargets
     c <- generateConstraints
-    if (!optimize || !entailed(t, c)) && !tautology(t, c)
-  yield SimpleSHACLShape(Subsumption(t, c))
+    if (!heuristic.optimize || !entailed(t, c)) && !tautology(t, c)
+  yield SHACLShape(Subsumption(t, c))

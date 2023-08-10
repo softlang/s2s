@@ -195,7 +195,7 @@ class SubsumptionsFromMappings(
     // (2) Construct all extended components.
     val extended = QueryExtensionOptimized(
       comps,
-      shapes.map(_.inScope(Scope.Pattern))
+      shapes.map(_.inScopeS(Scope.Pattern))
     ).extended
 
     if debug then 

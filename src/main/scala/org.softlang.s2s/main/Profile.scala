@@ -108,7 +108,7 @@ object Profile:
   ): Unit =
     Profiling(
       config = Configuration.default.copy(
-        activeReasoner = reasoner,
+        reasoner = reasoner,
         retry = retry,
         timeout = timeout
       ),

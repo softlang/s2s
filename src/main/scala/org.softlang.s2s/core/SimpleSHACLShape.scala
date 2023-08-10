@@ -5,15 +5,17 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 import org.softlang.s2s.query.AtomicPattern
 
-case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
-  def show(implicit state: BackendState): String = axiom.show(state)
+/** A restricted, simple SHACL shape. */
+class SimpleSHACLShape(axiom: Subsumption) extends SHACLShape(axiom):
 
-  def inScope(scope: Scope)(implicit scopes: Scopes): SimpleSHACLShape =
+  /** Put shape in specific scope. */
+  def inScopeS(scope: Scope)(implicit scopes: Scopes): SimpleSHACLShape =
     SimpleSHACLShape(
       Subsumption(axiom.c.inScope(scope), axiom.d.inScope(scope))
     )
 
-  def dropScope(implicit scopes: Scopes): SimpleSHACLShape =
+  /** Drop all scopes from this shape. */
+  def dropScopeS(implicit scopes: Scopes): SimpleSHACLShape =
     SimpleSHACLShape(
       Subsumption(axiom.c.dropScope, axiom.d.dropScope)
     )
@@ -38,43 +40,10 @@ case class SimpleSHACLShape(axiom: Subsumption) extends Showable:
     case Existential(_, _) => true
     case _                 => false
 
-  /** Test, whether `candidate` is a target of this shape `inPattern`. */
-  def hasTarget(
-      candidate: Var,
-      inPattern: Set[AtomicPattern]
-  ): Boolean =
-    import AtomicPattern._
-    axiom.c match
-      case NamedConcept(c) =>
-        inPattern.exists(_ match
-          case VAC(v, d) => v == candidate && d == c
-          case _         => false
-        )
-      case Existential(NamedRole(r), Top) =>
-        inPattern.exists(_ match
-          case VPL(v, p, _) => v == candidate && p == r
-          case VPV(v, p, _) => v == candidate && p == r
-          case _            => false
-        )
-      case Existential(Inverse(NamedRole(r)), Top) =>
-        inPattern.exists(_ match
-          case VPV(_, p, v) => v == candidate && p == r
-          case _            => false
-        )
-      case _ => false
-
 object SimpleSHACLShape:
 
-  /** Test, whether Concept c is a valid target query. */
-  private def validTarget(c: Concept): Boolean =
-    c match
-      case Existential(Inverse(NamedRole(_)), Top) => true
-      case Existential(NamedRole(_), Top)          => true
-      case NamedConcept(_)                         => true
-      case _                                       => false
-
   /** Test, whether Concept c is a valid constraint. */
-  private def validConstraint(c: Concept): Boolean =
+  def validConstraint(c: Concept): Boolean =
     c match
       case NamedConcept(_)                                     => true
       case Existential(NamedRole(_), NamedConcept(_))          => true
@@ -87,6 +56,6 @@ object SimpleSHACLShape:
   def fromAxiom(
       axiom: Subsumption
   ): S2STry[SimpleSHACLShape] =
-    if validTarget(axiom.c) && validConstraint(axiom.d) then
+    if SHACLShape.validTarget(axiom.c) && validConstraint(axiom.d) then
       Right(SimpleSHACLShape(axiom))
     else Left(NotSimpleError(axiom))

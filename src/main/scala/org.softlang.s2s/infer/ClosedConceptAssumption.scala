@@ -40,12 +40,12 @@ class ClosedConceptAssumptionPattern(
     a2
 
   val leftScope = Scope.Pattern
-  val rightScope = Scope.Pattern 
+  val rightScope = Scope.Pattern
 
 abstract class ClosedConceptAssumption(
     a: AtomicPatterns,
     useSubsumption: Boolean,
-    includeVariableClosure: Boolean,
+    includeVariableClosure: Boolean
 )(implicit scopes: Scopes)
     extends Scopeable:
 
@@ -94,8 +94,11 @@ abstract class ClosedConceptAssumption(
       else Map()
 
     conceptClosure.union(
-      vcm.map(
-        if useSubsumption 
-        then Subsumption.apply 
-        else Equality.apply).toSet
+      vcm
+        .map(
+          if useSubsumption
+          then Subsumption.apply
+          else Equality.apply
+        )
+        .toSet
     )

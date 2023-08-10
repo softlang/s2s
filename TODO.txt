@@ -1,0 +1,191 @@
+Abstract Syntax of Constraints
+------------------------------
+
+ϕ := A | {a} | ¬ϕ 
+   | ϕ ⊓ ϕ | ϕ ⊔ ϕ 
+   | ∃r.ϕ | ∀r.ϕ
+   | ⊤ | ⊥
+
+r := p | p^-
+
+Note: Can not include recursive shape references (independence required).
+Non-recursive shape references are syntactic sugar.
+
+Note: Could also include qualified number restrictions, though this is not very promising in terms of provable properties, so maybe omit.
+
+=== contraint logic programming ===
+
+Finite Property of Shapes
+-------------------------
+
+Given a finite vocabulary of concepts A, properties p, (and individuals a.).
+The syntax is infinite (e.g., A ⊓ A ⊓ ... ⊓ A )
+
+The set of relevant shapes is finite:
+
+    for ϕ ⊓ ϕ | ϕ ⊔ ϕ , normal form
+    for ∃p.ϕ | ∀p.ϕ , limit on nesting based on query (finite set that could possibly be entailed, given the query template)
+    -> nesting can also be property name specific.
+    -> only very few nested quantifications need to be considered.
+        Imagine a template x p1 y . y p2 z. What nestings are possible?
+        (1) We can target x, e.g., via ∃p1.⊤
+        (2) We can constrain x via ∃p1.∃p2.ϕ for some constraint ϕ on z.
+            (2.1) z either has another property (then the same argument applies)
+            (2.2) or z has not. z may have a concept C, for which we know that,
+                  e.g., C ⊑ ∃p3.⊤ - but then we only need to include C as ϕ, not
+                  the quantification ∃p3.⊤
+        (3) Thus, we only need to consider the explicit sets of quantifications 
+            defined by: p1, p2, p1->p2 for this query template.
+        
+        Imagine a template x p1 y . w p2 z. What nestings are possible?
+        (1) Let's assume y ⊑ w can be shown.
+        (2) Then, x can be constrained via ∃p1.∃p2.ϕ 
+        (3) Thus, we need to consider the explicit sets of quantifications 
+            defined by: p1, p2, p1->p2 for this query template.
+
+        Simple way: Consider all paths of length N, where N is the number of
+        property triple patterns in the template, made from properties in 
+        voc(q).
+
+        More efficient way: Consider only paths according to variables, while
+        considering that different variables can form a part under inclusion.
+
+        What about cycles? Limitation: No cycles; could be shown 
+        via representative?
+
+
+
+Heuristics and Use Cases
+------------------------
+
+(1) Validation tool support: Here, we don't necessarily need to generate shapes at all. Consider a language integration / type system scenario. We can infer required properties about the graph from language constructs, and validate them, encoded as shapes/axioms, on the knowledge base we infer.
+    Though, for a composition of queries, you do need to generate all shapes,
+unless the algorithm can be easily adapted to take the KB as input (which I don't think is the case).
+
+(2) Generation of shapes for persistent result graphs. Consider data integration, or similar use cases, where we want to infer some shapes to use for validation. Here, a user likely wants to select shapes based on the underlying domain model, perhaps starting with the input shapes. This process is inherently interactive and herusitics based, where suggested shapes can depend on selected shapes.
+
+(3) Informative use case. A user wants to be informed about the structure of result graphs of their query, in the general case. Here, simple shapes are preferable, and many entailed shapes are not required. Redundant shapes make it more difficult to comprehend the types over the graph, whereas entailed shapes can be implicitly understood (e.g., Professor is a Person, and Professor is a Researcher, we do not also need Professor is a Person and Researcher).
+
+
+
+Heuristic 1: Entailed shapes
+----------------------------
+
+Various shapes are redundant, since they are already entailed depending on the inclusion of simpler shapes. Even if we want to include these shapes in the final result, they need not be validated using the reasoner.
+
+(1) Redundant union/intersection
+
+ψ ⊑ ϕ1 ⊓ ϕ2        => 
+    ψ ⊑ ϕ1 and
+    ψ ⊑ ϕ2
+
+ψ ⊑ ϕ1 ⊔ ϕ2        => 
+    ψ ⊑ ϕ1 or
+    ψ ⊑ ϕ2
+
+ψ ⊑ ∀r.ϕ           =>
+    ψ ⊑ !∃r.!ϕ
+
+ψ ⊑ ∃r.(ϕ1 ⊔ ϕ2)   => 
+    ψ ⊑ ∃r.ϕ1 or
+    ψ ⊑ ∃r.ϕ2
+
+ψ ⊑ ∀r.(ϕ1 ⊓ ϕ2)   => 
+    ψ ⊑ ∀r.ϕ1 and
+    ψ ⊑ ∀r.ϕ2
+
+Conclusion:
+
+- omit top-level ⊓ and ⊔
+- omit ∀ (can be expressed through ∃)
+- for ϕ in ∃, assume DNF
+    - union can be expressed as separate shapes
+- ⊤ is only needed when it is the only construct in exists.
+
+=> We consider shapes build according to ϕ_m, consisting of
+
+- (single) negation of ϕ_m
+- ∃r.ϕ_m ⊓ ... ⊓ ϕ_m
+- A
+- {a}
+- ⊤
+- ⊥
+
+where top-level ⊓ can be omitted.
+
+Formal definition of reduces syntax:
+
+ϕ := A | ¬A | {a} | ¬{a} | ∃r.ϕ ⊓ ... ⊓ ϕ | ¬∃r.ϕ ⊔ ... ⊔ ϕ | ∃r.T | ¬∃r.T
+r := p | p^-
+
+Restrictions (finite property):
+- no repetition of elements in ϕ ⊓ ϕ  
+- "nesting depth" (usage of ∃ in ∃) limited by query-based constant
+- vocabulary limited by query
+
+(2) Redundant through concept entailment
+
+We can construct the candidate set stepwise, starting from a subset of constraints. Then, various shapes can be omitted. Consider we start with a hierarchy of classes.
+
+(2.1) Transitive
+
+Note: For concepts A1, A2, A3
+The same is valid for ∃r1.⊤, ∃r3.⊤, ∃r3.⊤
+or for {a1}, {a2}, {a3}
+
+A1 ⊑ A2 and A2 ⊑ A3
+
+we can omit
+
+A1 ⊓ A2 => A1
+A2 ⊓ A3 => A2
+A1 ⊓ A3 => A1
+
+(2.2) Shared super
+
+(again, also valid for ∃r.⊤ or {a})
+
+A4 ⊑ A3
+A4 ⊑ A5
+
+(2.3) Existential exclusion
+
+C ⊑ ∃p.⊤ => include in ∃p tests
+C ⊑ ¬∃p.⊤ => exclude from ¬∃p
+
+similarly when nested:
+
+C ⊑ ∃p.∃r.⊤ => include in ∃p.∃r tests (if also path p -> r in voc(q))
+
+(3) Forwards search from minimum intersections.
+
+3.1 - concept names
+3.1.1 First construct all (non-redundant) intersections with one element that is a concept names.
+3.1.2 Only for those that are valid with one element, construct those that are non-redundant with two elements that are concept names.
+3.2.3 Continue, until there are no valid shapes with N are found, or no non-redundant shapes with N + 1 can be constructed.
+
+-- TODO: When to introduce negation? At the end, or here? Can be optimized?
+-> At the end, we don't need to check concepts that are already in non-negated.
+
+3.2 - general shapes
+3.2.1 For all shapes with intersections of M concepts, construct (non-redundant) shapes with all possible additional existential quantifications with one existential quantification.
+3.2.2 Now, for all remaining, add another existential quantification.
+
+Nesting: In existential quantifications, only include existential quantifications in intersections, if there exists as path p1 -> p2 in the query template (and this shape is non-redundant).
+
+-- TODO: When to introduce negation here?
+
+
+
+Heuristic 2: Size of shapes
+---------------------------
+
+Limiting factors: Nesting depth (less than what is possible in query).
+
+
+
+Heuristic 3: Input shapes (and modifications)
+---------------------------------------------
+
+
+

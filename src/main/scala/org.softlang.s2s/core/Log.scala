@@ -4,7 +4,7 @@ import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.dl.Axiom
 import org.softlang.s2s.analysis.Profile
 import org.softlang.s2s.analysis.ProfileEntry
-import org.softlang.s2s.core.SimpleSHACLShape
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.query.SCCQ
 
 import java.time.LocalDateTime
@@ -135,7 +135,7 @@ class Log(
 
   def problem(
       q: SCCQ,
-      sin: Set[SimpleSHACLShape],
+      sin: Set[SHACLShape],
       qS: String,
       sinS: String
   ): Unit =
@@ -144,7 +144,7 @@ class Log(
     if profiling then println(entry)
     PROFILE = entry :: PROFILE
 
-  def candidates(cand: Set[SimpleSHACLShape]): Unit =
+  def candidates(cand: Set[SHACLShape]): Unit =
     val entry =
       ProfileEntry.Candidates(cand, LocalDateTime.now())
     if profiling then println(entry)
@@ -160,8 +160,7 @@ class Log(
       prettyVariableConcepts: Boolean = true
   ): Unit =
     val t1 =
-      if prettyVariableConcepts then
-        LOG.replaceAll("shar", "?")
+      if prettyVariableConcepts then LOG.replaceAll("shar", "?")
       else LOG
 
     val t2 =
