@@ -1,0 +1,49 @@
+Time: 2023-08-09T17:02:48.647299200
+Trials: 1000
+Reasoner: openllet
+Max Retries: 0
+Timeout: 60000
+--Configuration--
+MinPatternSize: 5
+MaxPatternSize: 7
+MinTemplateSize: 5
+MaxTemplateSize: 7
+FreshVariable: 0.5
+VariablesCount: 100
+FreshConcept: 0.8
+ConceptsCount: 100
+FreshProperty: 0.8
+PropertiesCount: 100
+FreshNominal: 0.9
+NominalsCount: 10
+PropertyConceptRatio: 0.3
+VariableToNominalRatio: 0.9
+CyclicRedrawCount: 10
+MinNumberOfShapes: 0
+MaxNumberOfShapes: 0
+PropertyConceptTargetRatio: 0.3
+PropertyConceptConstraintRatio: 0.3
+IncludeForallConstraints: true
+Seed: AAAI24
+--Report--
+Trials: 1000
+Failures: 0
+Samples: 1000
+  without restarts: 1000
+  no timeouts: 1000
+Average execution time: 32 milliseconds
+  without restarts: 32 milliseconds
+  no timeouts: 32 milliseconds
+Median execution time: 21 milliseconds
+  without restarts: 21 milliseconds
+  no timeouts: 21 milliseconds
+Average percentage spent on filtering: 78,58
+  without restarts: 78,58
+  no timeouts: 78,58
+Longest sample: 338 milliseconds
+  without restarts: 338 milliseconds
+  no timeouts: 338 milliseconds
+Shortest sample: 2 milliseconds
+  without restarts: 2 milliseconds
+  no timeouts: 2 milliseconds
+Failures: -

@@ -11,4 +11,4 @@ import org.softlang.s2s.main.S2S
 
 @main def profile(): Unit = Profile.run()
 
-@main def dev(): Unit = Dev.run()
+@main def dev(args: String*): Unit = Dev.run(args)

@@ -132,6 +132,7 @@ class ConfigurationComparison(
     // )
 
     val rc = ProblemGeneratorConfig(
+      inputFile = None,
       minPatternSize = 2,
       maxPatternSize = 6,
       minTemplateSize = 2,

@@ -1,0 +1,49 @@
+Time: 2023-08-09T16:30:20.703939100
+Trials: 1000
+Reasoner: hermit
+Max Retries: 0
+Timeout: 60000
+--Configuration--
+MinPatternSize: 1
+MaxPatternSize: 2
+MinTemplateSize: 1
+MaxTemplateSize: 2
+FreshVariable: 0.5
+VariablesCount: 100
+FreshConcept: 0.8
+ConceptsCount: 100
+FreshProperty: 0.8
+PropertiesCount: 100
+FreshNominal: 0.9
+NominalsCount: 10
+PropertyConceptRatio: 0.3
+VariableToNominalRatio: 0.9
+CyclicRedrawCount: 10
+MinNumberOfShapes: 0
+MaxNumberOfShapes: 0
+PropertyConceptTargetRatio: 0.3
+PropertyConceptConstraintRatio: 0.3
+IncludeForallConstraints: true
+Seed: AAAI24
+--Report--
+Trials: 1000
+Failures: 0
+Samples: 1000
+  without restarts: 1000
+  no timeouts: 1000
+Average execution time: 5 milliseconds
+  without restarts: 5 milliseconds
+  no timeouts: 5 milliseconds
+Median execution time: 4 milliseconds
+  without restarts: 4 milliseconds
+  no timeouts: 4 milliseconds
+Average percentage spent on filtering: NaN
+  without restarts: NaN
+  no timeouts: NaN
+Longest sample: 511 milliseconds
+  without restarts: 511 milliseconds
+  no timeouts: 511 milliseconds
+Shortest sample: 0 milliseconds
+  without restarts: 0 milliseconds
+  no timeouts: 0 milliseconds
+Failures: -

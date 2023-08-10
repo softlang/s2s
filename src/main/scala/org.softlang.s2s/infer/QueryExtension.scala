@@ -93,24 +93,27 @@ class QueryExtensionOptimized(
   ): Set[(Set[IsTarget], ApplyTemplate)] =
     // We obtain one result for each variable, we call the focus of this template.
     component._1.flatMap { v =>
-      val marked: Mset[AtomicPattern] = Mset()
-      val targets: Mset[IsTarget] = Mset()
-      // For each shape, and each variable, try to mark all patterns that can have impact on the final subsumption mapping.
-      shapes.foreach { s =>
+      shapes.flatMap { s =>
+        val marked: Mset[AtomicPattern] = Mset()
+        val targets: Mset[IsTarget] = Mset()
+        // For each shape, and each variable, try to mark all patterns that can have impact on the final subsumption mapping.
+        //shapes.foreach { s =>
         component._1.foreach { vi =>
           // If the variable is the current var v, also add the current shapes target. This identifies starting points for extending patterns.
           val exp = satisfied(s, v, component._2)
-          if vi == v && exp.nonEmpty then targets.add(targetToIsTarget(s))
+          if vi == v && exp.nonEmpty then 
+            targets.add(targetToIsTarget(s))
           marked.addAll(exp)
         }
-      }
+        //}
 
-      // Finally, we only need the connected component (since patterns were filtered, component is no longer connected) that contains the focus variable.
-      if marked.isEmpty then Nil
-      else
-        val template =
-          marked.toList.components.find(p => p._1.contains(v)).get._2.toList
-        List((targets.toSet, makeApplicationFn(v, template)))
+        // Finally, we only need the connected component (since patterns were filtered, component is no longer connected) that contains the focus variable.
+        if marked.isEmpty then Nil
+        else
+          val template =
+            marked.toList.components.find(p => p._1.contains(v)).get._2.toList
+          List((targets.toSet, makeApplicationFn(v, template)))
+      }
     }.toSet
 
   /** Helper function for constructable, that translates a shape constraint to
@@ -138,7 +141,7 @@ class QueryExtensionOptimized(
 
     shape.axiom.d match
       case NamedConcept(c) => Set(VAC(v, c))
-      case Existential(NamedRole(r), NamedConcept(c)) =>
+      case d @ Existential(NamedRole(r), NamedConcept(c)) =>
         component.flatMap { comp =>
           comp match
             // case p @ VPL(vs, ip, l) if ip == r && vs == v =>

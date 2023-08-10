@@ -18,6 +18,8 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
   private var actualMaxShapes = config.maxNumberOfShapes
   private var actualMinShapes = config.minNumberOfShapes
 
+  private val loader = FileLoader()
+
   // Initialize the rnd instance.
   private val rnd =
     if config.seed == "" then Random() else Random(config.seed.map(_.toInt).sum)
@@ -172,7 +174,17 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
 
   /** Sample a problem instance from this generator. */
   def sample(): (SCCQ, Set[SimpleSHACLShape]) =
-    doSample(0)
+    if config.inputFile.isDefined then fileSample()
+    else doSample(0)
+
+  private def fileSample(): (SCCQ, Set[SimpleSHACLShape]) =
+    val q =
+      if loader.isLoaded then loader.getSample()
+      else
+        loader.load(config.inputFile.get)
+        loader.getSample()
+    val s = sampleShapes(q)
+    (q, s)
 
   private def doSample(failure: Int): (SCCQ, Set[SimpleSHACLShape]) =
     val q = sampleQuery()
@@ -181,18 +193,18 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
     // If minimum number of shapes is violated (e.g., due to unlikely ratios)
     // retry. In total, we retry 10 times. Then, we accept this violation.
 
-    if s.size >= config.minNumberOfShapes.min || failure >= 10 then
-      (q, sampleShapes(q))
+    if s.size >= config.minNumberOfShapes.min || failure >= 10 then (q, s)
     else doSample(failure + 1)
 
   /** Sample a set of SimpleSHACLShapes */
   def sampleShapes(q: SCCQ): Set[SimpleSHACLShape] =
 
-    // The complete set of posible shapes.
+    // The complete set of possible shapes.
     val initial = ShapeGenerator(
-      q.pattern.vocabulary, 
-      optimize = true, 
-      proxyFamily = false).generate
+      q.pattern.vocabulary.union(q.template.vocabulary),
+      optimize = true,
+      proxyFamily = false
+    ).generate
 
     // Remove forall shapes, if they are not allowed.
     val allowed =
@@ -213,7 +225,7 @@ class ProblemGenerator(config: ProblemGeneratorConfig)(implicit scopes: Scopes):
       config.propertyConceptTargetRatio.sample(rnd)
     )
 
-    // Randomly select requierd subset from filtered shapes.
+    // Randomly select required subset from filtered shapes.
     rnd
       .shuffle(filtered.toList)
       .take(

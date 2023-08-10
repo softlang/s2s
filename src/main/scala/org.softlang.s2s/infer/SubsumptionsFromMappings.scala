@@ -190,11 +190,17 @@ class SubsumptionsFromMappings(
     // (1) Detect all components.
     val comps = a.components
 
+    if debug then comps.foreach(println)
+
     // (2) Construct all extended components.
     val extended = QueryExtensionOptimized(
       comps,
       shapes.map(_.inScope(Scope.Pattern))
     ).extended
+
+    if debug then 
+      println("")
+      extended.foreach(println)
 
     // (3) Generate component mappings and find subsumption.
     (for
@@ -203,3 +209,19 @@ class SubsumptionsFromMappings(
       // Test for each extended component, whether there is a mapping.
       pext <- extended
     yield componentMap(p1, pext)).flatten.toSet
+
+    /*
+
+    HashSet(
+      VPV(Var(x1),<https://github.com/softlang/s2s/p٭>,Var(y)),
+      VAC(Var(y),<https://github.com/softlang/s2s/B٭>),
+      B < E => VAC(Var(y),<https://github.com/softlang/s2s/E٭>),
+
+      // WHY?!
+      VPV(Var(y),<https://github.com/softlang/s2s/p٭>,Var(?0)),
+      VPV(Var(y),<https://github.com/softlang/s2s/p٭>,Var(?4)))
+
+      VAC(Var(?4),<https://github.com/softlang/s2s/B٭>),
+      VAC(Var(?0),<https://github.com/softlang/s2s/B٭>),
+
+    */

@@ -122,7 +122,7 @@ class Profiling(
       // Number of chunks (saves intermediate results).
       chunkCount: Int = 10,
       // Run additional and drop results for the first X samples.
-      dropFirstX: Int = 0
+      dropFirstX: Int = 10
   ): Unit =
 
     val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)

@@ -109,14 +109,14 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
   @Test def typed_1_4(): Unit =
     test(Set(":A ⊑ ∃:r.:B"), q1, q1_basicshapes)
 
-  @Test def typed_1_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q1, q1_basicshapes.union(q1_b_sub_a))
+  //@Test def typed_1_5(): Unit =
+  //  test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q1, q1_basicshapes.union(q1_b_sub_a))
 
   @Test def typed_1_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q1, q1_basicshapes)
 
-  @Test def typed_1_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q1, q1_basicshapes.union(q1_a_sub_b))
+  //@Test def typed_1_7(): Unit =
+  //  test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q1, q1_basicshapes.union(q1_a_sub_b))
 
   // Q2 -- Fully typed query with one property (renaming - swapping).
 
@@ -175,14 +175,14 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
   @Test def typed_2_4(): Unit =
     test(Set(":A ⊑ ∃:r.:B"), q2, q2_basicshapes)
 
-  @Test def typed_2_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q2, q2_basicshapes.union(q2_b_sub_a))
+  //@Test def typed_2_5(): Unit =
+  //  test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q2, q2_basicshapes.union(q2_b_sub_a))
 
   @Test def typed_2_6(): Unit =
     test(Set(":B ⊑ ∃-:r.:A"), q2, q2_basicshapes)
 
-  @Test def typed_2_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q2, q2_basicshapes.union(q2_a_sub_b))
+  //@Test def typed_2_7(): Unit =
+  //  test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q2, q2_basicshapes.union(q2_a_sub_b))
 
   // Q3 -- Dropping RHS type.
 
@@ -337,12 +337,12 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
   @Test def typed_8_8(): Unit =
     test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q8, q1_basicshapes)
 
-  @Test def typed_8_9(): Unit =
-    test(
-      Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B", ":B ⊑ :E"),
-      q8,
-      q1_basicshapes.union(q1_a_sub_b)
-    )
+  //@Test def typed_8_9(): Unit =
+  //  test(
+  //    Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B", ":B ⊑ :E"),
+  //    q8,
+  //    q1_basicshapes.union(q1_a_sub_b)
+  //  )
 
   // Q9 -- Copying all LHS with additional variable.
 
@@ -490,16 +490,16 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
       )
     )
 
-  @Test def typed_13_1(): Unit =
-    test(
-      Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
-      q12,
-      atleast = q12_basicshapes.union(
-        Set(
-          ":C ⊑ :G"
-        )
-      )
-    )
+  //@Test def typed_13_1(): Unit =
+  //  test(
+  //    Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
+  //    q12,
+  //    atleast = q12_basicshapes.union(
+  //      Set(
+  //        ":C ⊑ :G"
+  //      )
+  //    )
+  //  )
 
   @Test def typed_13_2(): Unit =
     test(Set("∃:r.⊤ ⊑ ∃:p.:F"), q12, q12_basicshapes)

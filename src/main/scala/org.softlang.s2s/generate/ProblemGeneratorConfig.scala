@@ -4,6 +4,9 @@ package org.softlang.s2s.generate
 case class ProblemGeneratorConfig(
     // Query parameters.
 
+    // Use a query file as input, instead of a generator.
+    inputFile: Option[String],
+
     // Min/max count of atomic patterns in Pattern.
     minPatternSize: IntParameter,
     maxPatternSize: IntParameter,
@@ -38,6 +41,7 @@ case class ProblemGeneratorConfig(
     // Min/max number of input shapes.
     minNumberOfShapes: IntParameter,
     maxNumberOfShapes: IntParameter,
+    // Number of additional shapes (not only from the vocabulary).
     // Ratio of property-based vs. Concept targets.
     // Set to -1.0 for default.
     propertyConceptTargetRatio: FloatParameter,
@@ -53,6 +57,7 @@ case class ProblemGeneratorConfig(
 
   private def fieldNames: List[String] =
     List(
+      "InputFile",
       "MinPatternSize",
       "MaxPatternSize",
       "MinTemplateSize",
@@ -78,6 +83,7 @@ case class ProblemGeneratorConfig(
 
   private def fields: List[String] =
     List(
+      inputFile,
       minPatternSize,
       maxPatternSize,
       minTemplateSize,
