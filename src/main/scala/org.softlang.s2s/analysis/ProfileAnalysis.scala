@@ -48,7 +48,7 @@ case class SuccessfulAnalysis(
   private def fmtTotal: String =
     val head = s"Total: $total"
     val tail =
-      if restartsCount > 0 then s" ($totalWithoutRestats)\n"
+      if restartsCount > 0 then s" ($totalWithoutRestarts)\n"
       else "\n"
     head ++ tail
 
@@ -64,7 +64,7 @@ case class SuccessfulAnalysis(
 
   override def toString: String =
     fmtTotal ++ fmtFilter ++
-      s"Restars: $restartsCount\n" ++
+      s"Restarts: $restartsCount\n" ++
       s"Timeout: $timedOut"
 
   /** Format as CSV value. */
@@ -72,7 +72,7 @@ case class SuccessfulAnalysis(
     s"$id;success;${total.toMillis};${filtering.toMillis};$timedOut;$restartsCount;${timeSpentRestarting.toMillis};${problem._2};${problem._4};$candidates;${result._2}"
 
   /** Total time not considering restarts (only successful run). */
-  def totalWithoutRestats: Duration = total - timeSpentRestarting
+  def totalWithoutRestarts: Duration = total - timeSpentRestarting
 
   /** Time spent filtering not considering restarts (only successful run). */
   def filteringWithoutRestarts: Duration = filtering - timeSpentRestarting
@@ -84,7 +84,7 @@ case class SuccessfulAnalysis(
   /** Percentage of time spent on filtering (no restarts). */
   def percentageFilteringWithoutRestarts: Double =
     filteringWithoutRestarts.length.toDouble
-      / totalWithoutRestats.length.toDouble
+      / totalWithoutRestarts.length.toDouble
 
 object ProfileAnalysis:
   def header: String =

@@ -31,6 +31,7 @@ object Profile:
 
   // Experiment generator configurations (from the paper).
 
+  // See ProblemGeneratorConfig Class for documentation (!)
   val small = ProblemGeneratorConfig(
     inputFile = None,
     minPatternSize = 1,

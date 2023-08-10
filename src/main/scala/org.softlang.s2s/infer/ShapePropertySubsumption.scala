@@ -21,7 +21,7 @@ class ShapePropertySubsumption(
 
   import AtomicPattern._
 
-  // TODO: Shapes targeting roles can widen unconstraint-ness.
+  // TODO: Shapes targeting roles can widen unconstrained-ness.
 
   // Example: ∃:p.T ⊑ :A and the pattern "?x :p ?y . ?x a :A"
 
@@ -32,14 +32,14 @@ class ShapePropertySubsumption(
       x match
         case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.Input)))
         case (n, Some(c)) =>
-          // Check that (all pairs) of variables are unconstrainted.
+          // Check that (all pairs) of variables are unconstrained.
           if c.forall(ci =>
               pattern
                 .filter(_.variables.contains(ci._1))
                 .size == 1 && pattern
                 .filter(_.variables.contains(ci._2))
                 .size == 1
-              // Since loop is always tigher than the expressed shape:
+              // Since loop is always tighter than the expressed shape:
                 && ci._1 != ci._2
             )
             // then the role is unconstrained.

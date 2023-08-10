@@ -9,6 +9,7 @@ import scala.util.{Try, Success, Failure}
 
 type Profile = List[ProfileEntry]
 
+/** Profile information, extracted from a log. */
 extension (profile: Profile)
   def analyze(
       result: Either[Throwable, (Set[SHACLShape], String)],
@@ -20,44 +21,44 @@ extension (profile: Profile)
       .head
       .asInstanceOf[ProfileEntry.Problem]
 
-    val cand = profile
+    val candidates = profile
       .filter(_.isInstanceOf[ProfileEntry.Candidates])
       .head
       .asInstanceOf[ProfileEntry.Candidates]
-      .cand
+      .candidates
 
     val p = (qs.q, qs.qS, qs.sin, qs.sinS)
 
     if result.isLeft then FailedAnalysis(p, result.left.get, trialID)
     else
-      val tstart = profile.find(_.isStart("algorithm")).get.time
+      val tStart = profile.find(_.isStart("algorithm")).get.time
       val tend = profile.find(_.isEnd("algorithm")).get.time
-      val total = tstart.until(tend, ChronoUnit.MILLIS).millis
+      val total = tStart.until(tend, ChronoUnit.MILLIS).millis
 
-      val fstart = profile.find(_.isStart("filter")).get.time
+      val fStart = profile.find(_.isStart("filter")).get.time
       val fend = profile.find(_.isEnd("filter")).get.time
-      val filter = fstart.until(fend, ChronoUnit.MILLIS).millis
+      val filter = fStart.until(fend, ChronoUnit.MILLIS).millis
 
       val lastRestart =
         profile.reverse
           .filter(_.isRestart("filter"))
           .headOption
           .map(_.time)
-          .getOrElse(fstart)
+          .getOrElse(fStart)
 
-      val spentRestarting = fstart.until(lastRestart, ChronoUnit.MILLIS).millis
+      val spentRestarting = fStart.until(lastRestart, ChronoUnit.MILLIS).millis
 
-      val timedout = profile.filter(_.isTimeout("filter")).nonEmpty
+      val timedOut = profile.filter(_.isTimeout("filter")).nonEmpty
 
       val restarts = profile.filter(_.isRestart("filter")).size
 
       SuccessfulAnalysis(
         problem = p,
         result = result.right.get,
-        candidates = cand.size,
+        candidates = candidates.size,
         total = total,
         filtering = filter,
-        timedOut = timedout,
+        timedOut = timedOut,
         restartsCount = restarts,
         timeSpentRestarting = spentRestarting,
         id = trialID

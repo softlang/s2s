@@ -16,6 +16,7 @@ import org.softlang.s2s.query.vocabulary
 
 import scala.concurrent.duration.*
 
+/** Full implementation of Algorithm 1. */
 class Algorithm(
     val config: Configuration,
     val shar: Shar,
@@ -183,21 +184,6 @@ class Algorithm(
         .union(una)
     )
 
-  /** Perform the candidate generation step of the algorithm. */
-  // private def generateCandidates(
-  //    q: SCCQ,
-  //    log: Log
-  // ): Set[SHACLShape] =
-  //  val can = CandidateGenerator(
-  //    q.template.vocabulary,
-  //    heuristic = config.shapeHeuristic
-  //  )(scopes).axioms
-
-  //  log.debug("S_can", can.map(_.show))
-  //  log.debugNoisy(s"(${can.size})")
-
-  //  can
-
   /** Perform the filtering step of the algorithm. */
   private def filter(
       candidates: Set[SHACLShape],
@@ -232,6 +218,7 @@ class Algorithm(
           log.timeout("filter", retry, timeout)
           Left(TimeoutError(config.timeout, config.retry))
 
+  /** Filter, with provided timeout value that aborts filtering. */
   private def filterWithTimeout(
       candidates: Set[SHACLShape],
       reasoner: DLReasoner,

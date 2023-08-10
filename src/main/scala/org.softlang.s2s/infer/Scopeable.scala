@@ -5,7 +5,7 @@ import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.inScope
 
-trait Scopeable(implicit scopes: Scopes) extends Inference:
+trait Scopable(implicit scopes: Scopes) extends Inference:
 
   /** The scope of the LHS of axioms. */
   val leftScope: Scope
@@ -32,6 +32,6 @@ trait Scopeable(implicit scopes: Scopes) extends Inference:
       case a => a
     )
 
-  // Combines the above steps (automatically) for Scopeable inference methods.
+  // Combines the above steps (automatically) for Scopable inference methods.
   def axioms: Set[Axiom] =
     extendAxioms(scopeAxioms(prepareAxioms)).union(addAxioms)

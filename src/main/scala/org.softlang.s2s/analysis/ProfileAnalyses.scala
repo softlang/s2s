@@ -120,7 +120,7 @@ extension (inAnalyses: ProfileAnalyses)
       val size = analyses.size
 
       val totals = analyses.map(_.total)
-      val totalsWR = analyses.map(_.totalWithoutRestats)
+      val totalsWR = analyses.map(_.totalWithoutRestarts)
       val totalsNT = analyses.filter(!_.timedOut).map(_.total)
 
       val filterings = analyses.map(_.filtering)

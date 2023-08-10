@@ -24,7 +24,7 @@ import de.pseifer.shar.core.Iri
 //    2.3 Remove "dangling" atoms, not connected to Var.
 //    Note Steps 2.1 and 2.2 can be pre-computed once (?)
 // 3. Create a map Var -> ([Targets], [AtomicPattern]) from (2)
-// 4. For each variable v in Pext, and for each elem in Map from (3),
+// 4. For each variable v in PExt, and for each elem in Map from (3),
 //    if v is targeted by Targets, then instantiate the rhs
 //    [AtomicPatterns] with v as Var and fresh variables for others.
 
@@ -77,12 +77,12 @@ class QueryExtensionOptimized(
       v: Var,
       // The input patterns.
       patterns: List[AtomicPattern]
-  ): ApplyTemplate = vother =>
+  ): ApplyTemplate = vOther =>
     // Create a mapping from concrete variables to fresh ones,
-    // and from variable 'v' to 'vother', the ApplyTemplate argument.
+    // and from variable 'v' to 'vOther', the ApplyTemplate argument.
     val vs = patterns.variables
     val mapping = vs.zip(List.fill(vs.size)(Var.fresh())).toMap
-    patterns.mappedWith(mapping + (v -> vother)).toSet
+    patterns.mappedWith(mapping + (v -> vOther)).toSet
 
   /** For a single component, determine all patterns that can be constructed via
     * shapes, while also being potentially relevant to the algorithm (i.e., they
@@ -97,15 +97,14 @@ class QueryExtensionOptimized(
         val marked: Mset[AtomicPattern] = Mset()
         val targets: Mset[IsTarget] = Mset()
         // For each shape, and each variable, try to mark all patterns that can have impact on the final subsumption mapping.
-        //shapes.foreach { s =>
+        // shapes.foreach { s =>
         component._1.foreach { vi =>
           // If the variable is the current var v, also add the current shapes target. This identifies starting points for extending patterns.
           val exp = satisfied(s, v, component._2)
-          if vi == v && exp.nonEmpty then 
-            targets.add(targetToIsTarget(s))
+          if vi == v && exp.nonEmpty then targets.add(targetToIsTarget(s))
           marked.addAll(exp)
         }
-        //}
+        // }
 
         // Finally, we only need the connected component (since patterns were filtered, component is no longer connected) that contains the focus variable.
         if marked.isEmpty then Nil

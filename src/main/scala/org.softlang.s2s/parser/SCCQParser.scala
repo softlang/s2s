@@ -18,10 +18,10 @@ class SCCQParser(shar: Shar):
                 c <- Util.flipEitherHead(qi._1.map(_.toAtomicPattern))
                 w <- Util.flipEitherHead(qi._2.map(_.toAtomicPattern))
               yield SCCQ(c, w)
-            case Left(msg) => Left(UnparseableQueryError(msg.show))
+            case Left(msg) => Left(UnparsableQueryError(msg.show))
           }
-        case Failure(msg, _) => Left(UnparseableQueryError(msg))
-        case Error(msg, _)   => Left(UnparseableQueryError(msg))
+        case Failure(msg, _) => Left(UnparsableQueryError(msg))
+        case Error(msg, _)   => Left(UnparsableQueryError(msg))
       }
 
   /** Parse a SCCQ query. */

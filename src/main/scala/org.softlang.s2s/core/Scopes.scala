@@ -7,7 +7,7 @@ import de.pseifer.shar.dl.NamedConcept
 /** Encoding of available scopes. */
 class Scopes(token: String):
 
-  /** Rule for naming/appending for the differnt scopes. */
+  /** Rule for naming/appending for the different scopes. */
   private def makeScopeToken(scope: Scope): String = scope match
     case Scope.Input    => ""
     case Scope.Pattern  => token

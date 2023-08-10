@@ -17,10 +17,10 @@ import org.softlang.s2s.infer.Shapes2Shapes
 object Dev:
 
   private def concepts(n: Int): Set[NamedConcept] =
-    (for i <- Range(0, n) yield NamedConcept(Util.forceIriUnsave(s"C$i"))).toSet
+    (for i <- Range(0, n) yield NamedConcept(Util.forceIriUnsafe(s"C$i"))).toSet
 
   private def properties(n: Int): Set[NamedRole] =
-    (for i <- Range(0, n) yield NamedRole(Util.forceIriUnsave(s"p$i"))).toSet
+    (for i <- Range(0, n) yield NamedRole(Util.forceIriUnsafe(s"p$i"))).toSet
 
   private def genCount(cs: Int, ps: Int): Int =
     val gen = ShapeGenerator(

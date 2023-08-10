@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 /* Algorithm:
 
-  For each combination of P1 pattern and Pext pattern,
+  For each combination of P1 pattern and PExt pattern,
   we construct a list where for each P1-variable there
   is a potential mapping candidate, or a blank.
 
@@ -54,7 +54,7 @@ import scala.collection.mutable.ListBuffer
   [[z,z], [?1, _]], [[?z, ?1], [?1, _]], [[z,?2], [?1, _]]
 
   We turn them into sets and remove blank (they did their job for the
-  transpos, keeping variables associated).
+  transpose, keeping variables associated).
 
   [{z}, {?1}], [{?z, ?1}, {?1}], [{z,?2}, {?1}] => [[z,1]]
 
@@ -79,7 +79,7 @@ class SubsumptionsFromMappings(
         rec.flatMap(r => head.map(t => t :: r))
     }
 
-  /** Finding associated candidate var in externsion for P1 var. */
+  /** Finding associated candidate var in extensions for P1 var. */
   private def represent(
       v: Var,
       a1: AtomicPattern,
@@ -139,11 +139,11 @@ class SubsumptionsFromMappings(
   /** Construct component map and obtain subsumptions. */
   private def componentMap(
       p1: (Set[Var], Set[AtomicPattern]),
-      pext: (Set[Var], Set[AtomicPattern])
+      pExt: (Set[Var], Set[AtomicPattern])
   ): Set[Subsumption] =
 
-    // The complete (including temporary) variables in pext and p1.
-    val pextv = pext._2.toList.variables
+    // The complete (including temporary) variables in pExt and p1.
+    val pExtV = pExt._2.toList.variables
     val p1v = p1._2.toList.variables
 
     // Determine a fix order of variables.
@@ -152,15 +152,15 @@ class SubsumptionsFromMappings(
     // Construct Step 1, in Algorithm above.
     val t =
       for p1i <- p1._2.toList
-      yield (for pexti <- pext._2.toList
-      yield lhs.map(represent(_, p1i, pexti)))
+      yield (for pExtI <- pExt._2.toList
+      yield lhs.map(represent(_, p1i, pExtI)))
         .filter(l =>
           l.exists(o => o.isEmpty || o.map(_.isFresh) == Some(false))
         )
         .filter(l => l.exists(!_.isEmpty))
 
     // Step by step, apply remaining algorithm above.
-    val rhss =
+    val rhsS =
       if t.isEmpty then List()
       else
         t.tail
@@ -171,15 +171,15 @@ class SubsumptionsFromMappings(
 
     // Construct the mapping, double-check by substituting (for cycles)
     // and finally construct a set of Subsumption axioms as output.
-    rhss.flatMap { rhs =>
+    rhsS.flatMap { rhs =>
       val mapping = lhs.zip(rhs).toMap
       // Most mappings are valid, still need to check for cycles.
-      if p1._2.toList.mappedWith(mapping).subsumedBy(pext._2.toList) then
+      if p1._2.toList.mappedWith(mapping).subsumedBy(pExt._2.toList) then
         mapping
-          // we can filter vacously satisfied subsumptions (i.e., x -> x)
+          // we can filter vacuously satisfied subsumptions (i.e., x -> x)
           .filter(_ != _)
           // filter out any temporary variables
-          .filter((x, y) => p1._1.contains(x) && pext._1.contains(y))
+          .filter((x, y) => p1._1.contains(x) && pExt._1.contains(y))
           // then generate the subsumption axioms (reverse of mapping).
           .map((x, y) => Subsumption(y.asConcept, x.asConcept))
       else Set()
@@ -198,7 +198,7 @@ class SubsumptionsFromMappings(
       shapes.map(_.inScopeS(Scope.Pattern))
     ).extended
 
-    if debug then 
+    if debug then
       println("")
       extended.foreach(println)
 
@@ -207,8 +207,8 @@ class SubsumptionsFromMappings(
       // For each sub-pattern component (will be mapped).
       p1 <- comps
       // Test for each extended component, whether there is a mapping.
-      pext <- extended
-    yield componentMap(p1, pext)).flatten.toSet
+      pExt <- extended
+    yield componentMap(p1, pExt)).flatten.toSet
 
     /*
 
@@ -224,4 +224,4 @@ class SubsumptionsFromMappings(
       VAC(Var(?4),<https://github.com/softlang/s2s/B٭>),
       VAC(Var(?0),<https://github.com/softlang/s2s/B٭>),
 
-    */
+     */

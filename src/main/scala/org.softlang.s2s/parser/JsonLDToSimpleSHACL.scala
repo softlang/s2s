@@ -4,13 +4,13 @@ import java.io.FileReader
 import com.apicatalog.jsonld.document.JsonDocument
 import com.apicatalog.jsonld.JsonLd
 
-class JsonLDToSimpleShacl(file: String): 
+class JsonLDToSimpleShacl(file: String):
 
-    val jdoc = JsonDocument.of(FileReader(file))
-    val ld = JsonLd.expand(jdoc).get()
+  val jDoc = JsonDocument.of(FileReader(file))
+  val ld = JsonLd.expand(jDoc).get()
 
-    // TODO
+  // TODO
 
-    def convert: Set[String] = 
-        throw new RuntimeException("JSON-LD is currently not supported.")
-        Set()
+  def convert: Set[String] =
+    throw new RuntimeException("JSON-LD is currently not supported.")
+    Set()

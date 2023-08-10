@@ -50,7 +50,7 @@ extension (aps: AtomicPatterns)
       case head :: next =>
         // Build this entry by finding all matches
         val ex = partial.filter(_._1.intersect(head.variables).nonEmpty)
-        val thiss =
+        val thisS =
           // if there are none, create a new entry.
           if ex.isEmpty then partial + (head.variables -> Set(head))
           // otherwise, join existing ones.
@@ -60,7 +60,7 @@ extension (aps: AtomicPatterns)
               // and join the extended component(s) together.
               (ex.keySet.flatten.union(head.variables)
                 -> (Set(head) ++ ex.values.flatten.toSet))
-        doComponents(next, thiss)
+        doComponents(next, thisS)
       // Processed all patterns.
       case Nil => partial
     doComponents(aps, Map()).toList

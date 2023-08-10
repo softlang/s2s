@@ -34,11 +34,11 @@ class Profiling(
     private var first: Boolean = true
 
     // If any output occurs, do not print progress.
-    private val anyout = noisy || logTime || logNoisy
+    private val anyOut = noisy || logTime || logNoisy
 
     /** Update the progress bar. */
     def update(trial: Int): Unit =
-      if !anyout then
+      if !anyOut then
         if first then first = false
         else print(del)
         print(
@@ -46,14 +46,14 @@ class Profiling(
             .padTo(ts, ' ')
             .reverse ++ "/" ++ trials.toString
         )
-      // For anyout + noisy profiling, only dump the trial
+      // For anyOut + noisy profiling, only dump the trial
       // (as much debugging info will be printed between).
       else if noisy then println(s"Trial: $trial/$trials")
       // Otherwise, do not print anything.
 
     /** Close the progress bar. */
     def close(): Unit =
-      if !anyout then first = true
+      if !anyOut then first = true
 
   private def runStep(
       q: SCCQ,

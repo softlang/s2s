@@ -18,7 +18,7 @@ enum ProfileEntry(val activity: String, val time: LocalDateTime):
       t: LocalDateTime
   ) extends ProfileEntry("problem", t)
 
-  case Candidates(cand: Set[SHACLShape], t: LocalDateTime)
+  case Candidates(candidates: Set[SHACLShape], t: LocalDateTime)
       extends ProfileEntry("candidates", t)
 
   // Start of a process.
@@ -27,7 +27,7 @@ enum ProfileEntry(val activity: String, val time: LocalDateTime):
   // End of a process.
   case End(a: String, t: LocalDateTime) extends ProfileEntry(a, t)
 
-  // Timetout event.
+  // Timed-out event.
   case Timeout(
       a: String,
       timeout: Duration,
@@ -76,5 +76,5 @@ enum ProfileEntry(val activity: String, val time: LocalDateTime):
     case Problem(_, _, q, sin, t) =>
       s"${t.toLocalTime} query-$q\n" ++
         s"${t.toLocalTime} shapes-$sin"
-    case Candidates(cand, t) =>
-      s"${t.toLocalTime} candidates-${cand.size}"
+    case Candidates(candidates, t) =>
+      s"${t.toLocalTime} candidates-${candidates.size}"

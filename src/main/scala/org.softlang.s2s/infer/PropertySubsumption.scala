@@ -32,7 +32,7 @@ class PropertySubsumption(
   private def subsumed(v1: Var, v2: Var): Boolean =
     hermit.prove(Subsumption(v1.asConcept, v2.asConcept))
 
-  // Subsumtion property.
+  // Subsumption property.
 
   /** Constraints for one property subsumed by constraints of another. */
   private def subsProperty(

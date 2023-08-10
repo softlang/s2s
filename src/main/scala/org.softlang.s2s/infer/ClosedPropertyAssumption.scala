@@ -11,7 +11,7 @@ class ClosedPropertyAssumption(
     targetScope: Scope
 )(implicit
     scopes: Scopes
-) extends Scopeable:
+) extends Scopable:
 
   import AtomicPattern._
 
@@ -100,7 +100,7 @@ class ClosedPropertyAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
-      else 
+      else
         Set(
           Subsumption(Existential(p, Top), Concept.unionOf(rhs))
         )
@@ -140,7 +140,7 @@ class ClosedPropertyAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
-      else 
+      else
         Set(
           Subsumption(
             Existential(Inverse(p), Top),

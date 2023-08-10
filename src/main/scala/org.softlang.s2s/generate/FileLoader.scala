@@ -8,19 +8,19 @@ import org.softlang.s2s.query.SCCQ
 import scala.util.Failure
 import scala.util.Try
 
+/** Load queries from file (for Profiling). */
 class FileLoader:
 
-  // Instantiate the reasoning framework.
   private val shar = Shar()
   import shar._
 
-  /** The query parser. */
   private val sccqp = SCCQParser(shar)
-
   private var it: Iterator[SCCQ] = null
 
+  /** Iterator on queries exists. */
   def isLoaded: Boolean = it != null
 
+  /** Load queries from a file. Drops broken queries silently. */
   def load(file: String): Unit =
     // Create buffered source from query file, where lines are queries.
     // May fail, ignored here.
@@ -32,6 +32,7 @@ class FileLoader:
       if i.isRight
     yield i.toOption.get
 
+  /** Get the next sample from the file iterator. */
   def getSample(): SCCQ = it.next()
 
 end FileLoader

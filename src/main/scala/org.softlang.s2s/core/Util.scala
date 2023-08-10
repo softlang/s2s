@@ -86,7 +86,7 @@ extension (r: Role)
 /** Basic utility functions. */
 object Util:
 
-  /** List of eithers to either of lists. */
+  /** List of 'eithers' to either of lists. */
   def flipEither[T1, T2](
       eithers: List[Either[T1, T2]]
   ): Either[List[T1], List[T2]] =
@@ -102,10 +102,10 @@ object Util:
     flipEither(eithers).left.map(_.head)
 
   /** Construct IRI for testing purposes. */
-  def forceIriUnsave(s: String): Iri =
+  def forceIriUnsafe(s: String): Iri =
     Iri.fromString(s"<https://github.com/softlang/s2s/testing/$s>").toOption.get
 
-  /** Compatbility mapping of characters, since ANTLR is somewhat system
+  /** Compatibility mapping of characters, since ANTLR is somewhat system
     * dependent with it's encodings.
     */
   def compatMap(s: String): String =
@@ -119,7 +119,7 @@ object Util:
 
   def formatSet(
       sin: Set[String],
-      oneline: Boolean = true,
+      oneLine: Boolean = true,
       prefix: String = "",
       postfix: String = "",
       token: String = ",",
@@ -129,7 +129,7 @@ object Util:
     val s = if sorted then sin.toList.sorted else sin.toList
     if s.isEmpty then prefix ++ "∅"
     else if s.size == 1 then prefix ++ s.head ++ postfix
-    else if oneline then prefix ++ s.map(_.trim).mkString(token) ++ postfix
+    else if oneLine then prefix ++ s.map(_.trim).mkString(token) ++ postfix
     else
       prefix ++ "\n" ++ s
         .map(indent ++ _.trim)

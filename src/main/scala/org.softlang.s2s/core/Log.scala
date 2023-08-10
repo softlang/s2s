@@ -58,7 +58,7 @@ class Log(
       Util.formatSet(
         s.toSet,
         prefix = title.trim ++ " = ",
-        oneline = false,
+        oneLine = false,
         sorted = sorted
       )
     )
@@ -144,9 +144,9 @@ class Log(
     if profiling then println(entry)
     PROFILE = entry :: PROFILE
 
-  def candidates(cand: Set[SHACLShape]): Unit =
+  def candidates(c: Set[SHACLShape]): Unit =
     val entry =
-      ProfileEntry.Candidates(cand, LocalDateTime.now())
+      ProfileEntry.Candidates(c, LocalDateTime.now())
     if profiling then println(entry)
     PROFILE = entry :: PROFILE
 

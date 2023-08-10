@@ -37,24 +37,24 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     shapes.map(_.dropScope)
 
   /** The query parser. */
-  private val sccqp = SCCQParser(shar)
+  private val sccqParser = SCCQParser(shar)
 
   /** Attempt to parse a SCCQ query. */
   def parseQuery(query: String): S2STry[SCCQ] =
     for
-      qi <- sccqp.parse(query)
+      qi <- sccqParser.parse(query)
       q <- SCCQ.validate(qi, config.renameToken)
     yield q
 
   /** The shape parser. */
-  private val shapep = ShapeParser(shar)
+  private val shapeParser = ShapeParser(shar)
 
   /** Attempt to parse a set of Simple SHACL shapes. */
   def parseShapes(
       shapes: Set[String]
   ): S2STry[Set[SHACLShape]] =
     for s <- Util
-        .flipEitherHead(shapes.map(shapep.parse(_)).toList)
+        .flipEitherHead(shapes.map(shapeParser.parse(_)).toList)
         .map(_.toSet)
     yield s.toList.toSet
 
@@ -92,7 +92,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     // Initialize the log.
     val log: Log = Log(debugging = config.debug)
 
-    val sout = for
+    val sOut = for
       // Parse and validate query.
       q <- parseQuery(query)
       // Parse and validate input shapes.
@@ -102,9 +102,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     yield r
 
     // Output (first) error, if any.
-    sout.left.map(r => log.error(r.show))
+    sOut.left.map(r => log.error(r.show))
 
-    (sout, log)
+    (sOut, log)
 
   /** Apply the algorithm, only. */
   def algorithm(

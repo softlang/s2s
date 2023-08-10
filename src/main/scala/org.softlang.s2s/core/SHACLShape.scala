@@ -5,7 +5,7 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 import org.softlang.s2s.query.AtomicPattern
 
-/** An arbitrary SHACL shape, expressed by an Subsumption axiom. */
+/** An arbitrary SHACL shape, expressed by a Subsumption axiom. */
 case class SHACLShape(val axiom: Subsumption) extends Showable {
 
   def show(implicit state: BackendState): String = axiom.show(state)

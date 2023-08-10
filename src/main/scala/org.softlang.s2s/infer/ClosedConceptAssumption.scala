@@ -47,7 +47,7 @@ abstract class ClosedConceptAssumption(
     useSubsumption: Boolean,
     includeVariableClosure: Boolean
 )(implicit scopes: Scopes)
-    extends Scopeable:
+    extends Scopable:
 
   import AtomicPattern._
 

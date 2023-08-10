@@ -9,6 +9,7 @@ import org.softlang.s2s.core.ShapeHeuristic
 import org.softlang.s2s.core.Vocabulary
 import org.softlang.s2s.core.inScope
 
+/** Candidate shape generator. */
 class CandidateGenerator(
     voc: Vocabulary,
     heuristic: ShapeHeuristic
@@ -24,4 +25,8 @@ class CandidateGenerator(
     if heuristic.simpleShapes && count == 0 then
       count += 1
       generate
-    else Set() // TODO: Multiple phases depending on input.
+    else Set()
+    // TODO: Multiple phases depending on input.
+    // TODO: Extend for phase-wise, optimize generation
+    // of arbitrary DL SHACL shapes.
+    // See also @ShapeGenerator
