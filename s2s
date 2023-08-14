@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sbt "runMain org.softlang.s2s.s2s $@"
-
+args="$@"
+sbt "runMain org.softlang.s2s.s2s $args"

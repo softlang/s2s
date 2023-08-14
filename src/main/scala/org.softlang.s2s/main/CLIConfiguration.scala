@@ -16,9 +16,7 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
            |""".stripMargin)
   footer(
     "\n" +
-      """For more information about the algorithm, see the full paper:
-      |  Philipp Seifer, Daniel Hernandez, Ralf Lämmel and Steffen Staab:
-      |  FromFrom Shapes to Shapes: Inferring SHACL Shapes for SPARQL Data Pipelines
+      """For more information about the algorithm, see the full paper: 
       |  ...TBD...
       |and the repository at
       |  ...URL...
