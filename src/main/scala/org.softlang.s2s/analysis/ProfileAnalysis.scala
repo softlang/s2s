@@ -27,6 +27,10 @@ case class FailedAnalysis(
 case class SuccessfulAnalysis(
     // The problem of this run.
     problem: ProblemType,
+    // Problem metadata.
+    patternSize: Int,
+    templateSize: Int,
+    numberOfShapes: Int,
     // Result of this analysis.
     result: (Set[SHACLShape], String),
     // Number of candidates.

@@ -9,6 +9,9 @@ case class TriValue[T](v: T, wr: T, nt: T)
 
 case class ProfileAnalysesEvaluation(
     trials: Int,
+    averagePatternSize: Float,
+    averageTemplateSize: Float,
+    averageShapeCount: Float,
     failureCount: Int,
     failures: List[FailedAnalysis],
     samples: TriValue[Int],
@@ -41,6 +44,9 @@ case class ProfileAnalysesEvaluation(
 
   override def toString: String = List(
     fmtSim("Trials", trials),
+    fmtSim("Patterns", averagePatternSize),
+    fmtSim("Templates", averageTemplateSize),
+    fmtSim("Shapes", averageShapeCount),
     fmtSim("Failures", failureCount),
     fmtTri("Samples", samples),
     fmtTri("Average execution time", averageExecutionTime),
@@ -70,6 +76,9 @@ extension (inAnalyses: ProfileAnalyses)
     if inAnalyses.isEmpty then
       ProfileAnalysesEvaluation(
         trials,
+        0,
+        0,
+        0,
         0,
         failures = Nil,
         samples = TriValue(
@@ -119,6 +128,10 @@ extension (inAnalyses: ProfileAnalyses)
       val timeout = timeoutL.millis
       val size = analyses.size
 
+      val patterns = analyses.map(_.patternSize)
+      val templates = analyses.map(_.templateSize)
+      val shapes = analyses.map(_.numberOfShapes)
+
       val totals = analyses.map(_.total)
       val totalsWR = analyses.map(_.totalWithoutRestarts)
       val totalsNT = analyses.filter(!_.timedOut).map(_.total)
@@ -136,6 +149,9 @@ extension (inAnalyses: ProfileAnalyses)
 
       ProfileAnalysesEvaluation(
         trials,
+        ProfileAnalyses.averageCount(patterns),
+        ProfileAnalyses.averageCount(templates),
+        ProfileAnalyses.averageCount(shapes),
         failures.size,
         failures = failures,
         samples = TriValue(
@@ -177,3 +193,6 @@ object ProfileAnalyses:
 
   def medianDuration(vs: List[Duration]): Duration =
     vs.sorted.drop(vs.size / 2).headOption.getOrElse(0.millis)
+
+  def averageCount(elem: List[Int]): Float =
+    if elem.isEmpty then -1 else elem.sum.toFloat / elem.size.toFloat

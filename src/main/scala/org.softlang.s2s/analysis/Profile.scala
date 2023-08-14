@@ -54,6 +54,9 @@ extension (profile: Profile)
 
       SuccessfulAnalysis(
         problem = p,
+        patternSize = p._1.pattern.size,
+        templateSize = p._1.template.size,
+        numberOfShapes = p._3.size,
         result = result.right.get,
         candidates = candidates.size,
         total = total,

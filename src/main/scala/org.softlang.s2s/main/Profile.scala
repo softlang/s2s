@@ -23,11 +23,11 @@ object Profile:
   val reasoner = ActiveReasoner.Hermit
 
   // Timeout - maximum time allowed for reasoning per sample.
-  val timeout = 60000
+  val timeout = 600000
 
   // Retry samples this many times. This mitigates unlucky cases
   // for non-deterministic reasoner optimization strategies.
-  val retry = 0
+  val retry = 0 
 
   // Experiment generator configurations (from the paper).
 
@@ -63,9 +63,7 @@ object Profile:
     minTemplateSize = 5,
     maxTemplateSize = 7,
     minNumberOfShapes = 5,
-    maxNumberOfShapes = 7,
-    propertyConceptTargetRatio = 0.3f,
-    propertyConceptConstraintRatio = 0.3f
+    maxNumberOfShapes = 7
   )
 
   val large = small.copy(
@@ -74,9 +72,7 @@ object Profile:
     minTemplateSize = 11,
     maxTemplateSize = 13,
     minNumberOfShapes = 11,
-    maxNumberOfShapes = 13,
-    propertyConceptTargetRatio = 0.3f,
-    propertyConceptConstraintRatio = 0.3f
+    maxNumberOfShapes = 13
   )
 
   // See ./wikidata/Readme.md
@@ -94,18 +90,22 @@ object Profile:
   )
 
   def run(): Unit =
-    runConfig(small)
+
+    // Main Experiment
+    runConfig(small, drop = 100) // 100 as warmup
     runConfig(medium)
     runConfig(large)
 
-    // runConfig(wikidata_small, trials = 60, drop = 2)
-    // runConfig(wikidata_medium, trials = 60, drop = 2)
-    // runConfig(wikidata_large, trials = 60, drop = 2)
+    // Wikidata Experiment
+    // runConfig(wikidata_small, trials = 62, repeat = 17)
+    // runConfig(wikidata_medium, trials = 62, repeat = 17)
+    // runConfig(wikidata_large, trials = 62, repeat = 17)
 
   private def runConfig(
       pgc: ProblemGeneratorConfig,
       trials: Int = trials,
-      drop: Int = 100
+      drop: Int = 0,
+      repeat: Int = 1
   ): Unit =
     Profiling(
       config = Configuration.default.copy(
@@ -113,7 +113,13 @@ object Profile:
         retry = retry,
         timeout = timeout
       ),
-      noisy = true,
+      noisy = false,
       logTime = false,
       logNoisy = false
-    ).run(pgc, trials = trials, chunkCount = 10, dropFirstX = drop)
+    ).run(
+      pgc,
+      setTrials = trials,
+      chunkCount = 10,
+      dropFirstX = drop,
+      repeatTrials = repeat
+    )

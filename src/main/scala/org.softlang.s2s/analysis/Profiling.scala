@@ -116,16 +116,27 @@ class Profiling(
       // Generator configuration.
       genConfig: ProblemGeneratorConfig,
       // Number of trials.
-      trials: Int,
+      setTrials: Int,
       // Write CSV to file.
       writeToFile: Boolean = true,
       // Number of chunks (saves intermediate results).
       chunkCount: Int = 10,
       // Run additional and drop results for the first X samples.
-      dropFirstX: Int = 10
+      dropFirstX: Int = 10,
+      // Repeat trials.
+      repeatTrials: Int = 1
   ): Unit =
 
-    val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)
+    object Sampler:
+      val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)
+      var cachedSample = gen.sample()
+      var counter = 0
+      def sample(repeat: Int): (SCCQ, Set[SHACLShape]) =
+        if counter == repeat then
+          counter = 0
+          cachedSample = gen.sample()
+        counter += 1
+        cachedSample
 
     // IO Files.
 
@@ -136,6 +147,7 @@ class Profiling(
 
     // Execute all trials.
 
+    val trials = repeatTrials * setTrials
     val allTrials = trials + dropFirstX
 
     val bar = ProgressBar(allTrials)
@@ -156,7 +168,7 @@ class Profiling(
         chunk += 1
         trial += 1
 
-        val qs = gen.sample()
+        val qs = Sampler.sample(repeatTrials)
         bar.update(trial)
         results = results ++ List(runStep(qs._1, qs._2.toList.toSet, trial))
 
