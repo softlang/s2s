@@ -170,9 +170,9 @@ extension (inAnalyses: ProfileAnalyses)
           ProfileAnalyses.medianDuration(totalsNT)
         ),
         averagePercentageFiltering = TriValue(
-          percs.sum / percs.size,
-          percsWR.sum / percsWR.size,
-          percsNT.sum / percsNT.size
+          ProfileAnalyses.average(percs),
+          ProfileAnalyses.average(percsWR),
+          ProfileAnalyses.average(percsNT)
         ),
         longest = TriValue(
           totals.max,
@@ -196,3 +196,6 @@ object ProfileAnalyses:
 
   def averageCount(elem: List[Int]): Float =
     if elem.isEmpty then -1 else elem.sum.toFloat / elem.size.toFloat
+
+  def average(elem: List[Double]): Double =
+    if elem.isEmpty then -1 else elem.sum.toDouble / elem.size.toDouble

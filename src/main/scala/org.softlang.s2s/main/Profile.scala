@@ -27,7 +27,7 @@ object Profile:
 
   // Retry samples this many times. This mitigates unlucky cases
   // for non-deterministic reasoner optimization strategies.
-  val retry = 0 
+  val retry = 0
 
   // Experiment generator configurations (from the paper).
 
@@ -90,7 +90,6 @@ object Profile:
   )
 
   def run(): Unit =
-
     // Main Experiment
     runConfig(small, drop = 100) // 100 as warmup
     runConfig(medium)

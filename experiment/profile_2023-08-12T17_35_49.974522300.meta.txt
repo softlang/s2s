@@ -41,9 +41,9 @@ Average execution time: 40 milliseconds
 Median execution time: 20 milliseconds
   without restarts: 20 milliseconds
   no timeouts: 20 milliseconds
-Average percentage spent on filtering: NaN
-  without restarts: NaN
-  no timeouts: NaN
+Average percentage spent on filtering: 87,11
+  without restarts: 87,11
+  no timeouts: 87,11
 Longest sample: 15754 milliseconds
   without restarts: 15754 milliseconds
   no timeouts: 15754 milliseconds

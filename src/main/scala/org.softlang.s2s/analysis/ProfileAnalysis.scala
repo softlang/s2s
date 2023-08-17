@@ -83,12 +83,15 @@ case class SuccessfulAnalysis(
 
   /** Percentage of time spent on filtering. */
   def percentageFiltering: Double =
-    filtering.length.toDouble / total.length.toDouble
+    if total.length == 0 then 0.0
+    else filtering.length.toDouble / total.length.toDouble
 
   /** Percentage of time spent on filtering (no restarts). */
   def percentageFilteringWithoutRestarts: Double =
-    filteringWithoutRestarts.length.toDouble
-      / totalWithoutRestarts.length.toDouble
+    if totalWithoutRestarts.length == 0 then 0.0
+    else
+      filteringWithoutRestarts.length.toDouble
+        / totalWithoutRestarts.length.toDouble
 
 object ProfileAnalysis:
   def header: String =
