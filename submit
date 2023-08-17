@@ -9,7 +9,7 @@ cat <<'EOF'
 import scala.sys.process._
 import sbt._
 
-val scala3Version = "3.2.0"
+val scala3Version = "3.3.0"
 
 // Name of fat jar produced via 'assembly' plugin.
 val jarName = "s2s.jar"
@@ -63,7 +63,7 @@ EOF
 )
 
 # Create folder for submission.
-mkdir submission
+mkdir Submission
 
 # Copy relevant files.
 
@@ -74,10 +74,11 @@ cp s2s Submission
 cp s2s.bat Submission
 cp README.md Submission
 cp -r paper_examples Submission
+cp -r experiment Submission
+cp -r wikidata Submission
 mkdir Submission/project
 cp project/build.properties Submission/project
 cp project/plugins.sbt Submission/project
-cp -r profile Submission
 
 cd Submission
 
@@ -120,7 +121,7 @@ find . -type f -a \( -name "*.scala" -o\
                                   -e 's/shar/dlib/g' \
                                   -e 's/Shar/Dlib/g' \
                                   -e 's/org\.softlang/anon\.ymous/g' \
-                                  -e 's/Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab/ANONYMOUS/g' \
+                                  -e 's/, Daniel Hernandez, Ralf Lämmel, and Steffen Staab//g' \
                                   -e 's/Philipp Seifer/ANONYMOUS/g' \
                                   -e 's/Softlang/ANONYMOUS/g' \
                                   -e 's/University of Koblenz/ANONYMOUS/g' \
@@ -132,5 +133,5 @@ find . -type f -a \( -name "*.scala" -o\
 
 cd ..
 rm -rf submission.zip
-zip -r submission.zip submission/
-rm -rf submission
+zip -r submission.zip Submission/
+rm -rf Submission
