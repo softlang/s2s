@@ -13,11 +13,13 @@ Building Shapes2Shapes requires the Scala build tool [SBT](https://www.scala-sbt
     * GNU/Linux or macOS: `./s2s paper_examples/q1.sparql paper_examples/S1.shacl`
     * From a `sbt` session: `runMain org.softlang.s2s.s2s paper_examples/q1.sparql paper_examples/S1.shacl`
 
-Note, that running from a SBT session is much faster, due to SBT startup time.
+Note, that running from a SBT session is much faster for multiple executions, due to SBT startup time.
 
 ## Usage
 
 The following usage examples assume usage of the `s2s` utility script; see the quick start section for system specific information, or for information on how to run the program from a SBT session, directly.
+
+Note: On Windows, you may want or need to set the active code page to UTF-8 via command [`chcp 65001`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chcp). The included `s2s.bat` script does so, automatically.
 
 ### Command Line Interface
 
