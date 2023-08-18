@@ -91,12 +91,9 @@ object Profile:
 
   def run(): Unit =
     // Main Experiment
-    // runConfig(small, drop = 100) // 100 as warmup
-    // runConfig(medium)
-    // runConfig(large)
-
-    // Warmup
-    runConfig(wikidata_small, trials = 100)
+    runConfig(small, drop = 100) // 100 as warmup
+    runConfig(medium)
+    runConfig(large)
 
     // Wikidata Experiment
     runConfig(wikidata_small, trials = 250, repeat = 4)
