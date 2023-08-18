@@ -78,27 +78,30 @@ object Profile:
   // See ./wikidata/Readme.md
 
   val wikidata_small = small.copy(
-    inputFile = Some("wikidata/queries")
+    inputFile = Some("wikidata/queries_clean")
   )
 
   val wikidata_medium = medium.copy(
-    inputFile = Some("wikidata/queries")
+    inputFile = Some("wikidata/queries_clean")
   )
 
   val wikidata_large = large.copy(
-    inputFile = Some("wikidata/queries")
+    inputFile = Some("wikidata/queries_clean")
   )
 
   def run(): Unit =
     // Main Experiment
-    runConfig(small, drop = 100) // 100 as warmup
-    runConfig(medium)
-    runConfig(large)
+    // runConfig(small, drop = 100) // 100 as warmup
+    // runConfig(medium)
+    // runConfig(large)
+
+    // Warmup
+    runConfig(wikidata_small, trials = 100)
 
     // Wikidata Experiment
-    // runConfig(wikidata_small, trials = 62, repeat = 17)
-    // runConfig(wikidata_medium, trials = 62, repeat = 17)
-    // runConfig(wikidata_large, trials = 62, repeat = 17)
+    runConfig(wikidata_small, trials = 250, repeat = 4)
+    runConfig(wikidata_medium, trials = 250, repeat = 4)
+    runConfig(wikidata_large, trials = 250, repeat = 4)
 
   private def runConfig(
       pgc: ProblemGeneratorConfig,

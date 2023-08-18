@@ -27,6 +27,11 @@ class FileLoader:
     val qft = io.Source.fromFile(file).getLines
     val iti = qft.map(sccqp.parse(_)).map(_.flatMap(q => SCCQ.validate(q, "*")))
 
+    // for
+    //  i <- iti
+    //  if i.isLeft
+    // do println(i)
+
     it = for
       i <- iti
       if i.isRight
