@@ -59,8 +59,8 @@ class ClosedConceptAssumptionPattern(
       a1.flatMap(_ match
         case Equality(NamedConcept(v), r) if v.isVariable =>
           Set(
-            Subsumption(NamedConcept(v), r.inScope(Scope.Pattern)),
-            Subsumption(r.inScope(Scope.Pattern), NamedConcept(v)),
+            //Subsumption(NamedConcept(v), r.inScope(Scope.Pattern)),
+            //Subsumption(r.inScope(Scope.Pattern), NamedConcept(v)),
             Subsumption(NamedConcept(v), r.inScope(Scope.Input)),
           ).union(
             if allowed then
