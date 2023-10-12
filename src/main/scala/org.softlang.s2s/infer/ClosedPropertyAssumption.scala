@@ -102,7 +102,7 @@ class ClosedPropertyAssumption(
       if rhs.isEmpty then Set()
       else
         Set(
-          Subsumption(Existential(p, Top), Concept.unionOf(rhs))
+          Equality(Existential(p, Top), Concept.unionOf(rhs))
         )
     }
 
@@ -142,7 +142,7 @@ class ClosedPropertyAssumption(
       if rhs.isEmpty then Set()
       else
         Set(
-          Subsumption(
+          Equality(
             Existential(Inverse(p), Top),
             Concept.unionOf(rhs)
           )
