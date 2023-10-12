@@ -141,7 +141,7 @@ class Algorithm(
     val dcaH = ClosedConceptAssumptionTemplate(q.template).axioms
 
     log.debug("CWA(q.H), step 2.", dcaH)
-    log.debug("CWA(q.P), step 3.", dcaP3)
+    log.debug("CWA(q.P), step 3. (and 6.)", dcaP3)
 
     log.profileEnd("build-dca-t")
     log.profileStart("build-cwa-p")

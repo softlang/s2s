@@ -3,9 +3,34 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.dl._
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.inScope
 import org.softlang.s2s.core.isVariable
 import org.softlang.s2s.query._
+
+/** Test, whether equality with Scope.Input is allowed.
+ *  This is allowed, if the variable dependency graph
+ *  is acyclic.
+ *  Slight hack for now. Before publication, 
+ *  refine these inferences to stan-alone steps,
+ *  that more clearly behave as expected. */
+object EqualityCondition:
+  private def hasEdge(s1: Set[Var], s2: Set[Var]): Boolean = 
+    s1.intersect(s2).nonEmpty
+
+  private def hasCycleOne(lst: List[Set[Var]]): Boolean = 
+    lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(lst.head, lst.last)
+
+  private def hasCycle(lst: List[Set[Var]]): Boolean = 
+    (3 to lst.size).map { i =>
+      lst.take(i)
+    }.exists(hasCycleOne)
+
+  def isAllowed(a: AtomicPatterns): Boolean = 
+    !a.map(_.variables)
+      .filter(_.size == 2)
+      .permutations
+      .exists(hasCycle)
 
 class ClosedConceptAssumptionTemplate(
     a: AtomicPatterns
@@ -28,13 +53,19 @@ class ClosedConceptAssumptionPattern(
         case a => a
       )
 
+    val allowed = EqualityCondition.isAllowed(a)
+
     val a2 =
       a1.flatMap(_ match
         case Equality(NamedConcept(v), r) if v.isVariable =>
           Set(
             Subsumption(NamedConcept(v), r.inScope(Scope.Pattern)),
-            Subsumption(r.inScope(Scope.Input), NamedConcept(v))
-          )
+            Subsumption(r.inScope(Scope.Pattern), NamedConcept(v)),
+            Subsumption(NamedConcept(v), r.inScope(Scope.Input)),
+          ).union(
+            if allowed then
+              Set(Subsumption(r.inScope(Scope.Input), NamedConcept(v)))
+            else Set())
         case a => Set(a)
       )
     a2
