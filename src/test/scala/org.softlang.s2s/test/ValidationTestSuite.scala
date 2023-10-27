@@ -21,7 +21,9 @@ abstract class ValidationTestSuite(
     // Do not run this test suite.
     disabled: Boolean = false,
     // Always print full debugging for failures.
-    verbose: Boolean = false
+    verbose: Boolean = false,
+    // Disable (success) output.
+    silent: Boolean = true
 ) extends Shapes2Shapes(
       Configuration.default.copy(
         reasoner = ActiveReasoner.Hermit
@@ -137,7 +139,7 @@ abstract class ValidationTestSuite(
           if mi.nonEmpty then println("Missing results:\n" ++ formatResults(mi))
       else
         // Successful test:
-        println(formatName(true, false))
+        if !silent then println(formatName(true, false))
 
     // Parsing and input error assertions.
     assert(exactlyOut.isRight)
