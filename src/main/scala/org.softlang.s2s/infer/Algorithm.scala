@@ -1,20 +1,20 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.Shar
-import de.pseifer.shar.core.Iri
-import de.pseifer.shar.core.Prefix
 import de.pseifer.shar.dl.Equality
 import de.pseifer.shar.dl.Subsumption
 import de.pseifer.shar.reasoning._
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
-import org.softlang.s2s.parser.SCCQParser
-import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
 
 import scala.concurrent.duration.*
+
+// TODO (1) Input should not be a set of shapes,
+//          but rather the prior KB.
+// TODO (2) Should compose w.r.t. namespaces.
 
 /** Full implementation of Algorithm 1. */
 class Algorithm(

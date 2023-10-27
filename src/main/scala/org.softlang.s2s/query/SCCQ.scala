@@ -79,6 +79,25 @@ extension (aps: AtomicPatterns)
     */
   def depth: Int =
     aps.filter(_.isPropertyPattern).size
+  
+  /** True, if the variable connectivity graph is cyclic. */
+  def hasCyclicVCG: Boolean = 
+    def hasEdge(s1: Set[Var], s2: Set[Var]): Boolean = 
+      s1.intersect(s2).nonEmpty
+
+    def hasCycleOne(lst: List[Set[Var]]): Boolean = 
+      lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(lst.head, lst.last)
+
+    def hasCycle(lst: List[Set[Var]]): Boolean = 
+      (3 to lst.size).map { i =>
+        lst.take(i)
+      }.exists(hasCycleOne)
+
+    // Finally, apply these functions.
+    !aps.map(_.variables)
+      .filter(_.size == 2)
+      .permutations
+      .exists(hasCycle)
 
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
