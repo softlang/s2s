@@ -3,10 +3,10 @@ package org.softlang.s2s.core
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
-import org.softlang.s2s.query.AtomicPattern
+import org.softlang.s2s.query.AtomicPattern // TODO remove with hasTarget
 
 /** An arbitrary SHACL shape, expressed by a Subsumption axiom. */
-case class SHACLShape(val axiom: Subsumption) extends Showable {
+case class SHACLShape(val axiom: Subsumption) extends Showable:
 
   def show(implicit state: BackendState): String = axiom.show(state)
 
@@ -23,6 +23,7 @@ case class SHACLShape(val axiom: Subsumption) extends Showable {
     )
 
   /** Test, whether `candidate` is a target of this shape `inPattern`. */
+  // TODO: Remove with new method.
   def hasTarget(
       candidate: Var,
       inPattern: Set[AtomicPattern]
@@ -53,7 +54,6 @@ case class SHACLShape(val axiom: Subsumption) extends Showable {
       case Right(s) => Some(s)
       case Left(_)  => None
 
-}
 
 object SHACLShape:
 
@@ -63,7 +63,7 @@ object SHACLShape:
       case Existential(NamedRole(_), Top)          => true
       case Existential(Inverse(NamedRole(_)), Top) => true
       case NamedConcept(_)                         => true
-      // TBD: Node targets.
+      // TBD: Node targets (?)
       case _ => false
 
   /** Test, whether Concept c is a valid constraint. */

@@ -1,8 +1,12 @@
 package org.softlang.s2s.test
 
 import de.pseifer.shar.core.Iri
+import de.pseifer.shar.dl._
+
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.SHACLShape
+import org.softlang.s2s.core.SimpleSHACLShape
 import org.softlang.s2s.query.AtomicPattern
 import org.softlang.s2s.query.SCCQ
 
@@ -11,7 +15,7 @@ trait TestData:
 
   implicit val scopes: Scopes = Scopes("•", 0, 1, 2, -1)
 
-  // Concepts
+  // IRIs (concept names)
 
   val A = Iri.fromString("<https://github.com/softlang/s2s/A•0>").toOption.get
   val B = Iri.fromString("<https://github.com/softlang/s2s/B•0>").toOption.get
@@ -28,7 +32,7 @@ trait TestData:
   val Co = Iri.fromString("<https://github.com/softlang/s2s/C•2>").toOption.get
   val Do = Iri.fromString("<https://github.com/softlang/s2s/D•2>").toOption.get
 
-  // Properties
+  // IRIs (role names)
   
   val p = Iri.fromString("<https://github.com/softlang/s2s/p•0>").toOption.get
   val r = Iri.fromString("<https://github.com/softlang/s2s/r•0>").toOption.get
@@ -45,6 +49,11 @@ trait TestData:
   val x = Var("x")
   val y = Var("y")
   val z = Var("z")
+
+  // (Simple)SHACLShapes
+  
+  val s1 = SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(D)))
+  val s2 = SHACLShape(Subsumption(NamedConcept(C), Union(NamedConcept(A), NamedConcept(B))))
 
   // Queries (empty)
 

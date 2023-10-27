@@ -1,9 +1,6 @@
 package org.softlang.s2s.core
 
-import de.pseifer.shar.core.BackendState
-import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
-import org.softlang.s2s.query.AtomicPattern
 
 /** A restricted, simple SHACL shape. */
 class SimpleSHACLShape(axiom: Subsumption) extends SHACLShape(axiom):
