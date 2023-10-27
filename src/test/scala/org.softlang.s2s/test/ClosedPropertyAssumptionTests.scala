@@ -20,10 +20,10 @@ class ClosedPropertyAssumptionTests extends TestData:
   // The function under test here.
   
   def workH(sccq: SCCQ): Set[Axiom] =
-    ClosedPropertyAssumption(sccq.template, Scope.Template).axioms
+    ClosedPropertyAssumption(sccq.template, Scope.Out).axioms
 
   def workP(sccq: SCCQ): Set[Axiom] =
-    ClosedPropertyAssumption(sccq.pattern, Scope.Pattern).axioms
+    ClosedPropertyAssumption(sccq.pattern, Scope.Med).axioms
 
   //  Empty
 

@@ -13,8 +13,8 @@ class ClosedConceptAssumptionTemplate(
 )(implicit scopes: Scopes)
     extends ClosedConceptAssumption(a, true, false)(scopes):
 
-  val leftScope = Scope.Template
-  val rightScope = Scope.Template
+  val leftScope = Scope.Out
+  val rightScope = Scope.Out
 
 class ClosedConceptAssumptionPattern(
     a: AtomicPatterns
@@ -25,7 +25,7 @@ class ClosedConceptAssumptionPattern(
     val a1 =
       axioms.map(_ match
         case Equality(l @ NamedConcept(_), r) if a.concepts.contains(l) =>
-          Equality(l, Intersection(l.inScope(Scope.Input), r))
+          Equality(l, Intersection(l.inScope(Scope.In), r))
         case a => a
       )
 
@@ -33,17 +33,17 @@ class ClosedConceptAssumptionPattern(
       a1.flatMap(_ match
         case Equality(NamedConcept(v), r) if v.isVariable =>
           Set(
-            Subsumption(NamedConcept(v), r.inScope(Scope.Input)),
+            Subsumption(NamedConcept(v), r.inScope(Scope.In)),
           ).union(
             if a.hasCyclicVCG then
-              Set(Subsumption(r.inScope(Scope.Input), NamedConcept(v)))
+              Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
             else Set())
         case a => Set(a)
       )
     a2
 
-  val leftScope = Scope.Pattern
-  val rightScope = Scope.Pattern
+  val leftScope = Scope.Med
+  val rightScope = Scope.Med
 
 abstract class ClosedConceptAssumption(
     a: AtomicPatterns,

@@ -1,8 +1,6 @@
 package org.softlang.s2s.core
 
-import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Iri
-import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 
 extension (i: Iri)
@@ -28,18 +26,31 @@ extension (i: Iri)
 
   /** Get this IRI in the respective scope. */
   def inScope(scope: Scope)(implicit scopes: Scopes): Iri =
-    if i.isVariable then i
+    // For variables, only apply the variable scope.
+    if i.isVariable then
+      if scope == Scope.Variable then
+        i.getBase(scopes)
+         .append(scopes.getToken(Scope.Variable))
+      else i
+    // For anything else, apply whatever scope is given.
     else
       scope match
-        case Scope.Pattern =>
+        case Scope.None =>
           i.getBase(scopes)
-            .append(scopes.patternScopeToken)
-        case Scope.Template =>
+            .append(scopes.getToken(Scope.None))
+        case Scope.In =>
           i.getBase(scopes)
-            .append(scopes.templateScopeToken)
-        case Scope.Input =>
+            .append(scopes.getToken(Scope.In))
+        case Scope.Med =>
           i.getBase(scopes)
-            .append(scopes.inputScopeToken)
+            .append(scopes.getToken(Scope.Med))
+        case Scope.Out =>
+          i.getBase(scopes)
+            .append(scopes.getToken(Scope.Out))
+        // Note: This never occurs. Perhaps it should be forbidden?
+        case Scope.Variable =>
+          i.getBase(scopes)
+            .append(scopes.getToken(Scope.Variable))
 
   /** Drop all scoping for this IRI. */
   def dropScope(implicit scopes: Scopes): Iri =

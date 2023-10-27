@@ -83,8 +83,8 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
   val renameToken =
     opt[String](
       required = false,
-      default = Some("٭"),
-      descr = "Use this String for internal renaming (def: *)"
+      default = Some("•"),
+      descr = "Use this String for internal renaming (def: •)"
     )
 
   val queryFile = trailArg[String](descr = "File containing input query")

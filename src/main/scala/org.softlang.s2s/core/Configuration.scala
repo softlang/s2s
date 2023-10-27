@@ -51,7 +51,7 @@ object Configuration:
     reasoner = ActiveReasoner.Hermit,
     timeout = 60000,
     retry = 0,
-    renameToken = "٭",
+    renameToken = "•",
     prefix = ":",
     log = true,
     debug = true,

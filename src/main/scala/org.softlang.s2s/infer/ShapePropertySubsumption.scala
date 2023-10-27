@@ -30,7 +30,7 @@ class ShapePropertySubsumption(
   def axioms: Set[Axiom] =
     patternConstraints.toSet.flatMap { x =>
       x match
-        case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.Input)))
+        case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.In)))
         case (n, Some(c)) =>
           // Check that (all pairs) of variables are unconstrained.
           if c.forall(ci =>
@@ -45,9 +45,9 @@ class ShapePropertySubsumption(
             // then the role is unconstrained.
           then
             Set(
-              RoleSubsumption(n, n.inScope(Scope.Input)),
-              RoleSubsumption(n.inScope(Scope.Input), n)
+              RoleSubsumption(n, n.inScope(Scope.In)),
+              RoleSubsumption(n.inScope(Scope.In), n)
             )
           // otherwise, the role is constrained.
-          else Set(RoleSubsumption(n, n.inScope(Scope.Input)))
+          else Set(RoleSubsumption(n, n.inScope(Scope.In)))
     }

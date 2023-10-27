@@ -55,8 +55,8 @@ class ConfigurationComparison(
         else print(".")
 
         // Initialize logs.
-        val log1 = Log(debugging = true)
-        val log2 = Log(debugging = true)
+        val log1 = Log(debugging = true)(s1.scopes)
+        val log2 = Log(debugging = true)(s2.scopes)
 
         // If results are different
         if !compare(q, s.toList.toSet, log1, log2) then
@@ -90,8 +90,8 @@ class ConfigurationComparison(
   def input(q: SCCQ, sin: Set[SHACLShape]): Boolean =
 
     // Initialize logs.
-    val log1 = Log(debugging = true)
-    val log2 = Log(debugging = true)
+    val log1 = Log(debugging = true)(s1.scopes)
+    val log2 = Log(debugging = true)(s2.scopes)
 
     val r = compare(q, sin, log1, log2)
 

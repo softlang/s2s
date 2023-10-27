@@ -78,7 +78,7 @@ class Profiling(
       debugging = true,
       profiling = logTime,
       noisy = logNoisy
-    )
+    )(s2s.scopes)
 
     log.problem(q, s, qS, sinS)
 

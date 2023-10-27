@@ -6,37 +6,38 @@ import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.query.AtomicPattern
 import org.softlang.s2s.query.SCCQ
 
+/** Test example data for internal unit tests. */
 trait TestData:
 
-  implicit val scopes: Scopes = Scopes("-")
+  implicit val scopes: Scopes = Scopes("•", 0, 1, 2, -1)
 
   // Concepts
 
-  val A = Iri.fromString("<https://github.com/softlang/s2s/A>").toOption.get
-  val B = Iri.fromString("<https://github.com/softlang/s2s/B>").toOption.get
-  val C = Iri.fromString("<https://github.com/softlang/s2s/C>").toOption.get
-  val D = Iri.fromString("<https://github.com/softlang/s2s/D>").toOption.get
+  val A = Iri.fromString("<https://github.com/softlang/s2s/A•0>").toOption.get
+  val B = Iri.fromString("<https://github.com/softlang/s2s/B•0>").toOption.get
+  val C = Iri.fromString("<https://github.com/softlang/s2s/C•0>").toOption.get
+  val D = Iri.fromString("<https://github.com/softlang/s2s/D•0>").toOption.get
 
-  val Am = Iri.fromString("<https://github.com/softlang/s2s/A->").toOption.get
-  val Bm = Iri.fromString("<https://github.com/softlang/s2s/B->").toOption.get
-  val Cm = Iri.fromString("<https://github.com/softlang/s2s/C->").toOption.get
-  val Dm = Iri.fromString("<https://github.com/softlang/s2s/D->").toOption.get
+  val Am = Iri.fromString("<https://github.com/softlang/s2s/A•1>").toOption.get
+  val Bm = Iri.fromString("<https://github.com/softlang/s2s/B•1>").toOption.get
+  val Cm = Iri.fromString("<https://github.com/softlang/s2s/C•1>").toOption.get
+  val Dm = Iri.fromString("<https://github.com/softlang/s2s/D•1>").toOption.get
 
-  val Ao = Iri.fromString("<https://github.com/softlang/s2s/A-->").toOption.get
-  val Bo = Iri.fromString("<https://github.com/softlang/s2s/B-->").toOption.get
-  val Co = Iri.fromString("<https://github.com/softlang/s2s/C-->").toOption.get
-  val Do = Iri.fromString("<https://github.com/softlang/s2s/D-->").toOption.get
+  val Ao = Iri.fromString("<https://github.com/softlang/s2s/A•2>").toOption.get
+  val Bo = Iri.fromString("<https://github.com/softlang/s2s/B•2>").toOption.get
+  val Co = Iri.fromString("<https://github.com/softlang/s2s/C•2>").toOption.get
+  val Do = Iri.fromString("<https://github.com/softlang/s2s/D•2>").toOption.get
 
   // Properties
   
-  val p = Iri.fromString("<https://github.com/softlang/s2s/p>").toOption.get
-  val r = Iri.fromString("<https://github.com/softlang/s2s/r>").toOption.get
+  val p = Iri.fromString("<https://github.com/softlang/s2s/p•0>").toOption.get
+  val r = Iri.fromString("<https://github.com/softlang/s2s/r•0>").toOption.get
 
-  val pm = Iri.fromString("<https://github.com/softlang/s2s/p->").toOption.get
-  val rm = Iri.fromString("<https://github.com/softlang/s2s/r->").toOption.get
+  val pm = Iri.fromString("<https://github.com/softlang/s2s/p•1>").toOption.get
+  val rm = Iri.fromString("<https://github.com/softlang/s2s/r•1>").toOption.get
 
-  val po = Iri.fromString("<https://github.com/softlang/s2s/p-->").toOption.get
-  val ro = Iri.fromString("<https://github.com/softlang/s2s/r-->").toOption.get
+  val po = Iri.fromString("<https://github.com/softlang/s2s/p•2>").toOption.get
+  val ro = Iri.fromString("<https://github.com/softlang/s2s/r•2>").toOption.get
 
   // Variables
 

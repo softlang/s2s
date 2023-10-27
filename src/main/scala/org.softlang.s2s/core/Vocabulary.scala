@@ -56,16 +56,16 @@ case class Vocabulary(
     )
 
   /** Appends ' to name (Hack via Pattern.Scope) */
-  private def triviallyRenamed: Vocabulary =
-    Vocabulary(
-      variables,
-      concepts.map(
-        _.inScope(Scope.Pattern)(Scopes("_triv"))
-          .asInstanceOf[NamedConcept]
-      ),
-      properties.map(
-        _.inScope(Scope.Pattern)(Scopes("_triv"))
-          .asInstanceOf[NamedRole]
-      ),
-      nominals.map(_.inScope(Scope.Pattern)(Scopes("_triv")))
-    )
+  //private def triviallyRenamed: Vocabulary =
+  //  Vocabulary(
+  //    variables,
+  //    concepts.map(
+  //      _.inScope(Scope.Med)(Scopes("_triv"))
+  //        .asInstanceOf[NamedConcept]
+  //    ),
+  //    properties.map(
+  //      _.inScope(Scope.Med)(Scopes("_triv"))
+  //        .asInstanceOf[NamedRole]
+  //    ),
+  //    nominals.map(_.inScope(Scope.Med)(Scopes("_triv")))
+  //  )

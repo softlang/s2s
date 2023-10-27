@@ -8,11 +8,11 @@ import de.pseifer.shar.dl.Concept
 import de.pseifer.shar.dl.NamedConcept
 
 /** A query variable. */
-final case class Var(v: String) extends Showable with AsConcept:
+final case class Var(v: String) extends Showable:
   def show(implicit state: BackendState): String = "?" + v
 
-  def asConcept: Concept =
-    NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get)
+  def asConcept(implicit scopes: Scopes): Concept =
+    NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get).inScope(Scope.Variable)
 
   /** Is a fresh variable instantiated by Var.fresh(). */
   def isFresh: Boolean = v.contains(Var.freshToken)

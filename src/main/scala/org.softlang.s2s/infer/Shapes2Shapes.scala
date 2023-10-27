@@ -25,7 +25,13 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   do shar.state.prefixes.add(p, i)
 
   // The scope encoding (implicit) needed for renaming.
-  implicit val scopes: Scopes = Scopes(config.renameToken)
+  implicit val scopes: Scopes = Scopes(
+    config.renameToken,
+    // TODO: Change these IDs.
+    in = 0,
+    med = 1,
+    out = 2,
+    variable = -1)
 
   /** Remove any scope-related renaming. */
   protected def descope(shapes: Set[SHACLShape]): Set[SHACLShape] =

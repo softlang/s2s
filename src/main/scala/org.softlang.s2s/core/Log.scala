@@ -2,9 +2,11 @@ package org.softlang.s2s.core
 
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.dl.Axiom
+
 import org.softlang.s2s.analysis.Profile
 import org.softlang.s2s.analysis.ProfileEntry
 import org.softlang.s2s.core.SHACLShape
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.query.SCCQ
 
 import java.time.LocalDateTime
@@ -22,7 +24,7 @@ class Log(
     debugging: Boolean = false,
     profiling: Boolean = false,
     noisy: Boolean = false
-):
+)(implicit val scopes: Scopes):
 
   // Internal state, the log and the profiling data.
   private var LOG: String = ""
@@ -157,7 +159,8 @@ class Log(
   /** Print this log to stdout. */
   def print(
       hidecolon: Boolean = false,
-      prettyVariableConcepts: Boolean = true
+      prettyVariableConcepts: Boolean = true,
+      prettyScopes: Boolean = true
   ): Unit =
     val t1 =
       if prettyVariableConcepts then LOG.replaceAll("shar", "?")
@@ -167,7 +170,11 @@ class Log(
       if hidecolon then t1.replaceAll(":", "")
       else t1
 
-    println(t2)
+    val t3 =
+      if prettyScopes then scopes.prettyScopeTokens(t2)
+      else t2
+
+    println(t3)
 
   /** Get log as a string. */
   override def toString: String = LOG

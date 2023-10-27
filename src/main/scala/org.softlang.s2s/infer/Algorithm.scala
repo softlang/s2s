@@ -34,10 +34,10 @@ class Algorithm(
 
     // Pre-process query and shapes, by setting scopes.
     val preQ = SCCQ(
-      query.template.inScope(Scope.Template),
-      query.pattern.inScope(Scope.Pattern)
+      query.template.inScope(Scope.Out),
+      query.pattern.inScope(Scope.Med)
     )
-    val pres = shapes.map(_.inScope(Scope.Input))
+    val pres = shapes.map(_.inScope(Scope.In))
 
     // Log input.
     logInput(preQ, pres, log)
@@ -148,7 +148,7 @@ class Algorithm(
 
     // CWA for query pattern.
 
-    val cwaP = ClosedPropertyAssumption(q.pattern, Scope.Pattern).axioms
+    val cwaP = ClosedPropertyAssumption(q.pattern, Scope.Med).axioms
     log.debug("CWA(q.P), step 4.", cwaP)
 
     log.profileEnd("build-cwa-p")
@@ -156,7 +156,7 @@ class Algorithm(
 
     // CWA for query template.
 
-    val cwaH = ClosedPropertyAssumption(q.template, Scope.Template).axioms
+    val cwaH = ClosedPropertyAssumption(q.template, Scope.Out).axioms
     log.debug("CWA(q.H), step 5.", cwaH)
 
     log.profileEnd("build-cwa-t")
