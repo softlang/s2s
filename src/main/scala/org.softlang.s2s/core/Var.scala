@@ -2,7 +2,6 @@ package org.softlang.s2s.core
 
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Iri
-import de.pseifer.shar.core.Prefix
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.Concept
 import de.pseifer.shar.dl.NamedConcept
