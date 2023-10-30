@@ -7,6 +7,7 @@ import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 import de.pseifer.shar.dl.Role
 import de.pseifer.shar.dl.NominalConcept
+
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.Var

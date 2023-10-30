@@ -5,6 +5,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
+
 import org.softlang.s2s.core.Var
 
 case class Vocabulary(
@@ -20,12 +21,16 @@ case class Vocabulary(
       Util.formatSet(properties.map(_.show), postfix = " ∈ P and ") ++
       Util.formatSet(nominals.map(_.show), postfix = " ∈ O")
 
+  /** True, if the vocabulary contains the Variable. */
   def contains(v: Var): Boolean = variables.contains(v)
 
+  /** True, if the vocabulary contains the NamedConcept. */
   def contains(c: NamedConcept): Boolean = concepts.contains(c)
 
+  /** True, if the vocabulary contains the NamedRole. */
   def contains(p: NamedRole): Boolean = properties.contains(p)
 
+  /** Set intersection of two vocabularies (component-wise). */
   def intersect(voc: Vocabulary): Vocabulary = Vocabulary(
     variables.intersect(voc.variables),
     concepts.intersect(voc.concepts),
@@ -33,6 +38,7 @@ case class Vocabulary(
     nominals.intersect(voc.nominals)
   )
 
+  /** Set union of two vocabularies (component-wise). */
   def union(voc: Vocabulary): Vocabulary = Vocabulary(
     variables.union(voc.variables),
     concepts.union(voc.concepts),
@@ -40,6 +46,7 @@ case class Vocabulary(
     nominals.union(voc.nominals)
   )
 
+  /** Set difference of two vocabularies (component-wise). */
   def diff(voc: Vocabulary): Vocabulary = Vocabulary(
     variables.diff(voc.variables),
     concepts.diff(voc.concepts),
@@ -47,25 +54,10 @@ case class Vocabulary(
     nominals.diff(voc.nominals)
   )
 
-  /** This vocabulary contains a specific string somewhere. */
+  /** True, if this vocabulary contains a specific name (String) somewhere. */
   def contains(s: String): Boolean =
     variables.exists(v => v.v.indexOf(s) != -1) || concepts.exists(c =>
       c.c.contains(s)
     ) || properties.exists(p => p.r.contains(s)) || nominals.exists(n =>
       n.contains(s)
     )
-
-  /** Appends ' to name (Hack via Pattern.Scope) */
-  //private def triviallyRenamed: Vocabulary =
-  //  Vocabulary(
-  //    variables,
-  //    concepts.map(
-  //      _.inScope(Scope.Med)(Scopes("_triv"))
-  //        .asInstanceOf[NamedConcept]
-  //    ),
-  //    properties.map(
-  //      _.inScope(Scope.Med)(Scopes("_triv"))
-  //        .asInstanceOf[NamedRole]
-  //    ),
-  //    nominals.map(_.inScope(Scope.Med)(Scopes("_triv")))
-  //  )

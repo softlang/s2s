@@ -50,6 +50,17 @@ trait TestData:
   val y = Var("y")
   val z = Var("z")
 
+  val x1 = Var("x1")
+  val y1 = Var("y1")
+  val x2 = Var("x2")
+  val y2 = Var("y2")
+  val x3 = Var("x3")
+  val y3 = Var("y3")
+  val x4 = Var("x4")
+  val y4 = Var("y4")
+  val x5 = Var("x5")
+  val y5 = Var("y5")
+
   // (Simple)SHACLShapes
   
   val s1 = SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(D)))
@@ -184,3 +195,4 @@ trait TestData:
       AtomicPattern.VPV(y, p, z),
       AtomicPattern.VPV(z, p, x),
     ))
+
