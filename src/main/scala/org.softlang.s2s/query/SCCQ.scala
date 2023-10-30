@@ -5,6 +5,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
+
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.S2STry
@@ -94,7 +95,7 @@ extension (aps: AtomicPatterns)
       }.exists(hasCycleOne)
 
     // Finally, apply these functions.
-    !aps.map(_.variables)
+    aps.map(_.variables)
       .filter(_.size == 2)
       .permutations
       .exists(hasCycle)

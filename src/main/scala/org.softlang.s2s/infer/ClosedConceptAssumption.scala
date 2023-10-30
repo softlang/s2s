@@ -36,8 +36,10 @@ class ClosedConceptAssumptionPattern(
             Subsumption(NamedConcept(v), r.inScope(Scope.In)),
           ).union(
             if a.hasCyclicVCG then
+              Set()
+            else 
               Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
-            else Set())
+          )
         case a => Set(a)
       )
     a2
