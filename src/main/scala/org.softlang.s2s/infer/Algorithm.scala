@@ -3,6 +3,7 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.Shar
 import de.pseifer.shar.dl.Equality
 import de.pseifer.shar.dl.Subsumption
+import de.pseifer.shar.dl.Axiom
 import de.pseifer.shar.reasoning._
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
@@ -44,7 +45,9 @@ class Algorithm(
     log.profileStart("build")
 
     // Infer axioms from query and shapes.
-    val axioms = buildAxioms(preQ, pres, log)
+    val initialAxioms = buildAxioms(preQ, pres, log)
+    val extendedAxioms = extendAxioms(preQ, pres, initialAxioms, log)
+    val axioms = AxiomSet(initialAxioms.union(extendedAxioms))
 
     log.profileEnd("build")
     log.profileStart("candidates")
@@ -76,41 +79,13 @@ class Algorithm(
 
     result
 
-  /** Add input query and shapes to log. */
-  private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
-    log.info("q", q.show)
-    log.debug("Σ(q)", q.vocabulary.show)
-    log.info("S_in", s.map(_.show).toList)
-
   /** Perform the KB construction set of the algorithm. */
-  private def buildAxioms(
+  def buildAxioms(
       q: SCCQ,
       s: Set[SHACLShape],
       log: Log
-  ): AxiomSet =
+  ): Set[Axiom] =
 
-    log.profileStart("build-mapping")
-
-    // Axioms from mapping method.
-
-    val mappingSubs = SubsumptionsFromMappings(
-      q.pattern,
-      s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
-    ).axioms
-    log.debug("MA(S_in, q.P)", mappingSubs)
-
-    log.profileEnd("build-mapping")
-    log.profileStart("build-properties")
-
-    // Add property subsumptions within query, and between query and shapes.
-
-    val props = PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
-    log.debug("RS(q)", props)
-
-    val shapeProps = ShapePropertySubsumption(q.pattern).axioms
-    log.debug("RS(q, S_in)", shapeProps)
-
-    log.profileEnd("build-properties")
     log.profileStart("build-dca-p")
 
     // DCA for query pattern.
@@ -168,21 +143,59 @@ class Algorithm(
     log.debug("UNA(q)", una)
 
     log.profileEnd("build-una")
-    log.profileStart("build-top")
+
+    // Property subsumption.
+
+    val shapeProps = ShapePropertySubsumption(q.pattern).axioms
+    log.debug("RS(q, S_in)", shapeProps)
+
+    log.profileEnd("build-properties")
 
     // Return the complete set of axioms.
 
-    AxiomSet(
-      s.map(_.axiom)
-        .union(mappingSubs)
-        .union(props)
-        .union(shapeProps)
-        .union(dcaP)
-        .union(dcaH)
-        .union(cwaP)
-        .union(cwaH)
-        .union(una)
-    )
+    s.map(_.axiom)
+      .union(shapeProps)
+      .union(dcaP)
+      .union(dcaH)
+      .union(cwaP)
+      .union(cwaH)
+      .union(una)
+
+  /** Perform the KB construction extension step of the algorithm. */
+  def extendAxioms(
+      q: SCCQ,
+      s: Set[SHACLShape],
+      ax: Set[Axiom],
+      log: Log
+    ): Set[Axiom] =
+
+    log.profileStart("build-mapping")
+
+    // Axioms from mapping method.
+
+    val mappingSubs = SubsumptionsFromMappings(
+      q.pattern,
+      s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+    ).axioms
+    log.debug("MA(S_in, q.P)", mappingSubs)
+
+    log.profileEnd("build-mapping")
+    log.profileStart("build-properties")
+
+    // Add property subsumptions within query, and between query and shapes.
+
+    val props = PropertySubsumption(q.pattern, mappingSubs, q.template).axioms
+    log.debug("RS(q)", props)
+
+    // Return the extended set of axioms.
+
+    mappingSubs.union(props)
+
+  /** Add input query and shapes to log. */
+  private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
+    log.info("q", q.show)
+    log.debug("Σ(q)", q.vocabulary.show)
+    log.info("S_in", s.map(_.show).toList)
 
   /** Perform the filtering step of the algorithm. */
   private def filter(

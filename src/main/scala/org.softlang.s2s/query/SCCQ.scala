@@ -103,9 +103,9 @@ extension (aps: AtomicPatterns)
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
   */
-case class SCCQ(
-    template: List[AtomicPattern],
-    pattern: List[AtomicPattern]
+class SCCQ(
+    val template: List[AtomicPattern],
+    val pattern: List[AtomicPattern]
 ) extends Showable:
 
   def show(implicit state: BackendState): String =

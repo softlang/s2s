@@ -50,6 +50,11 @@ trait TestData:
   val y = Var("y")
   val z = Var("z")
 
+  val wq = Var("w•-1")
+  val xq = Var("x•-1")
+  val yq = Var("y•-1")
+  val zq = Var("z•-1")
+
   val x1 = Var("x1")
   val y1 = Var("y1")
   val x2 = Var("x2")
@@ -61,10 +66,26 @@ trait TestData:
   val x5 = Var("x5")
   val y5 = Var("y5")
 
+  val x1q = Var("x1•-1")
+  val y1q = Var("y1•-1")
+  val x2q = Var("x2•-1")
+  val y2q = Var("y2•-1")
+  val x3q = Var("x3•-1")
+  val y3q = Var("y3•-1")
+  val x4q = Var("x4•-1")
+  val y4q = Var("y4•-1")
+  val x5q = Var("x5•-1")
+  val y5q = Var("y5•-1")
+
   // (Simple)SHACLShapes
   
   val s1 = SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(D)))
   val s2 = SHACLShape(Subsumption(NamedConcept(C), Union(NamedConcept(A), NamedConcept(B))))
+  val s3 = SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(NamedRole(p), NamedConcept(C))))
+  val s4 = SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(Inverse(NamedRole(p)), NamedConcept(C))))
+  val s5 = SimpleSHACLShape(Subsumption(NamedConcept(D), Existential(NamedRole(p), NamedConcept(C))))
+
+  val Sall = Set(s1, s3, s4, s5)
 
   // Queries (empty)
 
