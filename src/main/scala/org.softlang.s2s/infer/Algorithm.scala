@@ -22,7 +22,7 @@ class Algorithm(
     val config: Configuration,
     val shar: Shar,
     query: SCCQ,
-    shapes: Set[SHACLShape],
+    inConstraints: Either[Set[SimpleSHACLShape], Set[Axiom]],
     log: Log
 )(implicit val scopes: Scopes):
 
@@ -33,20 +33,22 @@ class Algorithm(
 
     log.profileStart("algorithm")
 
+    // NOTE: Perhaps this should be 
+
     // Pre-process query and shapes, by setting scopes.
     val preQ = SCCQ(
       query.template.inScope(Scope.Out),
       query.pattern.inScope(Scope.Med)
     )
-    val pres = shapes.map(_.inScope(Scope.In))
 
     // Log input.
-    logInput(preQ, pres, log)
+    if inConstraints.isLeft then 
+      logInput(preQ, inConstraints.left.get.map(_.asInstanceOf[SHACLShape]), log)
     log.profileStart("build")
 
     // Infer axioms from query and shapes.
-    val initialAxioms = buildAxioms(preQ, pres, log)
-    val extendedAxioms = extendAxioms(preQ, pres, initialAxioms, log)
+    val initialAxioms = buildAxioms(preQ, inConstraints, log)
+    val extendedAxioms = extendAxioms(preQ, inConstraints, initialAxioms, log)
     val axioms = AxiomSet(initialAxioms.union(extendedAxioms))
 
     log.profileEnd("build")
@@ -82,7 +84,7 @@ class Algorithm(
   /** Perform the KB construction set of the algorithm. */
   def buildAxioms(
       q: SCCQ,
-      s: Set[SHACLShape],
+      s: Either[Set[SimpleSHACLShape], Set[Axiom]],
       log: Log
   ): Set[Axiom] =
 
@@ -153,7 +155,9 @@ class Algorithm(
 
     // Return the complete set of axioms.
 
-    s.map(_.axiom)
+    (s match
+      case Left(shapes) => shapes.map(_.axiom)
+      case Right(axioms) => axioms)
       .union(shapeProps)
       .union(dcaP)
       .union(dcaH)
@@ -164,7 +168,7 @@ class Algorithm(
   /** Perform the KB construction extension step of the algorithm. */
   def extendAxioms(
       q: SCCQ,
-      s: Set[SHACLShape],
+      s: Either[Set[SimpleSHACLShape], Set[Axiom]],
       ax: Set[Axiom],
       log: Log
     ): Set[Axiom] =
@@ -173,41 +177,37 @@ class Algorithm(
 
     // Axioms from mapping method.
     
-    // Make shapes from candidates over (input scope) vocabulary of query.
-    val canGen = CandidateGenerator(
-      q.pattern.vocabulary,
-      heuristic = ShapeHeuristic(
-        optimize = false,
-        proxyFamily = true,
-        simpleShapes = true)
-    )(scopes)
-    var result: S2STry[Set[SHACLShape]] = Right(Set())
-    var all: Set[SHACLShape] = Set()
-    var current = canGen.getNext().map(_.inScope(Scope.In))
+    // Shapes: Either given Simple SHACL shapes,
+    // or generate from prior 'ax'.
+    val shapes = s match
+      case Left(si) => si
+      case Right(_) => // Generate from 'ax'.
+        // Make shapes from candidates over (input scope) vocabulary of query.
+        val canGen = CandidateGenerator(
+          q.pattern.vocabulary,
+          heuristic = ShapeHeuristic(
+            optimize = false,
+            proxyFamily = true,
+            simpleShapes = true)
+        )(scopes)
+        var result: S2STry[Set[SHACLShape]] = Right(Set())
+        var all: Set[SHACLShape] = Set()
+        var current = canGen.getNext().map(_.inScope(Scope.In))
 
-    while current.nonEmpty do
-      val previous =
-        filter(current, AxiomSet(ax), Log(), config.retry, config.timeout.millis)
-      result = for
-        p <- previous
-        r <- result
-      yield r.union(p)
-      all = all.union(current)
-      current = canGen.getNext(previous)
-
-    //println("\n\n")
-    //println("-------------------------------------------")
-    //result.toOption.get.map(_.show).foreach(println)
-    //println("===")
-    //s.map(_.show).foreach(println)
-
-    log.debug("ShApEs ", all.map(_.show).mkString(","))
-    log.debug("ShApEs ", result.toOption.get.map(_.show).mkString(","))
+        while current.nonEmpty do
+          val previous =
+            filter(current, AxiomSet(ax), Log(), config.retry, config.timeout.millis)
+          result = for
+            p <- previous
+            r <- result
+          yield r.union(p)
+          all = all.union(current)
+          current = canGen.getNext(previous)
+        result.toOption.get
 
     val mappingSubs = SubsumptionsFromMappings(
       q.pattern,
-      result.toOption.get.map(_.toSimple).filter(_.nonEmpty).map(_.get)
-      //s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+      shapes.map(_.toSimple).filter(_.nonEmpty).map(_.get)
     ).axioms
     log.debug("MA(S_in, q.P)", mappingSubs)
 

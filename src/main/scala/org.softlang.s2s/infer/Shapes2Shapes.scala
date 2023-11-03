@@ -3,6 +3,8 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Prefix
+import de.pseifer.shar.dl.Axiom
+
 import org.softlang.s2s.core._
 import org.softlang.s2s.parser.SCCQParser
 import org.softlang.s2s.parser.ShapeParser
@@ -108,8 +110,26 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     (sOut, log)
 
   /** Apply the algorithm, only. */
+  def algorithmFast(
+      q: SCCQ,
+      s: Set[SimpleSHACLShape],
+      log: Log
+  ): S2STry[Set[SHACLShape]] = Algorithm(
+    config, 
+    shar, 
+    q, 
+    Left(s.map(_.inScopeS(Scope.In))), 
+    log)(scopes)()
+
+  /** Apply the algorithm, only. */
   def algorithm(
       q: SCCQ,
       s: Set[SHACLShape],
       log: Log
-  ): S2STry[Set[SHACLShape]] = Algorithm(config, shar, q, s, log)(scopes)()
+  ): S2STry[Set[SHACLShape]] = 
+    Algorithm(
+      config, 
+      shar, 
+      q,
+      Right(s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
+      log)(scopes)()
