@@ -172,10 +172,42 @@ class Algorithm(
     log.profileStart("build-mapping")
 
     // Axioms from mapping method.
+    
+    // Make shapes from candidates over (input scope) vocabulary of query.
+    val canGen = CandidateGenerator(
+      q.pattern.vocabulary,
+      heuristic = ShapeHeuristic(
+        optimize = false,
+        proxyFamily = true,
+        simpleShapes = true)
+    )(scopes)
+    var result: S2STry[Set[SHACLShape]] = Right(Set())
+    var all: Set[SHACLShape] = Set()
+    var current = canGen.getNext().map(_.inScope(Scope.In))
+
+    while current.nonEmpty do
+      val previous =
+        filter(current, AxiomSet(ax), Log(), config.retry, config.timeout.millis)
+      result = for
+        p <- previous
+        r <- result
+      yield r.union(p)
+      all = all.union(current)
+      current = canGen.getNext(previous)
+
+    //println("\n\n")
+    //println("-------------------------------------------")
+    //result.toOption.get.map(_.show).foreach(println)
+    //println("===")
+    //s.map(_.show).foreach(println)
+
+    log.debug("ShApEs ", all.map(_.show).mkString(","))
+    log.debug("ShApEs ", result.toOption.get.map(_.show).mkString(","))
 
     val mappingSubs = SubsumptionsFromMappings(
       q.pattern,
-      s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+      result.toOption.get.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+      //s.map(_.toSimple).filter(_.nonEmpty).map(_.get)
     ).axioms
     log.debug("MA(S_in, q.P)", mappingSubs)
 

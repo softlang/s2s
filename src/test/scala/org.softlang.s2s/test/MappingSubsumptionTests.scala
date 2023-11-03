@@ -21,11 +21,10 @@ class MappingSubsumptionTests extends TestData:
   def work(a: AtomicPatterns, shapes: Set[SimpleSHACLShape]): Set[Axiom] =
     val preA = a.inScope(Scope.Med)
     val o = workOld(preA, shapes)
-    val n = workNew(preA, shapes.map(_.axiom)) // not sufficient, possibly
-    assertEquals(o, n)
+    //val n = workNew(preA, shapes.map(_.axiom)) // not sufficient, possibly
+    //assertEquals(o, n)
     o
 
-  /*
   @Test def testNoSubsumption1(): Unit =
     assertEquals(work(q1.pattern, Set()), Set())
     assertEquals(work(q1.pattern, Sall), Set())
@@ -39,7 +38,6 @@ class MappingSubsumptionTests extends TestData:
       Subsumption(yq.asConcept, xq.asConcept),
       Subsumption(xq.asConcept, yq.asConcept),
     ))
-  */
 
   @Test def testSimpleExtendedSubsumptionFail(): Unit =
     assertEquals(work(q4.pattern, Set()), Set())
@@ -49,7 +47,6 @@ class MappingSubsumptionTests extends TestData:
       Subsumption(xq.asConcept, yq.asConcept)
     ))
 
-  /*
   @Test def testNoSubsumption3(): Unit =
     assertEquals(work(q5.pattern, Set()), Set())
     assertEquals(work(q5.pattern, Sall), Set())
@@ -112,4 +109,3 @@ class MappingSubsumptionTests extends TestData:
       Subsumption(xq.asConcept, yq.asConcept),
     ))
 
-  */

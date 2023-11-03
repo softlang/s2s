@@ -16,13 +16,42 @@ class MappingSubsumption(
 )(implicit scopes: Scopes)
     extends Inference:
 
+  private def thealgorithm(p1: (Set[Var], Set[AtomicPattern]), p2: (Set[Var], Set[AtomicPattern])): Unit = 
+    if debug then 
+      println("\nCase:")
+      println("  Left: " + p1._1.mkString(", "))
+      println("" + p1._2.mkString("\n"))
+      println("  Right: " + p2._1.mkString(", "))
+      println("" + p2._2.mkString("\n"))
+
+    // Get the sets of variables as lists (fixed, arbitrary order).
+    val v1 = p1._1.toList
+    val v2 = p2._1.toList
+
+    // generate possible mappings
+    //   substitution for variables in p2 by (subset of) variables in p1
+    // substitute (mappedWith) (subsumedBy)
+    //   substitue variables in p2 by mapping
+    // find diff
+    //   ?
+    // generate axioms (from diff)
+    // prove axioms
+    // if true: get (result) axioms from mapping
+
   def axioms: Set[Axiom] =
 
     // (1) Detect all components.
     val comps = a.components
 
-    if debug then kb.foreach(println)
-    if debug then comps.foreach(println)
+    if debug then 
+      println("\nKnowledge Base:")
+      kb.foreach{ a =>
+        println("  " + a.toString)
+      }
+      println("\nComponents:")
+      comps.foreach{ c =>
+        println("  " + c.toString)
+      }
 
     // - Iterate all actual variable mappings
     // - Extend with fresh variables
@@ -48,6 +77,23 @@ class MappingSubsumption(
     //  pExt <- extended
     //yield componentMap(p1, pExt)).flatten.toSet
     
+    // Brute-force approach for each combination:
+
+    // - For each possible mapping
+    //   - generate substituted pattern
+    //   - find the 'diff' required for subsumption (set minus)
+    //   - make constraint from this 'diff' (for variables)
+    //   - for all 'targets' in original pattern (for variables)
+    //     - test if target subsumed by constraint
+    
+    // Find combinations of components.
+    for
+      p1 <- comps
+      p2 <- comps
+    yield
+      thealgorithm(p1, p2)
+
     if debug then println("\n")
 
     Set()
+
