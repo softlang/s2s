@@ -5,7 +5,7 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 import org.softlang.s2s.query._
 import org.softlang.s2s.core._
-import scala.util.control.NonLocalReturns.*
+import scala.util.boundary
 
 import scala.collection.mutable.{Set => Mset}
 import de.pseifer.shar.core.Iri

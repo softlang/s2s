@@ -57,11 +57,11 @@ class ClosedPropertyAssumptionTests extends munit.FunSuite with TestData:
   test("query3H") {
     val t = workH(q3)
     assertEquals(t.size, 0)
+  }
     
   test("query4P") {
     val t = workP(q4)
     assertEquals(t.size, 0)
-  }
   }
 
   test("query4H") {

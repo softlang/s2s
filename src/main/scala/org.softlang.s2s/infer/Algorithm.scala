@@ -43,7 +43,7 @@ class Algorithm(
 
     // Log input.
     if inConstraints.isLeft then 
-      logInput(preQ, inConstraints.left.get.map(_.asInstanceOf[SHACLShape]), log)
+      logInput(preQ, inConstraints.swap.toOption.get.map(_.asInstanceOf[SHACLShape]), log)
     log.profileStart("build")
 
     // Infer axioms from query and shapes.
@@ -141,7 +141,7 @@ class Algorithm(
 
     // UNA for query template & pattern.
 
-    val una = UniqueNameAssumption(q.template.union(q.pattern)).axioms
+    val una = UniqueNameAssumption(q.template.concat(q.pattern)).axioms
     log.debug("UNA(q)", una)
 
     log.profileEnd("build-una")
@@ -203,7 +203,7 @@ class Algorithm(
           yield r.union(p)
           all = all.union(current)
           current = canGen.getNext(previous)
-        result.toOption.get
+        result.toOption.get // TODO: Fix me. This is not safe (might be empty).
 
     val mappingSubs = SubsumptionsFromMappings(
       q.pattern,
@@ -282,7 +282,7 @@ class Algorithm(
 
     t.start()
     t.join(timeout.toMillis)
-    t.stop()
+    //t.stop()
 
     if result.isDefined then log.info("S_out", result.get.map(_.show))
     result.map((log, _))

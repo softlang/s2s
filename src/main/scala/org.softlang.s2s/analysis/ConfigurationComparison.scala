@@ -21,6 +21,8 @@ class ConfigurationComparison(
     title2: String = ""
 ):
 
+  import scala.language.implicitConversions
+
   // Test S2S Instances.
   private val s1 = Shapes2Shapes(c1)
   private val s2 = Shapes2Shapes(c2)

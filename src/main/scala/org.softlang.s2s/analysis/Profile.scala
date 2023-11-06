@@ -29,7 +29,7 @@ extension (profile: Profile)
 
     val p = (qs.q, qs.qS, qs.sin, qs.sinS)
 
-    if result.isLeft then FailedAnalysis(p, result.left.get, trialID)
+    if result.isLeft then FailedAnalysis(p, result.swap.toOption.get, trialID)
     else
       val tStart = profile.find(_.isStart("algorithm")).get.time
       val tend = profile.find(_.isEnd("algorithm")).get.time
@@ -57,7 +57,7 @@ extension (profile: Profile)
         patternSize = p._1.pattern.size,
         templateSize = p._1.template.size,
         numberOfShapes = p._3.size,
-        result = result.right.get,
+        result = result.toOption.get,
         candidates = candidates.size,
         total = total,
         filtering = filter,

@@ -26,7 +26,7 @@ class ShapeGenerator(
   /** Generate all target queries (Concepts). */
   private def generateTargets: Set[Concept] =
     voc.concepts.toList
-      .union(voc.properties.toList.flatMap { p =>
+      .concat(voc.properties.toList.flatMap { p =>
         Set(Existential(p, Top), Existential(Inverse(p), Top))
       })
       .toSet
@@ -51,7 +51,7 @@ class ShapeGenerator(
     // Concepts and negated concepts.
     val cwn =
       voc.concepts.toList
-        .union(voc.concepts.toList.map(Complement(_)))
+        .concat(voc.concepts.toList.map(Complement(_)))
         .toSet
 
     // Closed existential (i.e., ∃r.T).
@@ -82,7 +82,7 @@ class ShapeGenerator(
   /** Generate exactly simple SHACL constraints. */
   private def generateConstraintsSimple: Set[Concept] =
     voc.concepts.toList
-      .union(
+      .concat(
         voc.properties.toList.flatMap { p =>
           val temp = voc.concepts.flatMap { c =>
             Set(
