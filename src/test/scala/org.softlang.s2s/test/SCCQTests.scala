@@ -1,70 +1,77 @@
 package org.softlang.s2s.test
 
-import org.junit.Assert.*
-import org.junit.Test
-
 import de.pseifer.shar.dl._
 
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.query._
 
-class SCCQTests extends TestData:
+class SCCQTests extends munit.FunSuite with TestData:
 
   // Properties, concepts and variables.
 
-  @Test def testProperties1(): Unit =
+  test("Properties (empty)") {
     assertEquals(q1.properties, Set())
+  }
 
-  @Test def testProperties2(): Unit =
+  test("Properties (non-empty)") {
     assertEquals(q5.properties, Set(NamedRole(p)))
+  }
   
-  @Test def testConcepts1(): Unit =
+  test("Concepts (non-empty)") {
     assertEquals(q1.concepts, Set(NamedConcept(C)))
+  }
 
-  @Test def testConcepts2(): Unit =
+  test("Concepts (empty)") {
     assertEquals(q5.concepts, Set())
+  }
 
-  @Test def testVariable1(): Unit =
+  test("Variables (single)") {
     assertEquals(q1.variables, Set(Var("x")))
     assertEquals(q1.pattern.head.variables, Set(x))
+  }
 
-  @Test def testVariable2(): Unit =
+  test("Variables (multiple)") {
     assertEquals(q5.variables, Set(Var("x"), Var("y")))
     assertEquals(q5.variables, Set(x, y))
+  }
 
   // Cycles
 
-  @Test def testCyclic1(): Unit =
-    assertFalse(q1.pattern.hasCyclicVCG)
-    assertFalse(q2.pattern.hasCyclicVCG)
-    assertFalse(q3.pattern.hasCyclicVCG)
-    assertFalse(q4.pattern.hasCyclicVCG)
-    assertFalse(q5.pattern.hasCyclicVCG)
-    assertFalse(q6.pattern.hasCyclicVCG)
-    assertFalse(q7.pattern.hasCyclicVCG)
-    assertFalse(q8.pattern.hasCyclicVCG)
-    assertFalse(q9.pattern.hasCyclicVCG)
-    assertFalse(q10.pattern.hasCyclicVCG)
-    assertFalse(q11.pattern.hasCyclicVCG)
+  test("Cyclic 1") {
+    assert(!q1.pattern.hasCyclicVCG)
+    assert(!q2.pattern.hasCyclicVCG)
+    assert(!q3.pattern.hasCyclicVCG)
+    assert(!q4.pattern.hasCyclicVCG)
+    assert(!q5.pattern.hasCyclicVCG)
+    assert(!q6.pattern.hasCyclicVCG)
+    assert(!q7.pattern.hasCyclicVCG)
+    assert(!q8.pattern.hasCyclicVCG)
+    assert(!q9.pattern.hasCyclicVCG)
+    assert(!q10.pattern.hasCyclicVCG)
+    assert(!q11.pattern.hasCyclicVCG)
+  }
 
-  @Test def testCyclic2(): Unit =
-    assertFalse(q1.template.hasCyclicVCG)
-    assertFalse(q2.template.hasCyclicVCG)
-    assertFalse(q3.template.hasCyclicVCG)
-    assertFalse(q4.template.hasCyclicVCG)
-    assertFalse(q5.template.hasCyclicVCG)
-    assertFalse(q6.template.hasCyclicVCG)
-    assertFalse(q7.template.hasCyclicVCG)
-    assertFalse(q8.template.hasCyclicVCG)
-    assertFalse(q9.template.hasCyclicVCG)
-    assertFalse(q10.template.hasCyclicVCG)
-    assertFalse(q11.template.hasCyclicVCG)
+  test("Cyclic 2") {
+    assert(!q1.template.hasCyclicVCG)
+    assert(!q2.template.hasCyclicVCG)
+    assert(!q3.template.hasCyclicVCG)
+    assert(!q4.template.hasCyclicVCG)
+    assert(!q5.template.hasCyclicVCG)
+    assert(!q6.template.hasCyclicVCG)
+    assert(!q7.template.hasCyclicVCG)
+    assert(!q8.template.hasCyclicVCG)
+    assert(!q9.template.hasCyclicVCG)
+    assert(!q10.template.hasCyclicVCG)
+    assert(!q11.template.hasCyclicVCG)
+  }
 
-  @Test def testCyclic3(): Unit =
-    assertTrue(q12.pattern.hasCyclicVCG)
+  test("Cyclic 3") {
+    assert(q12.pattern.hasCyclicVCG)
+  }
 
-  @Test def testCyclic4(): Unit =
-    assertTrue(q12.template.hasCyclicVCG)
+  test("Cyclic 4") {
+    assert(q12.template.hasCyclicVCG)
+  }
 
   val q13 = SCCQ(
     List(
@@ -80,11 +87,13 @@ class SCCQTests extends TestData:
       AtomicPattern.VPV(z, p, y),
     ))
 
-  @Test def testCyclic5(): Unit =
-    assertTrue(q13.pattern.hasCyclicVCG)
+  test("Cyclic 5") {
+    assert(q13.pattern.hasCyclicVCG)
+  }
 
-  @Test def testCyclic6(): Unit =
-    assertTrue(q13.template.hasCyclicVCG)
+  test("Cyclic 6") {
+    assert(q13.template.hasCyclicVCG)
+  }
 
   val q14 = SCCQ(
     List(
@@ -100,15 +109,17 @@ class SCCQTests extends TestData:
       AtomicPattern.VPV(z, p, y),
     ))
 
-  @Test def testCyclic7(): Unit =
-    assertTrue(q14.pattern.hasCyclicVCG)
+  test("Cyclic 7") {
+    assert(q14.pattern.hasCyclicVCG)
+  }
 
-  @Test def testCyclic8(): Unit =
-    assertTrue(q14.template.hasCyclicVCG)
+  test("Cyclic 8") {
+    assert(q14.template.hasCyclicVCG)
+  }
 
   // Components
   
-  @Test def testComponents1(): Unit =
+  test("Components 1") {
     assertEquals(q1.pattern.components.size, 1)
     assertEquals(q2.pattern.components.size, 1)
     assertEquals(q5.pattern.components.size, 1)
@@ -123,10 +134,12 @@ class SCCQTests extends TestData:
     assertEquals(q14.pattern.components.size, 1)
     assertEquals(q13.template.components.size, 1)
     assertEquals(q14.template.components.size, 1)
+  }
 
-  @Test def testComponents2(): Unit =
+  test("Components 2") {
     assertEquals(q3.pattern.components.size, 2)
     assertEquals(q4.pattern.components.size, 2)
+  }
 
   val q15 = SCCQ(
     List(
@@ -140,9 +153,10 @@ class SCCQTests extends TestData:
       AtomicPattern.VAC(x3, C)
     ))
 
-  @Test def testComponents3(): Unit =
+  test("Components 3") {
     assertEquals(q15.pattern.components.size, 3)
     assertEquals(q15.template.components.size, 3)
+  }
 
   val q16 = SCCQ(
     List(
@@ -156,6 +170,8 @@ class SCCQTests extends TestData:
       AtomicPattern.VAC(x3, C)
     ))
 
-  @Test def testComponents4(): Unit =
+  test("Components 4") {
     assertEquals(q16.pattern.components.size, 3)
     assertEquals(q16.template.components.size, 3)
+  }
+

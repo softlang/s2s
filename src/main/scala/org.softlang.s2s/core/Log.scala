@@ -162,6 +162,14 @@ class Log(
       prettyVariableConcepts: Boolean = true,
       prettyScopes: Boolean = true
   ): Unit =
+    println(format(hidecolon, prettyVariableConcepts, prettyScopes))
+
+  /** Format this log and return String. */
+  def format(
+      hidecolon: Boolean = false,
+      prettyVariableConcepts: Boolean = true,
+      prettyScopes: Boolean = true
+  ): String =
     val t1 =
       if prettyVariableConcepts then LOG.replaceAll("shar", "?")
       else LOG
@@ -174,7 +182,7 @@ class Log(
       if prettyScopes then scopes.prettyScopeTokens(t2)
       else t2
 
-    println(t3)
+    t3
 
   /** Get log as a string. */
   override def toString: String = LOG

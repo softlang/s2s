@@ -1,21 +1,11 @@
 package org.softlang.s2s.test
 
-import org.junit.Assert.*
-import org.junit.rules.TestName
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestName
-
 import de.pseifer.shar.dl._
 import org.softlang.s2s.infer._
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.core.Scope
 
-class ClosedPropertyAssumptionTests extends TestData:
-
-  @Rule
-  def name = _name
-  val _name = TestName()
+class ClosedPropertyAssumptionTests extends munit.FunSuite with TestData:
 
   // The function under test here.
   
@@ -27,401 +17,425 @@ class ClosedPropertyAssumptionTests extends TestData:
 
   //  Empty
 
-  @Test def query0P(): Unit =
+  test("query0P") {
     val t = workP(q0)
-    assertTrue(t.isEmpty)
+    assert(t.isEmpty)
+  }
 
-  @Test def query0H(): Unit =
+  test("query0H") {
     val t = workH(q0)
-    assertTrue(t.isEmpty)
+    assert(t.isEmpty)
+  }
 
   // Concepts only
 
-  @Test def query1P(): Unit =
+  test("query1P") {
     val t = workP(q1)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query1H(): Unit =
+  test("query1H") {
     val t = workH(q1)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query2P(): Unit =
+  test("query2P") {
     val t = workP(q2)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query2H(): Unit =
+  test("query2H") {
     val t = workH(q2)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query3P(): Unit =
+  test("query3P") {
     val t = workP(q3)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query3H(): Unit =
+  test("query3H") {
     val t = workH(q3)
     assertEquals(t.size, 0)
     
-  @Test def query4P(): Unit =
+  test("query4P") {
     val t = workP(q4)
     assertEquals(t.size, 0)
+  }
+  }
 
-  @Test def query4H(): Unit =
+  test("query4H") {
     val t = workH(q4)
     assertEquals(t.size, 0)
+  }
 
   // Properties only
 
-  @Test def query5P(): Unit =
+  test("query5P") {
     val t = workP(q5)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query5H(): Unit =
+  test("query5H") {
     val t = workH(q5)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query6P(): Unit =
+  test("query6P") {
     val t = workP(q6)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(rm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(rm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(rm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(rm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(rm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(rm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 8)
+  }
 
-  @Test def query6H(): Unit =
+  test("query6H") {
     val t = workH(q6)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(ro), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(ro), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(ro)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(ro)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(ro), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(ro)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 8)
+  }
 
-  @Test def query7P(): Unit =
+  test("query7P") {
     val t = workP(q7)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(rm), Top),
       Intersection(
         y.asConcept, 
         Existential(NamedRole(rm), z.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(rm)), Top),
       Intersection(
         z.asConcept, 
         Existential(Inverse(NamedRole(rm)), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(rm), z.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(rm)), y.asConcept),
       z.asConcept)))
     assertEquals(t.size, 8)
+  }
 
-  @Test def query7H(): Unit =
+  test("query7H") {
     val t = workH(q7)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(ro), Top),
       Intersection(
         y.asConcept, 
         Existential(NamedRole(ro), z.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(ro)), Top),
       Intersection(
         z.asConcept, 
         Existential(Inverse(NamedRole(ro)), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(ro), z.asConcept),
       y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(ro)), y.asConcept),
       z.asConcept)))
     assertEquals(t.size, 8)
+  }
 
   // General
   
-  @Test def query8P(): Unit =
+  test("query8P") {
     val t = workP(q8)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query8H(): Unit =
+  test("query8H") {
     val t = workH(q8)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query9P(): Unit =
+  test("query9P") {
     val t = workP(q9)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query9H(): Unit =
+  test("query9H") {
     val t = workH(q9)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query10P(): Unit =
+  test("query10P") {
     val t = workP(q10)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query10H(): Unit =
+  test("query10H") {
     val t = workH(q10)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query11P(): Unit =
+  test("query11P") {
     val t = workP(q11)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(pm), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(pm)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
+  }
 
-  @Test def query11H(): Unit =
+  test("query11H") {
     val t = workH(q11)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Intersection(
         x.asConcept, 
         Existential(NamedRole(po), y.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Intersection(
         y.asConcept, 
         Existential(Inverse(NamedRole(po)), x.asConcept)))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept),
       x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept),
       y.asConcept)))
     assertEquals(t.size, 4)
     
   // Queries (cyclic)
+  }
 
-  @Test def query12P(): Unit =
+  test("query12P") {
     val t = workP(q12)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), Top),
       Union(
         Union(
@@ -434,7 +448,7 @@ class ClosedPropertyAssumptionTests extends TestData:
           Intersection(
             z.asConcept,
             Existential(NamedRole(pm), x.asConcept))))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), Top),
       Union(
         Union(
@@ -447,23 +461,24 @@ class ClosedPropertyAssumptionTests extends TestData:
           Intersection(
             x.asConcept,
             Existential(Inverse(NamedRole(pm)), z.asConcept))))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), x.asConcept), z.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), y.asConcept), x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(pm), z.asConcept), y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), x.asConcept), y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), y.asConcept), z.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(pm)), z.asConcept), x.asConcept)))
     assertEquals(t.size, 8)
+  }
 
-  @Test def query12H(): Unit =
+  test("query12H") {
     val t = workH(q12)
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), Top),
       Union(
         Union(
@@ -476,7 +491,7 @@ class ClosedPropertyAssumptionTests extends TestData:
           Intersection(
             z.asConcept,
             Existential(NamedRole(po), x.asConcept))))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), Top),
       Union(
         Union(
@@ -489,16 +504,18 @@ class ClosedPropertyAssumptionTests extends TestData:
           Intersection(
             x.asConcept,
             Existential(Inverse(NamedRole(po)), z.asConcept))))))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), x.asConcept), z.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), y.asConcept), x.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(NamedRole(po), z.asConcept), y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), x.asConcept), y.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), y.asConcept), z.asConcept)))
-    assertTrue(t.contains(Equality(
+    assert(t.contains(Equality(
       Existential(Inverse(NamedRole(po)), z.asConcept), x.asConcept)))
     assertEquals(t.size, 8)
+  }
+

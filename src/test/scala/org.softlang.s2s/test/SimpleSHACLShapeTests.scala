@@ -1,58 +1,70 @@
 package org.softlang.s2s.test
 
-import org.junit.Assert.*
-import org.junit.Test
-
 import de.pseifer.shar.dl._
 
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.core.SimpleSHACLShape
 
-class SimpleSHACLShapeTests extends TestData:
+class SimpleSHACLShapeTests extends munit.FunSuite with TestData:
 
-  @Test def testIsConceptShape1(): Unit =
-    assertTrue(SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isConceptShape)
+  test("isConceptShape 1") {
+    assert(SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isConceptShape)
+  }
 
-  @Test def testIsConceptShape2(): Unit =
-    assertFalse(SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(NamedRole(p), NamedConcept(C)))).isConceptShape)
+  test("isConceptShape 2") {
+    assert(!SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(NamedRole(p), NamedConcept(C)))).isConceptShape)
+  }
 
-  @Test def testIsExistsShape1(): Unit =
-    assertFalse(SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isExistsShape)
+  test("isExistsShape 1") {
+    assert(!SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isExistsShape)
+  }
 
-  @Test def testIsExistsShape2(): Unit =
-    assertTrue(SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(NamedRole(p), NamedConcept(C)))).isExistsShape)
+  test("isExistsShape 2") {
+    assert(SimpleSHACLShape(Subsumption(NamedConcept(C), Existential(NamedRole(p), NamedConcept(C)))).isExistsShape)
+  }
 
-  @Test def testIsForallShape1(): Unit =
-    assertFalse(SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isForallShape)
+  test("isForallShape 1") {
+    assert(!SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).isForallShape)
+  }
 
-  @Test def testIsForallShape2(): Unit =
-    assertTrue(SimpleSHACLShape(Subsumption(NamedConcept(C), Universal(NamedRole(p), NamedConcept(C)))).isForallShape)
+  test("isForallShape 2") {
+    assert(SimpleSHACLShape(Subsumption(NamedConcept(C), Universal(NamedRole(p), NamedConcept(C)))).isForallShape)
+  }
 
-  @Test def testhasExistentialTarget1(): Unit =
-    assertFalse(SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).hasExistentialTarget)
+  test("hasExistentialTarget 1") {
+    assert(!SimpleSHACLShape(Subsumption(NamedConcept(C), NamedConcept(C))).hasExistentialTarget)
+  }
 
-  @Test def testhasExistentialTarget2(): Unit =
-    assertTrue(SimpleSHACLShape(Subsumption(Existential(NamedRole(p), NamedConcept(C)), NamedConcept(D))).hasExistentialTarget)
+  test("hasExistentialTarget 2") {
+    assert(SimpleSHACLShape(Subsumption(Existential(NamedRole(p), NamedConcept(C)), NamedConcept(D))).hasExistentialTarget)
+  }
   
-  @Test def testValidConstraint1(): Unit =
-    assertTrue(SimpleSHACLShape.validConstraint(Existential(NamedRole(p), NamedConcept(C))))
+  test("validConstraint 1") {
+    assert(SimpleSHACLShape.validConstraint(Existential(NamedRole(p), NamedConcept(C))))
+  }
 
-  @Test def testValidConstraint2(): Unit =
-    assertTrue(SimpleSHACLShape.validConstraint(Existential(Inverse(NamedRole(p)), NamedConcept(C))))
+  test("validConstraint 2") {
+    assert(SimpleSHACLShape.validConstraint(Existential(Inverse(NamedRole(p)), NamedConcept(C))))
+  }
 
-  @Test def testValidConstraint3(): Unit =
-    assertTrue(SimpleSHACLShape.validConstraint(NamedConcept(C)))
+  test("validConstraint 3") {
+    assert(SimpleSHACLShape.validConstraint(NamedConcept(C)))
+  }
 
-  @Test def testValidConstraint4(): Unit =
-    assertFalse(SimpleSHACLShape.validConstraint(Union(NamedConcept(C), NamedConcept(D))))
+  test("validConstraint 4") {
+    assert(!SimpleSHACLShape.validConstraint(Union(NamedConcept(C), NamedConcept(D))))
+  }
 
-  @Test def testValidConstraint5(): Unit =
-    assertFalse(SimpleSHACLShape.validConstraint(Intersection(NamedConcept(C), NamedConcept(D))))
+  test("validConstraint 5") {
+    assert(!SimpleSHACLShape.validConstraint(Intersection(NamedConcept(C), NamedConcept(D))))
+  }
 
-  @Test def testValidConstraint6(): Unit =
-    assertFalse(SimpleSHACLShape.validConstraint(Existential(Inverse(NamedRole(p)), Top)))
+  test("validConstraint 6") {
+    assert(!SimpleSHACLShape.validConstraint(Existential(Inverse(NamedRole(p)), Top)))
+  }
 
-  @Test def testValidConstraint7(): Unit =
-    assertFalse(SimpleSHACLShape.validConstraint(Existential(NamedRole(p), Bottom)))
+  test("validConstraint 7") {
+    assert(!SimpleSHACLShape.validConstraint(Existential(NamedRole(p), Bottom)))
+  }
 

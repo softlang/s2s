@@ -1,22 +1,22 @@
 package org.softlang.s2s.test
 
-import org.junit.Assert.*
-import org.junit.Test
-
 import org.softlang.s2s.core.Var
 
-class VarTests extends TestData:
+class VarTests extends munit.FunSuite with TestData:
   
-  @Test def testFreshVariable1(): Unit =
-    assertTrue(Var.fresh().isFresh)
-    assertTrue(Var.fresh().isFresh)
+  test("testFreshVariable1") {
+    assert(Var.fresh().isFresh)
+    assert(Var.fresh().isFresh)
+  }
 
-  @Test def testFreshVariable2(): Unit =
-    assertFalse(w.isFresh)
-    assertFalse(x.isFresh)
-    assertFalse(y.isFresh)
-    assertFalse(z.isFresh)
+  test("testFreshVariable2") {
+    assert(!w.isFresh)
+    assert(!x.isFresh)
+    assert(!y.isFresh)
+    assert(!z.isFresh)
+  }
 
-  @Test def testAsConcept1(): Unit =
+  test("testAsConcept1") {
     val xStr = "<https://github.com/pseifer/shar/ontology/x•-1>"
     assertEquals(x.asConcept.toString, xStr)
+  }

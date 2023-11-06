@@ -1,10 +1,8 @@
 import scala.sys.process._
 import sbt._
 
-val scala3Version = "3.2.0"
-
-// Name of fat jar produced via 'assembly' plugin.
-val jarName = "s2s.jar"
+val scala3Version = "3.3.0"
+val jarName = "s2s.jar" // fat jar produced by 'assembly' plugin
 
 // The Shar framework for reasoning as a Git dependeny.
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
@@ -35,6 +33,7 @@ lazy val root = project
     run / javaOptions += "-Xmx4G",
     run / javaOptions += "-Dfile.encoding=UTF-8",
     scalaVersion := scala3Version,
+    scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
     // Settings for assembly (fat jar).
     assembly / mainClass := Some("org.softlang.s2s.s2s"),
     assembly / assemblyJarName := jarName,
@@ -43,6 +42,9 @@ lazy val root = project
       case _                        => MergeStrategy.first
     },
     commands += stagingClean,
+    // Development dependency; local only - install manually and comment dependsOn(shar);
+    // this is only needed so metals works correctly with the GitHub dependency for SHAR.
+    //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     // Dependencies.
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
     // JFact reasoner support.
@@ -56,7 +58,7 @@ lazy val root = project
     // CLI Application.
     libraryDependencies += "org.rogach" %% "scallop" % "4.1.0",
     // Testing
-    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test,
     // Parsing
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0"
   )

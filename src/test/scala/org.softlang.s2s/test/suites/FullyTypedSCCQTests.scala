@@ -1,20 +1,13 @@
 package org.softlang.s2s.test.suites
 
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestName
-import org.softlang.s2s.test.ValidationTestSuite
+import org.softlang.s2s.test.ValidationSuite
 
 // Test cases for a sublanguage of SCCQ (fully-typed SCCQ).
 // A fully-typed SCCQ is a concept SCCQ where also for each
 // pattern (x,y) : p there exists a pattern (x : A) and (y : B)
 // in q.
 
-class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
-
-  @Rule
-  def name = _name
-  val _name = TestName()
+class FullyTypedSCCQTests extends ValidationSuite:
 
   // Q0 -- Basic, fully typed query with a single concept.
 
@@ -30,27 +23,24 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∀:q.:B"
   )
 
-  @Test def typed_0_0(): Unit =
-    test(noshapes, q0, q0_basicshapes)
+  work("typed_0_0", noshapes, q0, q0_basicshapes)
 
   val q0_guaranteed_r = Set(":B ⊑ ∃:q.:B", "∃-:q.⊤ ⊑ ∃:q.:B")
 
-  @Test def typed_0_1(): Unit =
-    test(Set(":A ⊑ ∃:r.:A"), q0, q0_basicshapes.union(q0_guaranteed_r))
+  work("typed_0_1", Set(":A ⊑ ∃:r.:A"), q0, q0_basicshapes.union(q0_guaranteed_r))
 
   val q0_guaranteed_mr = Set(":B ⊑ ∃-:q.:B", "∃:q.⊤ ⊑ ∃-:q.:B")
 
-  @Test def typed_0_2(): Unit =
-    test(Set(":A ⊑ ∃-:r.:A"), q0, q0_basicshapes.union(q0_guaranteed_mr))
+  work("typed_0_2", Set(":A ⊑ ∃-:r.:A"), q0, q0_basicshapes.union(q0_guaranteed_mr))
 
   val q0_guaranteed_r_and_mr = q0_guaranteed_r.union(q0_guaranteed_mr)
 
-  @Test def typed_0_3(): Unit =
-    test(
-      Set(":A ⊑ ∃-:r.:A", ":A ⊑ ∃:r.:A"),
-      q0,
-      q0_basicshapes.union(q0_guaranteed_r_and_mr)
-    )
+  work(
+    "typed_0_3",
+    Set(":A ⊑ ∃-:r.:A", ":A ⊑ ∃:r.:A"),
+    q0,
+    q0_basicshapes.union(q0_guaranteed_r_and_mr)
+  )
 
   // Q1 -- Fully typed query with one property (renaming).
 
@@ -68,8 +58,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∀:q.:D"
   )
 
-  @Test def typed_1_0(): Unit =
-    test(noshapes, q1, q1_basicshapes)
+  work("typed_1_0", noshapes, q1, q1_basicshapes)
 
   val q1_a_sub_b = Set(
     ":C ⊑ :D",
@@ -83,8 +72,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∃-:q.:D"
   )
 
-  @Test def typed_1_1(): Unit =
-    test(Set(":A ⊑ :B"), q1, q1_basicshapes)
+  work("typed_1_1", Set(":A ⊑ :B"), q1, q1_basicshapes)
 
   val q1_b_sub_a = Set(
     ":D ⊑ :C",
@@ -98,25 +86,19 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃:q.⊤ ⊑ ∃:q.:C"
   )
 
-  @Test def typed_1_2(): Unit =
-    test(Set(":B ⊑ :A"), q1, q1_basicshapes)
+  work("typed_1_2", Set(":B ⊑ :A"), q1, q1_basicshapes)
 
   val q1_a_eq_b = q1_a_sub_b.union(q1_b_sub_a)
 
-  @Test def typed_1_3(): Unit =
-    test(Set(":B ⊑ :A", ":A ⊑ :B"), q1, q1_basicshapes)
+  work("typed_1_3", Set(":B ⊑ :A", ":A ⊑ :B"), q1, q1_basicshapes)
 
-  @Test def typed_1_4(): Unit =
-    test(Set(":A ⊑ ∃:r.:B"), q1, q1_basicshapes)
+  work("typed_1_4", Set(":A ⊑ ∃:r.:B"), q1, q1_basicshapes)
 
-  //@Test def typed_1_5(): Unit =
-  //  test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q1, q1_basicshapes.union(q1_b_sub_a))
+  work("typed_1_5", Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q1, q1_basicshapes.union(q1_b_sub_a))
 
-  @Test def typed_1_6(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A"), q1, q1_basicshapes)
+  work("typed_1_6", Set(":B ⊑ ∃-:r.:A"), q1, q1_basicshapes)
 
-  //@Test def typed_1_7(): Unit =
-  //  test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q1, q1_basicshapes.union(q1_a_sub_b))
+  work("typed_1_7", Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q1, q1_basicshapes.union(q1_a_sub_b))
 
   // Q2 -- Fully typed query with one property (renaming - swapping).
 
@@ -134,8 +116,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∀:q.:C"
   )
 
-  @Test def typed_2_0(): Unit =
-    test(noshapes, q2, q2_basicshapes)
+  work("typed_2_0", noshapes, q2, q2_basicshapes)
 
   val q2_a_sub_b = Set(
     ":D ⊑ :C",
@@ -149,8 +130,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∃-:q.:C"
   )
 
-  @Test def typed_2_1(): Unit =
-    test(Set(":A ⊑ :B"), q2, q2_basicshapes)
+  work("typed_2_1", Set(":A ⊑ :B"), q2, q2_basicshapes)
 
   val q2_b_sub_a = Set(
     ":C ⊑ :D",
@@ -164,25 +144,19 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃:q.⊤ ⊑ ∃:q.:D"
   )
 
-  @Test def typed_2_2(): Unit =
-    test(Set(":B ⊑ :A"), q2, q2_basicshapes)
+  work("typed_2_2", Set(":B ⊑ :A"), q2, q2_basicshapes)
 
   val q2_a_eq_b = q2_a_sub_b.union(q2_b_sub_a)
 
-  @Test def typed_2_3(): Unit =
-    test(Set(":B ⊑ :A", ":A ⊑ :B"), q2, q2_basicshapes)
+  work("typed_2_3", Set(":B ⊑ :A", ":A ⊑ :B"), q2, q2_basicshapes)
 
-  @Test def typed_2_4(): Unit =
-    test(Set(":A ⊑ ∃:r.:B"), q2, q2_basicshapes)
+  work("typed_2_4", Set(":A ⊑ ∃:r.:B"), q2, q2_basicshapes)
 
-  //@Test def typed_2_5(): Unit =
-  //  test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q2, q2_basicshapes.union(q2_b_sub_a))
+  work("typed_2_5", Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q2, q2_basicshapes.union(q2_b_sub_a))
 
-  @Test def typed_2_6(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A"), q2, q2_basicshapes)
+  work("typed_2_6", Set(":B ⊑ ∃-:r.:A"), q2, q2_basicshapes)
 
-  //@Test def typed_2_7(): Unit =
-  //  test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q2, q2_basicshapes.union(q2_a_sub_b))
+  work("typed_2_7", Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q2, q2_basicshapes.union(q2_a_sub_b))
 
   // Q3 -- Dropping RHS type.
 
@@ -195,8 +169,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∃-:q.:C"
   )
 
-  @Test def typed_3_0(): Unit =
-    test(noshapes, q3, q3_basicshapes)
+  work("typed_3_0", noshapes, q3, q3_basicshapes)
 
   // Q4 -- Dropping LHS type.
 
@@ -209,8 +182,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∀:q.:D"
   )
 
-  @Test def typed_4_0(): Unit =
-    test(noshapes, q4, q4_basicshapes)
+  work("typed_4_0", noshapes, q4, q4_basicshapes)
 
   // Q5 -- Adding synonym type on LHS.
 
@@ -238,8 +210,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∃-:q.:E"
   )
 
-  @Test def typed_5_0(): Unit =
-    test(noshapes, q5, q5_basicshapes)
+  work("typed_5_0", noshapes, q5, q5_basicshapes)
 
   // QW6 -- Adding synonym type on RHS.
 
@@ -267,8 +238,7 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃-:q.⊤ ⊑ ∀:q.:E"
   )
 
-  @Test def typed_6_0(): Unit =
-    test(noshapes, q6, q6_basicshapes)
+  work("typed_6_0", noshapes, q6, q6_basicshapes)
 
   // Q7 -- Constraining with additional type on LHS.
 
@@ -278,29 +248,21 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
       "?x a :E . ?x a : A . ?x :r ?y . ?y a :B"
     )
 
-  @Test def typed_7_0(): Unit =
-    test(noshapes, q7, q1_basicshapes)
+  work("typed_7_0", noshapes, q7, q1_basicshapes)
 
-  @Test def typed_7_1(): Unit =
-    test(Set(":A ⊑ :B"), q7, q1_basicshapes)
+  work("typed_7_1", Set(":A ⊑ :B"), q7, q1_basicshapes)
 
-  @Test def typed_7_2(): Unit =
-    test(Set(":B ⊑ :A"), q7, q1_basicshapes)
+  work("typed_7_2", Set(":B ⊑ :A"), q7, q1_basicshapes)
 
-  @Test def typed_7_3(): Unit =
-    test(Set(":B ⊑ :A", ":A ⊑ :B"), q7, q1_basicshapes)
+  work("typed_7_3", Set(":B ⊑ :A", ":A ⊑ :B"), q7, q1_basicshapes)
 
-  @Test def typed_7_4(): Unit =
-    test(Set(":A ⊑ ∃:r.:B"), q7, q1_basicshapes)
+  work("typed_7_4", Set(":A ⊑ ∃:r.:B"), q7, q1_basicshapes)
 
-  @Test def typed_7_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q7, q1_basicshapes)
+  work("typed_7_5", Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q7, q1_basicshapes)
 
-  @Test def typed_7_6(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A"), q7, q1_basicshapes)
+  work("typed_7_6", Set(":B ⊑ ∃-:r.:A"), q7, q1_basicshapes)
 
-  @Test def typed_7_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q7, q1_basicshapes)
+  work("typed_7_7", Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q7, q1_basicshapes)
 
   // Q8 -- Constraining with additional type on LHS.
 
@@ -310,39 +272,30 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
       "?x a :A . ?x :r ?y . ?y a :B . ?y a :E"
     )
 
-  @Test def typed_8_0(): Unit =
-    test(noshapes, q8, q1_basicshapes)
+  work("typed_8_0", noshapes, q8, q1_basicshapes)
 
-  @Test def typed_8_1(): Unit =
-    test(Set(":A ⊑ :B"), q8, q1_basicshapes)
+  work("typed_8_1", Set(":A ⊑ :B"), q8, q1_basicshapes)
 
-  @Test def typed_8_2(): Unit =
-    test(Set(":B ⊑ :A"), q8, q1_basicshapes)
+  work("typed_8_2", Set(":B ⊑ :A"), q8, q1_basicshapes)
 
-  @Test def typed_8_3(): Unit =
-    test(Set(":B ⊑ :A", ":A ⊑ :B"), q8, q1_basicshapes)
+  work("typed_8_3", Set(":B ⊑ :A", ":A ⊑ :B"), q8, q1_basicshapes)
 
-  @Test def typed_8_4(): Unit =
-    test(Set(":A ⊑ ∃:r.:B"), q8, q1_basicshapes)
+  work("typed_8_4", Set(":A ⊑ ∃:r.:B"), q8, q1_basicshapes)
 
-  @Test def typed_8_5(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q8, q1_basicshapes)
+  work("typed_8_5", Set(":A ⊑ ∃:r.:B", ":B ⊑ :A"), q8, q1_basicshapes)
 
-  @Test def typed_8_6(): Unit =
-    test(Set(":A ⊑ ∃:r.:B", ":B ⊑ :A", ":B ⊑ :E"), q8, q1_basicshapes)
+  work("typed_8_6", Set(":A ⊑ ∃:r.:B", ":B ⊑ :A", ":B ⊑ :E"), q8, q1_basicshapes)
 
-  @Test def typed_8_7(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A"), q8, q1_basicshapes)
+  work("typed_8_7", Set(":B ⊑ ∃-:r.:A"), q8, q1_basicshapes)
 
-  @Test def typed_8_8(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q8, q1_basicshapes)
+  work("typed_8_8", Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B"), q8, q1_basicshapes)
 
-  //@Test def typed_8_9(): Unit =
-  //  test(
-  //    Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B", ":B ⊑ :E"),
-  //    q8,
-  //    q1_basicshapes.union(q1_a_sub_b)
-  //  )
+  work(
+    "typed_8_9",
+    Set(":B ⊑ ∃-:r.:A", ":A ⊑ :B", ":B ⊑ :E"),
+    q8,
+    q1_basicshapes.union(q1_a_sub_b)
+  )
 
   // Q9 -- Copying all LHS with additional variable.
 
@@ -354,11 +307,9 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
 
   val q9_basicshapes = q1_basicshapes.removedAll(Set(":C ⊑ ∃:q.:D"))
 
-  @Test def typed_9_0(): Unit =
-    test(noshapes, q9, q9_basicshapes)
+  work("typed_9_0", noshapes, q9, q9_basicshapes)
 
-  @Test def typed_9_1(): Unit =
-    test(Set(":A ⊑ ∃:r.:B"), q9, q1_basicshapes)
+  work("typed_9_1", Set(":A ⊑ ∃:r.:B"), q9, q1_basicshapes)
 
   // Q10 -- Copying all RHS with additional variable.
 
@@ -370,11 +321,9 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
 
   val q10_basicshapes = q1_basicshapes.removedAll(Set(":D ⊑ ∃-:q.:C"))
 
-  @Test def typed_10_0(): Unit =
-    test(noshapes, q10, q10_basicshapes)
+  work("typed_10_0", noshapes, q10, q10_basicshapes)
 
-  @Test def typed_10_1(): Unit =
-    test(Set(":B ⊑ ∃-:r.:A"), q10, q1_basicshapes)
+  work("typed_10_1", Set(":B ⊑ ∃-:r.:A"), q10, q1_basicshapes)
 
   // Q11 -- Copying all properties with additional variables.
 
@@ -389,24 +338,23 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     ":D ⊑ ∃-:q.:C"
   )
 
-  @Test def typed_11_0(): Unit =
-    test(noshapes, q11, q11_basicshapes)
+  work("typed_11_0", noshapes, q11, q11_basicshapes)
 
-  @Test def typed_11_1(): Unit =
-    test(
-      Set("∃:r.⊤ ⊑ :A", "∃-:r.⊤ ⊑ :B"),
-      q11,
-      q11_basicshapes.union(
-        Set(
-          "∃:q.⊤ ⊑ ∀-:q.:C",
-          "∃:q.⊤ ⊑ ∃:q.:D",
-          "∃:q.⊤ ⊑ :C",
-          "∃-:q.⊤ ⊑ ∀:q.:D",
-          "∃-:q.⊤ ⊑ :D",
-          "∃-:q.⊤ ⊑ ∃-:q.:C"
-        )
+  work(
+    "typed_11_1",
+    Set("∃:r.⊤ ⊑ :A", "∃-:r.⊤ ⊑ :B"),
+    q11,
+    q11_basicshapes.union(
+      Set(
+        "∃:q.⊤ ⊑ ∀-:q.:C",
+        "∃:q.⊤ ⊑ ∃:q.:D",
+        "∃:q.⊤ ⊑ :C",
+        "∃-:q.⊤ ⊑ ∀:q.:D",
+        "∃-:q.⊤ ⊑ :D",
+        "∃-:q.⊤ ⊑ ∃-:q.:C"
       )
     )
+  )
 
   // Q12 -- Two cases, side by side.
 
@@ -444,62 +392,53 @@ class FullyTypedSCCQTests extends ValidationTestSuite("Fully-Typed"):
     "∃:s.⊤ ⊑ ∀-:q.:C"
   )
 
-  @Test def typed_12_0(): Unit =
-    test(noshapes, q12, q12_basicshapes)
+  work("typed_12_0", noshapes, q12, q12_basicshapes)
 
-  @Test def typed_12_1(): Unit =
-    test(Set(":A ⊑ :E"), q12, q12_basicshapes)
+  work("typed_12_1", Set(":A ⊑ :E"), q12, q12_basicshapes)
 
-  @Test def typed_12_2(): Unit =
-    test(Set(":E ⊑ :A"), q12, q12_basicshapes)
+  work("typed_12_2", Set(":E ⊑ :A"), q12, q12_basicshapes)
 
-  @Test def typed_12_3(): Unit =
-    test(Set(":B ⊑ :F"), q12, q12_basicshapes)
+  work("typed_12_3", Set(":B ⊑ :F"), q12, q12_basicshapes)
 
-  @Test def typed_12_4(): Unit =
-    test(Set(":F ⊑ :B"), q12, q12_basicshapes)
+  work("typed_12_4", Set(":F ⊑ :B"), q12, q12_basicshapes)
 
-  @Test def typed_12_6(): Unit =
-    test(
-      Set("∃-:r.⊤ ⊑ ∃-:p.:E", ":B ⊑ :F"),
-      q12,
-      atleast = q12_basicshapes.union(
-        Set(
-          ":D ⊑ :H"
-        )
+  work(
+    "typed_12_5",
+    Set("∃-:r.⊤ ⊑ ∃-:p.:E", ":B ⊑ :F"),
+    q12,
+    atleast = q12_basicshapes.union(
+      Set(
+        ":D ⊑ :H"
       )
     )
+  )
 
-  @Test def typed_12_7(): Unit =
-    test(Set(":A ⊑ :E", ":B ⊑ :F"), q12, q12_basicshapes)
+  work("typed_12_7", Set(":A ⊑ :E", ":B ⊑ :F"), q12, q12_basicshapes)
 
-  @Test def typed_12_8(): Unit =
-    test(Set(":A ⊑ :E", ":A ⊑ :B"), q12, q12_basicshapes)
+  work("typed_12_8", Set(":A ⊑ :E", ":A ⊑ :B"), q12, q12_basicshapes)
 
-  @Test def typed_12_9(): Unit =
-    test(Set(":E ⊑ :A", ":B ⊑ :A"), q12, q12_basicshapes)
+  work("typed_12_9", Set(":E ⊑ :A", ":B ⊑ :A"), q12, q12_basicshapes)
 
-  @Test def typed_13_0(): Unit =
-    test(
-      Set("∃:r.⊤ ⊑ ∃:p.:F", ":A ⊑ :E"),
-      q12,
-      atleast = q12_basicshapes.union(
-        Set(
-          ":C ⊑ :G"
-        )
+  work(
+    "typed_13_0",
+    Set("∃:r.⊤ ⊑ ∃:p.:F", ":A ⊑ :E"),
+    q12,
+    atleast = q12_basicshapes.union(
+      Set(
+        ":C ⊑ :G"
       )
     )
+  )
 
-  //@Test def typed_13_1(): Unit =
-  //  test(
-  //    Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
-  //    q12,
-  //    atleast = q12_basicshapes.union(
-  //      Set(
-  //        ":C ⊑ :G"
-  //      )
-  //    )
-  //  )
+  work(
+    "typed_13_1",
+    Set("∃:r.⊤ ⊑ ∃:p.:F", "∃:p.⊤ ⊑ :E"),
+    q12,
+    atleast = q12_basicshapes.union(
+      Set(
+        ":C ⊑ :G"
+      )
+    )
+  )
 
-  @Test def typed_13_2(): Unit =
-    test(Set("∃:r.⊤ ⊑ ∃:p.:F"), q12, q12_basicshapes)
+  work("typed_13_2", Set("∃:r.⊤ ⊑ ∃:p.:F"), q12, q12_basicshapes)

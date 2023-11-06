@@ -23,7 +23,7 @@ abstract class ValidationTestSuite(
     // Always print full debugging for failures.
     verbose: Boolean = false,
     // Disable (success) output.
-    silent: Boolean = true
+    silent: Boolean = false
 ) extends Shapes2Shapes(
       Configuration.default.copy(
         reasoner = ActiveReasoner.Hermit

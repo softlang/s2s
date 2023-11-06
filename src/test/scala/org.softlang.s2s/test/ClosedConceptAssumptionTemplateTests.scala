@@ -1,20 +1,10 @@
 package org.softlang.s2s.test
 
-import org.junit.Assert.*
-import org.junit.rules.TestName
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestName
-
 import de.pseifer.shar.dl._
 import org.softlang.s2s.infer._
 import org.softlang.s2s.query.SCCQ
 
-class ClosedConceptAssumptionTemplateTests extends TestData:
-
-  @Rule
-  def name = _name
-  val _name = TestName()
+class ClosedConceptAssumptionTemplateTests extends munit.FunSuite with TestData:
 
   // The function under test here.
   
@@ -23,76 +13,89 @@ class ClosedConceptAssumptionTemplateTests extends TestData:
 
   //  Empty
 
-  @Test def query0(): Unit =
+  test("query0") {
     val t = work(q0)
-    assertTrue(t.isEmpty)
+    assert(t.isEmpty)
+  }
 
   // Concepts only
 
-  @Test def query1(): Unit =
+  test("query1") {
     val t = work(q1)
-    assertTrue(t.contains(Equality(NamedConcept(Co), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), x.asConcept)))
     assertEquals(t.size, 1)
+  }
 
-  @Test def query2(): Unit =
+  test("query2") {
     val t = work(q2)
-    assertTrue(t.contains(Equality(NamedConcept(Co), x.asConcept)))
-    assertTrue(t.contains(Equality(NamedConcept(Do), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Do), x.asConcept)))
     assertEquals(t.size, 2)
+  }
 
-  @Test def query3(): Unit =
+  test("query3") {
     val t = work(q3)
-    assertTrue(t.contains(Equality(NamedConcept(Co), Union(
+    assert(t.contains(Equality(NamedConcept(Co), Union(
       x.asConcept, 
       y.asConcept))))
     assertEquals(t.size, 1)
+  }
 
-  @Test def query4(): Unit =
+  test("query4") {
     val t = work(q4)
-    assertTrue(t.contains(Equality(NamedConcept(Co), x.asConcept)))
-    assertTrue(t.contains(Equality(NamedConcept(Do), y.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Do), y.asConcept)))
     assertEquals(t.size, 2)
+  }
 
   // Properties only
 
-  @Test def query5(): Unit =
+  test("query5") {
     val t = work(q5)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query6(): Unit =
+  test("query6") {
     val t = work(q6)
     assertEquals(t.size, 0)
+  }
 
-  @Test def query7(): Unit =
+  test("query7") {
     val t = work(q7)
     assertEquals(t.size, 0)
+  }
 
   // General
   
-  @Test def query8(): Unit =
+  test("query8") {
     val t = work(q8)
-    assertTrue(t.contains(Equality(NamedConcept(Co), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), x.asConcept)))
     assertEquals(t.size, 1)
+  }
 
-  @Test def query9(): Unit =
+  test("query9") {
     val t = work(q9)
-    assertTrue(t.contains(Equality(NamedConcept(Co), y.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), y.asConcept)))
     assertEquals(t.size, 1)
+  }
 
-  @Test def query10(): Unit =
+  test("query10") {
     val t = work(q10)
-    assertTrue(t.contains(Equality(NamedConcept(Co), Union(
+    assert(t.contains(Equality(NamedConcept(Co), Union(
       x.asConcept, y.asConcept))))
     assertEquals(t.size, 1)
+  }
 
-  @Test def query11(): Unit =
+  test("query11") {
     val t = work(q11)
-    assertTrue(t.contains(Equality(NamedConcept(Co), x.asConcept)))
-    assertTrue(t.contains(Equality(NamedConcept(Do), y.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Co), x.asConcept)))
+    assert(t.contains(Equality(NamedConcept(Do), y.asConcept)))
     assertEquals(t.size, 2)
+  }
 
   // Queries (cyclic)
 
-  @Test def query12(): Unit =
+  test("query12") {
     val t = work(q12)
     assertEquals(t.size, 0)
+  }
