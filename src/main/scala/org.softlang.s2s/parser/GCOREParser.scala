@@ -3,17 +3,19 @@ package org.softlang.s2s.parser
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 
+import org.softlang.s2s.query.GCORE
+
 /** A parser for conjunctive G-CORE queries. */
-class GCoreParser extends RegexParsers:
+class GCOREParser extends RegexParsers:
   import org.softlang.s2s.query.GCORE._
 
-  def apply(input: String): Query = parseAll(pBasicGraphQuery, input) match
-    case Success(result, _) => result
+  def apply(input: String): GCORE = parseAll(pBasicGraphQuery, input) match
+    case Success(result, _) => GCORE(result._1, result._2)
     case failure : NoSuccess => scala.sys.error("Parser error: " + failure.msg)
 
   // Queries
 
-  def pBasicGraphQuery: Parser[BasicGraphQuery] = 
+  def pBasicGraphQuery: Parser[(ConstructClause, MatchClause)] = 
     pConstructClause ~ pMatchClause ^^ {
       case c ~ m => (c,m)
     }

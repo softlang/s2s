@@ -1,13 +1,13 @@
 package org.softlang.s2s.test
 
 import org.softlang.s2s.query.GCORE
-import org.softlang.s2s.parser.GCoreParser
+import org.softlang.s2s.parser.GCOREParser
 
-class GCoreParserTests extends munit.FunSuite:
+class GCOREParserTests extends munit.FunSuite:
   import GCORE._
 
   // The parser instance to be tested.
-  val p = GCoreParser()
+  val p = GCOREParser()
 
   // Test framework.
   
