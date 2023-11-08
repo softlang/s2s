@@ -18,12 +18,12 @@ class GCORE(
   def show(implicit state: BackendState = shar.state): String =
     "CONSTRUCT " ++ template.show ++ "\nMATCH " ++ pattern.show
 
-  def toSCCQ: SCCQ =
+  //def toSCCQ: SCCQ =
     // transform template to SCCQ template
     // transform pattern to SCCQ pattern
 
     // TODO
-    SCCQ(Nil, Nil)
+    //SCCQ(Nil, Nil)
 
 //class GCoreToSparql(prefix: String):
 //
@@ -94,14 +94,17 @@ object GCORE:
 
   enum ConstructClause extends Showable:
     case Construct(fullGraphPattern: FullGraphPattern)
+    case ConstructS(fullGraphPattern: FullGraphPattern, setClause: SetClause)
 
     def show(implicit state: BackendState): String =
       this match
         case Construct(fgp) => fgp.map(_.show).mkString(", ")
+        case ConstructS(fgp, sc) => fgp.map(_.show).mkString(", ") ++ "\n" ++ sc.show
 
-    def toSCCQ: S2STry[AtomicPatterns] =
-      this match
-        case Construct(fgp) => fgpToSCCQ(fgp)
+    //def toSCCQ: S2STry[AtomicPatterns] =
+    //  this match
+    //    case Construct(fgp) => fgpToSCCQ(fgp)
+    //    case ConstructS(fgp, sc) => fa
       
 
     //case ConstructWhen(fullGraphPattern: FullGraphPattern, booleanCondition: WhenClause)
@@ -118,6 +121,19 @@ object GCORE:
   //enum ObjectConstruct:
   //  case NodeConstruct(x: Variable)
   //  case EdgeConstruct(x: Variable,  z: Variable, y: Variable)
+
+  enum SetClause extends Showable:
+    case AddKeyValue(x: Variable, k: Key, v: Value)
+    case AddLabel(x: Variable, l: Label)
+    case RemoveKey(x: Variable, k: Key)
+    case RemoveLabel(x: Variable, l: Label)
+
+    def show(implicit state: BackendState): String =
+      this match
+        case AddKeyValue(x, k, v) => s"${x.show}${k.show} = ${v.show}"
+        case AddLabel(x, l) => x.show ++ l.show
+        case RemoveKey(x, k) => "-" ++ x.show ++ k.show
+        case RemoveLabel(x, l) => "-" ++ x.show ++ l.show
 
   enum WhenClause extends Showable:
     case HasKey(x: Variable, k: Key)
@@ -142,10 +158,10 @@ object GCORE:
         case Match(fgp) => fgp.map(_.show).mkString(", ")
         case MatchWhere(fgp, c) => fgp.map(_.show).mkString(", ") ++ "\nWHERE " ++ c.show
 
-    def toSCCQ: S2STry[AtomicPatterns] =
-      this match
-        case Match(fgp) => fgpToSCCQ(fgp)
-        case MatchWhere(fgp, c) => fgpToSCCQ(fgp, c)
+    //def toSCCQ: S2STry[AtomicPatterns] =
+    //  this match
+    //    case Match(fgp) => fgpToSCCQ(fgp)
+    //    case MatchWhere(fgp, c) => fgpToSCCQ(fgp, c)
 
   type FullGraphPattern = Set[BasicGraphPattern]
     
@@ -158,10 +174,10 @@ object GCORE:
         case NodePattern(v) => s"(${v.show})"
         case EdgePattern(x, z, y) => s"(${x.show})-[${z.show}]->(${y.show})"
 
-    def toSCCQ: S2STry[AtomicPatterns] =
-      this match
-        case NodePattern(v) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
-        case EdgePattern(x, z, y) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
+    //def toSCCQ: S2STry[AtomicPatterns] =
+    //  this match
+    //    case NodePattern(v) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
+    //    case EdgePattern(x, z, y) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
 
     // def toSCCQ(wc: WhenClause): S2STry[AtomicPatterns] =
     //   this match
