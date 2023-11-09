@@ -21,17 +21,46 @@ class GCOREParser extends RegexParsers:
     }
 
   def pConstructClause: Parser[ConstructClause] = 
-    "CONSTRUCT" ~> repsep(pBasicGraphPattern, ",") ^^ {
-      case f => ConstructClause.Construct(f.toSet)
+    "CONSTRUCT" ~> repsep(pBasicGraphPattern, ",") ~ opt("SET" ~> pSetClauses) ~ opt("REMOVE" ~> pRemoveClauses) ^^ {
+      case f ~ s ~ r => ConstructClause.Construct(f.toSet, s.toList.flatten, r.toList.flatten)
     }
 
   def pMatchClause: Parser[MatchClause] =
-    "MATCH" ~> repsep(pBasicGraphPattern, ",") ~ opt("WHERE" ~> pWhenClause) ^^ { 
-      case f ~ Some(w) => MatchClause.MatchWhere(f.toSet, w)
-      case f ~ None => MatchClause.Match(f.toSet)
+    "MATCH" ~> repsep(pBasicGraphPattern, ",") ~ opt("WHERE" ~> pWhenClauses) ^^ { 
+      case f ~ Some(w) => MatchClause.Match(f.toSet, w)
+      case f ~ None => MatchClause.Match(f.toSet, Nil)
     }
 
+  // Set and Remove clauses.
+
+  def pSetClauses: Parser[List[SetClause]] =
+    rep1sep(pSetClause, "AND")
+
+  def pSetClause: Parser[SetClause] =
+    pSetKeyValue | pSetLabel
+  
+  def pSetLabel: Parser[SetClause.SetLabel] =
+    pVariable ~ pLabel ^^ { case x ~ k => SetClause.SetLabel(x, k) }
+
+  def pSetKeyValue: Parser[SetClause.SetKeyValue] =
+    pVariable ~ pKey ~ "=" ~  pValue ^^ { case x ~ k ~ _ ~ v => SetClause.SetKeyValue(x, k, v) }
+
+  def pRemoveClauses: Parser[List[RemoveClause]] =
+    rep1sep(pRemoveClause, "AND")
+
+  def pRemoveClause: Parser[RemoveClause] =
+    pRemoveKey| pRemoveLabel
+  
+  def pRemoveLabel: Parser[RemoveClause.RemoveLabel] =
+    pVariable ~ pLabel ^^ { case x ~ k => RemoveClause.RemoveLabel(x, k) }
+
+  def pRemoveKey: Parser[RemoveClause.RemoveKey] =
+    pVariable ~ pKey ^^ { case x ~ k => RemoveClause.RemoveKey(x, k) }
+
   // Conditional clauses.
+
+  def pWhenClauses: Parser[List[WhenClause]] =
+    rep1sep(pWhenClause, "AND")
 
   def pWhenClause: Parser[WhenClause] =
     pHasKeyValue | pHasKey | pHasLabel

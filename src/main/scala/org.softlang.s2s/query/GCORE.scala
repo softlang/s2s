@@ -93,13 +93,16 @@ object GCORE:
   // CONSTRUCT (simplified)
 
   enum ConstructClause extends Showable:
-    case Construct(fullGraphPattern: FullGraphPattern)
-    case ConstructS(fullGraphPattern: FullGraphPattern, setClause: SetClause)
+    case Construct(fullGraphPattern: FullGraphPattern, set: List[SetClause], remove: List[RemoveClause])
+
 
     def show(implicit state: BackendState): String =
       this match
-        case Construct(fgp) => fgp.map(_.show).mkString(", ")
-        case ConstructS(fgp, sc) => fgp.map(_.show).mkString(", ") ++ "\n" ++ sc.show
+        case Construct(fgp, s, r) => 
+          val bs = fgp.map(_.show).mkString(", ")
+          val ss = if s.nonEmpty then "\nSET" ++ s.map(_.show).mkString(" AND ") else ""
+          val rs = if s.nonEmpty then "\nREMOVE" ++ r.map(_.show).mkString(" AND ") else ""
+          bs ++ ss ++ rs
 
     //def toSCCQ: S2STry[AtomicPatterns] =
     //  this match
@@ -122,18 +125,23 @@ object GCORE:
   //  case NodeConstruct(x: Variable)
   //  case EdgeConstruct(x: Variable,  z: Variable, y: Variable)
 
-  enum SetClause extends Showable:
-    case AddKeyValue(x: Variable, k: Key, v: Value)
-    case AddLabel(x: Variable, l: Label)
+  enum RemoveClause extends Showable:
     case RemoveKey(x: Variable, k: Key)
     case RemoveLabel(x: Variable, l: Label)
 
     def show(implicit state: BackendState): String =
       this match
-        case AddKeyValue(x, k, v) => s"${x.show}${k.show} = ${v.show}"
-        case AddLabel(x, l) => x.show ++ l.show
         case RemoveKey(x, k) => "-" ++ x.show ++ k.show
         case RemoveLabel(x, l) => "-" ++ x.show ++ l.show
+
+  enum SetClause extends Showable:
+    case SetKeyValue(x: Variable, k: Key, v: Value)
+    case SetLabel(x: Variable, l: Label)
+
+    def show(implicit state: BackendState): String =
+      this match
+        case SetKeyValue(x, k, v) => s"${x.show}${k.show} = ${v.show}"
+        case SetLabel(x, l) => x.show ++ l.show
 
   enum WhenClause extends Showable:
     case HasKey(x: Variable, k: Key)
@@ -150,13 +158,14 @@ object GCORE:
 
   // MATCH
   enum MatchClause extends Showable:
-    case Match(fullGraphPattern: FullGraphPattern)
-    case MatchWhere(fullGraphPattern: FullGraphPattern, booleanCondition: WhenClause)
+    case Match(fullGraphPattern: FullGraphPattern, conditions: List[WhenClause])
 
     def show(implicit state: BackendState): String =
       this match
-        case Match(fgp) => fgp.map(_.show).mkString(", ")
-        case MatchWhere(fgp, c) => fgp.map(_.show).mkString(", ") ++ "\nWHERE " ++ c.show
+        case Match(fgp, c) => 
+          val bs = fgp.map(_.show).mkString(", ")
+          val ws = if c.nonEmpty then "\nWHERE " ++ c.map(_.show).mkString(" AND ") else ""
+          bs ++ ws
 
     //def toSCCQ: S2STry[AtomicPatterns] =
     //  this match

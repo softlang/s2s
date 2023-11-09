@@ -78,12 +78,16 @@ class GCOREParserTests extends munit.FunSuite:
     parsesNot("._b")
   }
 
-  test("Parsing of Value") {
+  test("Parsing of Int Value") {
     implicit val pp = p.pValue
 
     parses("42", Value.IntValue(42))
     parses("0", Value.IntValue(0))
     parses("-1", Value.IntValue(-1))
+  }
+    
+  test("Parsing of String Value") {
+    implicit val pp = p.pValue
 
     parses("\"abc\"", Value.StringValue("abc"))
     parses("\"123\"", Value.StringValue("123"))
@@ -91,11 +95,18 @@ class GCOREParserTests extends munit.FunSuite:
     parses("\"\"", Value.StringValue(""))
     parses("\" \"", Value.StringValue(" "))
     parses("\"  \"", Value.StringValue("  "))
+  }
+
+  test("Parsing of Boolean Value") {
+    implicit val pp = p.pValue
 
     parses("true", Value.BooleanValue(true))
     parses("true", Value.BooleanValue(true))
     parses("false", Value.BooleanValue(false))
+  }
 
+  test("Parsing of Value (Fail)") {
+    implicit val pp = p.pValue
     parsesButNot("1", Value.IntValue(2))
     parsesButNot("123", Value.StringValue("abc"))
     parsesButNot("0", Value.BooleanValue(true))
@@ -144,36 +155,126 @@ class GCOREParserTests extends munit.FunSuite:
     parsesNot("person=")
   }
 
+  test("Parsing of Simple WhenClauses") {
+    implicit val pp = p.pWhenClauses
+
+    // Must parse one or more.
+    parses("x:Person", List(whenLabel))
+    parses("x:Person AND x.age", List(whenLabel, whenKey))
+    parses("x.age AND x:Person", List(whenKey, whenLabel))
+    parses(" x.age   AND      x:Person ", List(whenKey, whenLabel))
+    parses("x:Person AND x.age AND x.age = 42", List(whenLabel, whenKey, whenKeyValue))
+
+    // Must be at least one clause (not empty).
+    parsesNot("")
+  }
+
+  val longMatch = Set(nodeBGP, edgeBGP)
+
   test("Parsing of MatchClause") {
     implicit val pp = p.pMatchClause
 
-    parses("MATCH (x)", MatchClause.Match(Set(nodeBGP)))
-    parses("MATCH (x)-[z]->(y)", MatchClause.Match(Set(edgeBGP)))
+    parses("MATCH (x)", MatchClause.Match(Set(nodeBGP), Nil))
+    parses("MATCH (x)-[z]->(y)", MatchClause.Match(Set(edgeBGP), Nil))
 
-    val longMatch = Set(nodeBGP, edgeBGP)
-    parses("MATCH (x), (x)-[z]->(y)", MatchClause.Match(longMatch))
-    parses("MATCH (x)-[z]->(y), (x)", MatchClause.Match(longMatch))
-
-    parses("MATCH (x) WHERE x:Person", MatchClause.MatchWhere(Set(nodeBGP), whenLabel))
-    parses("MATCH (x) WHERE x.age", MatchClause.MatchWhere(Set(nodeBGP), whenKey))
-    parses("MATCH (x) WHERE x.age = 42", MatchClause.MatchWhere(Set(nodeBGP), whenKeyValue))
-
-    parses("MATCH  (x)    WHERE    x:Person", MatchClause.MatchWhere(Set(nodeBGP), whenLabel))
-    parses("""MATCH (x)
-              WHERE x:Person""", MatchClause.MatchWhere(Set(nodeBGP), whenLabel))
-
-    parses("MATCH (x), (x)-[z]->(y) WHERE x:Person", MatchClause.MatchWhere(longMatch, whenLabel))
-    parses("MATCH (x)-[z]->(y), (x) WHERE x.age = 42", MatchClause.MatchWhere(longMatch, whenKeyValue))
+    parses("MATCH (x), (x)-[z]->(y)", MatchClause.Match(longMatch, Nil))
+    parses("MATCH (x)-[z]->(y), (x)", MatchClause.Match(longMatch, Nil))
   }
+
+  test("Parsing of MatchClause with WhereClause") {
+    implicit val pp = p.pMatchClause
+
+    parses("MATCH (x) WHERE x:Person", MatchClause.Match(Set(nodeBGP), List(whenLabel)))
+    parses("MATCH (x) WHERE x.age", MatchClause.Match(Set(nodeBGP), List(whenKey)))
+    parses("MATCH (x) WHERE x.age = 42", MatchClause.Match(Set(nodeBGP), List(whenKeyValue)))
+
+    parses("MATCH  (x)    WHERE    x:Person", MatchClause.Match(Set(nodeBGP), List(whenLabel)))
+    parses("""MATCH (x)
+              WHERE x:Person""", MatchClause.Match(Set(nodeBGP), List(whenLabel)))
+
+    parses("MATCH (x), (x)-[z]->(y) WHERE x:Person", MatchClause.Match(longMatch, List(whenLabel)))
+    parses("MATCH (x)-[z]->(y), (x) WHERE x.age = 42", MatchClause.Match(longMatch, List(whenKeyValue)))
+
+    parses("MATCH (x), (x)-[z]->(y) WHERE x:Person AND x.age = 42", MatchClause.Match(longMatch, List(whenLabel, whenKeyValue)))
+    parses("MATCH (x)-[z]->(y), (x) WHERE x.age = 42 AND x:Person", MatchClause.Match(longMatch, List(whenKeyValue, whenLabel)))
+  }
+
+  val longConstruct = Set(nodeBGP, edgeBGP)
 
   test("Parsing of ConstructClause") {
     implicit val pp = p.pConstructClause
 
-    parses("CONSTRUCT (x)", ConstructClause.Construct(Set(nodeBGP)))
-    parses("CONSTRUCT (x)-[z]->(y)", ConstructClause.Construct(Set(edgeBGP)))
+    parses("CONSTRUCT (x)", ConstructClause.Construct(Set(nodeBGP), Nil, Nil))
+    parses("CONSTRUCT (x)-[z]->(y)", ConstructClause.Construct(Set(edgeBGP), Nil, Nil))
 
-    val longConstruct = Set(nodeBGP, edgeBGP)
-    parses("CONSTRUCT (x), (x)-[z]->(y)", ConstructClause.Construct(longConstruct))
-    parses("CONSTRUCT (x)-[z]->(y), (x)", ConstructClause.Construct(longConstruct))
+    parses("CONSTRUCT (x), (x)-[z]->(y)", ConstructClause.Construct(longConstruct, Nil, Nil))
+    parses("CONSTRUCT (x)-[z]->(y), (x)", ConstructClause.Construct(longConstruct, Nil, Nil))
   }
 
+  val setLabel = SetClause.SetLabel(Variable("x"), Label("Person"))
+  val setKeyValue = SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+
+  test("Parsing of SetClauses") {
+    implicit val pp = p.pSetClauses
+
+    parses("x:Person", List(setLabel))
+    parses("x.age = 42", List(setKeyValue))
+    parses("x.age = 42 AND x:Person", List(setKeyValue, setLabel))
+    parses("x:Person", List(setLabel))
+    parses("x.age = 42", List(setKeyValue))
+    parses("x.age = 42 AND x:Person", List(setKeyValue, setLabel))
+    parses("x:Person", List(setLabel))
+
+    parsesNot("")
+    parsesNot("x")
+    parsesNot("x.age")
+  }
+
+  val removeLabel = RemoveClause.RemoveLabel(Variable("x"), Label("Person"))
+  val removeKey = RemoveClause.RemoveKey(Variable("x"), Key("age"))
+
+  test("Parsing of RemoveClauses") {
+    implicit val pp = p.pRemoveClauses
+
+    parses("x:Person", List(removeLabel))
+    parses("x.age ", List(removeKey))
+    parses("x.age AND x:Person", List(removeKey, removeLabel))
+    parses("x:Person", List(removeLabel))
+    parses("x.age ", List(removeKey))
+    parses("x.age AND x:Person", List(removeKey, removeLabel))
+    parses("x:Person", List(removeLabel))
+
+    parsesNot("")
+    parsesNot("x")
+    parsesNot("x.age = 42")
+  }
+
+  test("Parsing of ConstructClause with SetClause") {
+    implicit val pp = p.pConstructClause
+
+    parses("CONSTRUCT (x) SET x:Person", ConstructClause.Construct(Set(nodeBGP), List(setLabel), Nil))
+    parses("CONSTRUCT (x) SET x.age = 42", ConstructClause.Construct(Set(nodeBGP), List(setKeyValue), Nil))
+    parses("CONSTRUCT (x) SET x.age = 42 AND x:Person", ConstructClause.Construct(Set(nodeBGP), List(setKeyValue, setLabel), Nil))
+    parses("CONSTRUCT (x)-[z]->(y) SET x:Person", ConstructClause.Construct(Set(edgeBGP), List(setLabel), Nil))
+    parses("CONSTRUCT (x)-[z]->(y) SET x.age = 42", ConstructClause.Construct(Set(edgeBGP), List(setKeyValue), Nil))
+    parses("CONSTRUCT (x)-[z]->(y) SET x.age = 42 AND x:Person", ConstructClause.Construct(Set(edgeBGP), List(setKeyValue, setLabel), Nil))
+    parses("CONSTRUCT (x), (x)-[z]->(y) SET x:Person", ConstructClause.Construct(longConstruct, List(setLabel), Nil))
+  }
+
+  test("Parsing of ConstructClause with RemoveClause") {
+    implicit val pp = p.pConstructClause
+
+    parses("CONSTRUCT (x) REMOVE x:Person", ConstructClause.Construct(Set(nodeBGP), Nil, List(removeLabel)))
+    parses("CONSTRUCT (x) REMOVE x.age", ConstructClause.Construct(Set(nodeBGP), Nil, List(removeKey)))
+    parses("CONSTRUCT (x) REMOVE x.age AND x:Person", ConstructClause.Construct(Set(nodeBGP), Nil, List(removeKey, removeLabel)))
+    parses("CONSTRUCT (x)-[z]->(y) REMOVE x:Person", ConstructClause.Construct(Set(edgeBGP), Nil, List(removeLabel)))
+    parses("CONSTRUCT (x)-[z]->(y) REMOVE x.age ", ConstructClause.Construct(Set(edgeBGP), Nil, List(removeKey)))
+    parses("CONSTRUCT (x)-[z]->(y) REMOVE x.age AND x:Person", ConstructClause.Construct(Set(edgeBGP), Nil, List(removeKey, removeLabel)))
+    parses("CONSTRUCT (x), (x)-[z]->(y) REMOVE x:Person", ConstructClause.Construct(longConstruct, Nil, List(removeLabel)))
+  }
+
+  test("Parsing of ConstructClause with SetClause and RemoveClause") {
+    implicit val pp = p.pConstructClause
+    parses("CONSTRUCT (x) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person", 
+      ConstructClause.Construct(Set(nodeBGP), List(setKeyValue, setLabel), List(removeKey, removeLabel)))
+  }
