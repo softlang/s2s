@@ -112,6 +112,12 @@ object Util:
   ): Either[T1, List[T2]] =
     flipEither(eithers).left.map(_.head)
 
+  /** Sequence a list of option to option of list. */
+  def sequence[A](l: List[Option[A]]): Option[List[A]] = l.foldLeft(Option(List.empty[A])) {
+    case(Some(r), Some(v)) => Some(v :: r); 
+    case(_, _) => None 
+  }
+
   /** Construct IRI for testing purposes. */
   def forceIriUnsafe(s: String): Iri =
     Iri.fromString(s"<https://github.com/softlang/s2s/testing/$s>").toOption.get

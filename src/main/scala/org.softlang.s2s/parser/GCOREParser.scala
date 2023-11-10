@@ -15,26 +15,26 @@ class GCOREParser extends RegexParsers:
 
   // Queries
 
-  def pBasicGraphQuery: Parser[(ConstructClause, MatchClause)] = 
-    pConstructClause ~ pMatchClause ^^ {
+  def pBasicGraphQuery: Parser[(Construct, Match)] = 
+    pConstruct ~ pMatch ^^ {
       case c ~ m => (c,m)
     }
 
-  def pConstructClause: Parser[ConstructClause] = 
+  def pConstruct: Parser[Construct] = 
     "CONSTRUCT" ~> repsep(pBasicGraphPattern, ",") ~ opt("SET" ~> pSetClauses) ~ opt("REMOVE" ~> pRemoveClauses) ^^ {
-      case f ~ s ~ r => ConstructClause.Construct(f.toSet, s.toList.flatten, r.toList.flatten)
+      case f ~ s ~ r => Construct(f.toSet, s.toSet.flatten, r.toSet.flatten)
     }
 
-  def pMatchClause: Parser[MatchClause] =
+  def pMatch: Parser[Match] =
     "MATCH" ~> repsep(pBasicGraphPattern, ",") ~ opt("WHERE" ~> pWhenClauses) ^^ { 
-      case f ~ Some(w) => MatchClause.Match(f.toSet, w)
-      case f ~ None => MatchClause.Match(f.toSet, Nil)
+      case f ~ Some(w) => Match(f.toSet, w.toSet)
+      case f ~ None => Match(f.toSet, Set())
     }
 
   // Set and Remove clauses.
 
-  def pSetClauses: Parser[List[SetClause]] =
-    rep1sep(pSetClause, "AND")
+  def pSetClauses: Parser[Set[SetClause]] =
+    rep1sep(pSetClause, "AND") ^^ { _.toSet }
 
   def pSetClause: Parser[SetClause] =
     pSetKeyValue | pSetLabel
@@ -45,8 +45,8 @@ class GCOREParser extends RegexParsers:
   def pSetKeyValue: Parser[SetClause.SetKeyValue] =
     pVariable ~ pKey ~ "=" ~  pValue ^^ { case x ~ k ~ _ ~ v => SetClause.SetKeyValue(x, k, v) }
 
-  def pRemoveClauses: Parser[List[RemoveClause]] =
-    rep1sep(pRemoveClause, "AND")
+  def pRemoveClauses: Parser[Set[RemoveClause]] =
+    rep1sep(pRemoveClause, "AND") ^^ { _.toSet }
 
   def pRemoveClause: Parser[RemoveClause] =
     pRemoveKey| pRemoveLabel
@@ -59,8 +59,8 @@ class GCOREParser extends RegexParsers:
 
   // Conditional clauses.
 
-  def pWhenClauses: Parser[List[WhenClause]] =
-    rep1sep(pWhenClause, "AND")
+  def pWhenClauses: Parser[Set[WhenClause]] =
+    rep1sep(pWhenClause, "AND") ^^ { _.toSet }
 
   def pWhenClause: Parser[WhenClause] =
     pHasKeyValue | pHasKey | pHasLabel
