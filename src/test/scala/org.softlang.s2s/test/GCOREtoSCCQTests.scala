@@ -13,60 +13,167 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   val shar = Shar()
   import shar._
 
-  // Algorithm:
-  //  - Take all When
-  //  -   Build Where
-  //  - Take all When, union Set, diff Remove
-  //  -   Build Construct
-
-  val gq1 = GCORE(
-      Construct(
-        Set(BasicGraphPattern.NodePattern(Variable("x"))),
-        set = Set(SetClause.SetLabel(Variable("x"), Label("Dog"))),
-        remove = Set(RemoveClause.RemoveLabel(Variable("x"), Label("Person")))
-      ),
-      Match(
-        Set(BasicGraphPattern.NodePattern(Variable("x"))),
-        when = Set(
-          WhenClause.HasLabel(Variable("x"), Label("Person")),
-          WhenClause.HasLabel(Variable("x"), Label("Friendly"))
-        )
-      )
-    )
-
-  val sq1 = SCCQ(
-    template = List(
-      AtomicPattern.VAC(Var("x"), Label("Friendly").toIri),
-      AtomicPattern.VAC(Var("x"), Label("Dog").toIri)
-    ), 
-    pattern = List(
-      AtomicPattern.VAC(Var("x"), Label("Person").toIri),
-      AtomicPattern.VAC(Var("x"), Label("Friendly").toIri)
-    )
-  )
-
-  // Convert GCORE 'g' to SCCQ, test vs 's'.
-  def work(g: GCORE, s: SCCQ, debug: Boolean = false): Unit =
+  // GCORE 'g' converts successfully to SCCQ, test vs 's'.
+  def assertConvertsTo(g: GCORE, s: SCCQ, debug: Boolean = false): Unit =
     if debug then
       println("-- given sccq")
-      println(sq1.show)
+      println(s.show)
       println("\n-- given gcore")
-      println(gq1.show)
+      println(g.show)
       println("\n-- converted gcore -> sccq")
-      println(gq1.toSCCQ.map(_.show))
+      println(g.toSCCQ.map(_.show))
     val conv = g.toSCCQ
     assert(conv.isDefined)
     assert(SCCQ.validate(conv.get, "invalidForThisTest&*@!!!!").isRight)
-    assertEquals(conv.get.template, sq1.template)
-    assertEquals(conv.get.pattern, sq1.pattern)
+    assertEquals(conv.get.template, s.template)
+    assertEquals(conv.get.pattern, s.pattern)
 
-  // Test that given query can not be converted 
-  // to a valid SCCQ.
-  def workInvalid(g: GCORE): Unit =
+  // Given query can not be converted to a valid SCCQ.
+  def assertInvalid(g: GCORE): Unit =
     val conv = g.toSCCQ
-    assert(false)
-    // TODO
+    assert(conv.isEmpty)
 
-  test("Minimal G-CORE query to SCCQ query") {
-    work(gq1, sq1)
+  // Tests dealing with labels.
+
+  test("Converting GCORE with pure node fails") {
+    assertInvalid(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set()
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set()
+        )
+      )
+    )
   }
+
+  test("Converting GCORE with single when succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set()
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasLabel(Variable("x"), Label("Person"))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri)
+        ), 
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri),
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with when = remove fails") {
+    assertInvalid(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set(
+            RemoveClause.RemoveLabel(Variable("x"), Label("Person"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasLabel(Variable("x"), Label("Person"))
+          )
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with when <:< remove fails") {
+    assertInvalid(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set(
+            RemoveClause.RemoveLabel(Variable("x"), Label("Person")),
+            RemoveClause.RemoveLabel(Variable("x"), Label("Dog"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasLabel(Variable("x"), Label("Person"))
+          )
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with when <:< remove succeeds, if set") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(
+            SetClause.SetLabel(Variable("x"), Label("Dog"))
+          ),
+          remove = Set(
+            RemoveClause.RemoveLabel(Variable("x"), Label("Person")),
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasLabel(Variable("x"), Label("Person"))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), Label("Dog").toIri)
+        ), 
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri)
+        )
+      )
+    )
+  }
+
+  test("Converting (valid) GCORE with labels succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(SetClause.SetLabel(Variable("x"), Label("Dog"))),
+          remove = Set(RemoveClause.RemoveLabel(Variable("x"), Label("Person")))
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasLabel(Variable("x"), Label("Person")),
+            WhenClause.HasLabel(Variable("x"), Label("Friendly"))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), Label("Friendly").toIri),
+          AtomicPattern.VAC(Var("x"), Label("Dog").toIri)
+        ), 
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri),
+          AtomicPattern.VAC(Var("x"), Label("Friendly").toIri)
+        )
+      )
+    )
+  }
+
