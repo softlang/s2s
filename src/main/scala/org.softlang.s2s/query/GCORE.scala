@@ -40,7 +40,10 @@ class GCORE(
           Some(labels.map { l =>
             AtomicPattern.VAC(vx, l.toIri)
           })
-      case BasicGraphPattern.EdgePattern(_, _, _) => Some(Nil)
+      case BasicGraphPattern.EdgePattern(x, _, y) => for 
+        n1 <- generateNodes(Set(BasicGraphPattern.NodePattern(x)), vars, lok)
+        n2 <- generateNodes(Set(BasicGraphPattern.NodePattern(y)), vars, lok)
+      yield n1.union(n2)
     }).map(_.flatten.toSet)
 
   private def generateEdges(fgp: FullGraphPattern, lok: Map[Variable, List[WhenClause]]): Option[Set[AtomicPattern]] =
