@@ -40,7 +40,7 @@ class GCORE(
           Some(labels.map { l =>
             AtomicPattern.VAC(vx, l.toIri)
           })
-      case BasicGraphPattern.EdgePattern(x, _, y) => for 
+      case BasicGraphPattern.EdgePattern(x, e, y) => for 
         n1 <- generateNodes(Set(BasicGraphPattern.NodePattern(x)), vars, lok)
         n2 <- generateNodes(Set(BasicGraphPattern.NodePattern(y)), vars, lok)
       yield n1.union(n2)
@@ -48,10 +48,10 @@ class GCORE(
 
   private def generateEdges(fgp: FullGraphPattern, lok: Map[Variable, List[WhenClause]]): Option[Set[AtomicPattern]] =
     // Iterate all EdgePattern.
-    Util.sequence(fgp.toList.map { 
-      case BasicGraphPattern.EdgePattern(x, p, y) => 
-        // Find all labels for p. 
-        val labels = lok.getOrElse(p, Nil).flatMap { p => p match
+    Util.sequence(fgp.toList.map {
+      case BasicGraphPattern.EdgePattern(x, e, y) => 
+        // Find all labels for e. 
+        val labels = lok.getOrElse(e, Nil).flatMap { p => p match
           case WhenClause.HasLabel(_, l) => Some(l)
           case _ => None
         }
@@ -61,10 +61,13 @@ class GCORE(
         else 
           val vx = x.toVar
           val vy = y.toVar
-          // Generate VPV pattern for all labels.
-          Some(labels.map { l =>
-            AtomicPattern.VPV(vx, l.toIri, vy)
-          })
+          val ve = e.toVar
+          val s = Set(
+            // TODO: Use different namespaces for 'user' vs. 's2s' (in/out).
+            AtomicPattern.VPV(vx, Label("out").toIri, ve),
+            AtomicPattern.VPV(ve, Label("in").toIri, vy)
+          )
+          generateNodes(Set(BasicGraphPattern.NodePattern(e)), Set(), lok).map(_.union(s))
       case BasicGraphPattern.NodePattern(_) => Some(Nil)
     }).map(_.flatten.toSet)
 
@@ -78,6 +81,7 @@ class GCORE(
       nodes <- generateNodes(fgp, edges.toList.variables, lok)
     yield edges.union(nodes).toList
 
+  /** Convert this query to a SCCQ. */
   def toSCCQ: Option[SCCQ] =
     for h <- generateAtomic(
           template.fullGraphPattern, 
@@ -91,30 +95,6 @@ class GCORE(
       template = h,
       pattern = p
     )
-
-//class GCoreToSparql(prefix: String):
-//
-//  import Syntax._
-//
-//  def convert(gcore: Query): String = 
-//    convert(gcore._1) ++ convert(gcore._2)
-//
-//  private def convert(c: ConstructClause): String = ""
-//
-//  private def convert(c: MatchClause): String = c match
-//    case MatchClause.Match(p) => s"WHERE { ${convert(p)} }"
-//    case MatchClause.MatchWhere(p, w) => s"WHERE { ${convert(p)} . ${convert(w)} }"
-//
-//  private def convert(: FullGraphPattern): String = 
-//    p.map(convert).filter(_ != "").mkString(" . ")
-//
-//  private def convert(p: BasicGraphPattern): String = p match
-//    case BasicGraphPattern.NodePattern(x) => ""
-//    case BasicGraphPattern.EdgePattern(x, z, y) => "tbd"
-//
-//  private def convert(w: WhenClause): String = ""
-//
-//  private def convert(v: Variable): String = s"?${v.name}"
 
 object GCORE:
 
@@ -168,12 +148,6 @@ object GCORE:
         val ss = if s.nonEmpty then "\nSET" ++ s.map(_.show).mkString(" AND ") else ""
         val rs = if s.nonEmpty then "\nREMOVE" ++ r.map(_.show).mkString(" AND ") else ""
         bs ++ ss ++ rs
-
-    //def toSCCQ: S2STry[AtomicPatterns] =
-    //  this match
-    //    case Construct(fgp) => fgpToSCCQ(fgp)
-    //    case ConstructS(fgp, sc) => fa
-      
 
     //case ConstructWhen(fullGraphPattern: FullGraphPattern, booleanCondition: WhenClause)
 
@@ -244,11 +218,6 @@ object GCORE:
           val ws = if c.nonEmpty then "\nWHERE " ++ c.map(_.show).mkString(" AND ") else ""
           bs ++ ws
 
-    //def toSCCQ: S2STry[AtomicPatterns] =
-    //  this match
-    //    case Match(fgp) => fgpToSCCQ(fgp)
-    //    case MatchWhere(fgp, c) => fgpToSCCQ(fgp, c)
-
   type FullGraphPattern = Set[BasicGraphPattern]
     
   enum BasicGraphPattern extends Showable:
@@ -258,16 +227,6 @@ object GCORE:
     def show(implicit state: BackendState): String = this match
         case NodePattern(v) => s"(${v.show})"
         case EdgePattern(x, z, y) => s"(${x.show})-[${z.show}]->(${y.show})"
-
-    //def toSCCQ: S2STry[AtomicPatterns] =
-    //  this match
-    //    case NodePattern(v) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
-    //    case EdgePattern(x, z, y) => Left(UnsupportedQueryError(this, "can not be converted to SCCQ"))
-
-    // def toSCCQ(wc: WhenClause): S2STry[AtomicPatterns] =
-    //   this match
-    //     case NodePattern(v) => 
-    //     case EdgePattern(x, z, y) => 
 
   private def fgpToSCCQ(fgp: FullGraphPattern, wc: WhenClause): S2STry[AtomicPatterns] = Right(Nil) // TODO
 

@@ -25,8 +25,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     val conv = g.toSCCQ
     assert(conv.isDefined)
     assert(SCCQ.validate(conv.get, "invalidForThisTest&*@!!!!").isRight)
-    assertEquals(conv.get.template, s.template)
-    assertEquals(conv.get.pattern, s.pattern)
+    assertEquals(conv.get.template.toSet, s.template.toSet)
+    assertEquals(conv.get.pattern.toSet, s.pattern.toSet)
 
   // Given query can not be converted to a valid SCCQ.
   def assertInvalid(g: GCORE): Unit =
@@ -178,6 +178,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   }
 
   // Tests dealing with edge labels.
+  
+  val out = Label("out").toIri
+  val in = Label("in").toIri
 
   test("Converting GCORE with pure edge fails") {
     assertInvalid(
@@ -231,10 +234,14 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         ), 
         pattern = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         )
       )
     )
@@ -258,12 +265,16 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         ), 
         pattern = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         )
       )
     )
@@ -291,12 +302,16 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("hates").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("hates").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         ), 
         pattern = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y"))
         )
       )
     )
@@ -327,13 +342,17 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("hates").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("hates").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), Label("Person").toIri)
         ), 
         pattern = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), Label("Person").toIri)
         )
       )
@@ -363,13 +382,17 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("hates").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("hates").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri),
         ), 
         pattern = List(
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri)
         )
       )
@@ -404,21 +427,26 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("hates").toIri),
           AtomicPattern.VAC(Var("x"), Label("Person").toIri),
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
+          AtomicPattern.VAC(Var("x"), Label("QuasiCat").toIri),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri),
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri),
-          AtomicPattern.VAC(Var("x"), Label("QuasiCat").toIri),
-          AtomicPattern.VPV(Var("x"), Label("hates").toIri, Var("y"))
         ), 
         pattern = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("e"), Label("knows").toIri),
+          AtomicPattern.VAC(Var("e"), Label("likes").toIri),
           AtomicPattern.VAC(Var("x"), Label("Person").toIri),
-          AtomicPattern.VPV(Var("x"), Label("knows").toIri, Var("y")),
           AtomicPattern.VAC(Var("x"), Label("DogLover").toIri),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri),
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri),
-          AtomicPattern.VPV(Var("x"), Label("likes").toIri, Var("y"))
         )
       )
     )
   }
+
