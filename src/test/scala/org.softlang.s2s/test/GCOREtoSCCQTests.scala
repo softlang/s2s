@@ -179,8 +179,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
 
   // Tests dealing with edge labels.
   
-  val out = Label("out").toIri
-  val in = Label("in").toIri
+  val out = GCORE.outIri
+  val in = GCORE.inIri
 
   test("Converting GCORE with pure edge fails") {
     assertInvalid(
@@ -445,6 +445,339 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("DogLover").toIri),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri),
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri),
+        )
+      )
+    )
+  }
+
+  // Tests dealing with node key-value pairs.
+
+  test("Converting GCORE with single key-value succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set()
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim"))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with multiple key-value succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(),
+          remove = Set()
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with set/remove for key-value succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+          ),
+          remove = Set(
+            RemoveClause.RemoveKey(Variable("x"), Key("employed"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri)
+        ), 
+        pattern = List(
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with set for same key succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43))
+          ),
+          remove = Set()
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(43).toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+        )
+      )
+    )
+  }
+
+  test("Converting GCORE with many key-values succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43))
+          ),
+          remove = Set(
+            RemoveClause.RemoveKey(Variable("x"), Key("employed"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.NodePattern(Variable("x"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(43).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+        )
+      )
+    )
+  }
+
+  // Tests dealing with edge key-value pairs.
+
+  test("Converting GCORE with many key-values for edges succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001))
+          ),
+          remove = Set(
+            RemoveClause.RemoveKey(Variable("e"), Key("manager"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("HR")),
+            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2001).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("HR").toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2000).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("HR").toIri),
+          AtomicPattern.VPL(Var("e"), Key("manager").toIri, Value.BooleanValue(false).toIri),
+        )
+      )
+    )
+  }
+
+  // Tests dealing with edge and node key-value pairs.
+
+  test("Converting GCORE with many key-values for edges succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
+            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
+            SetClause.SetKeyValue(Variable("y"), Key("age"), Value.IntValue(43))
+          ),
+          remove = Set(
+            RemoveClause.RemoveKey(Variable("e"), Key("manager")),
+            RemoveClause.RemoveKey(Variable("x"), Key("employed")),
+            RemoveClause.RemoveKey(Variable("y"), Key("employed"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false)),
+            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true)),
+            WhenClause.HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("y"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("y"), Key("employed"), Value.BooleanValue(true))
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2001).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(43).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("y"), Key("age").toIri, Value.IntValue(43).toIri),
+          AtomicPattern.VPL(Var("y"), Key("name").toIri, Value.StringValue("Tim").toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2000).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("e"), Key("manager").toIri, Value.BooleanValue(false).toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+          AtomicPattern.VPL(Var("y"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("y"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("y"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+        )
+      )
+    )
+  }
+
+  // Tests dealing with edge and node key-value pairs and labels.
+
+  test("Converting GCORE with many key-values for edges succeeds") {
+    assertConvertsTo(
+      GCORE(
+        template = Construct(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          set = Set(
+            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
+            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
+            SetClause.SetKeyValue(Variable("y"), Key("age"), Value.IntValue(43)),
+            SetClause.SetLabel(Variable("x"), Label("A2"))
+          ),
+          remove = Set(
+            RemoveClause.RemoveKey(Variable("e"), Key("manager")),
+            RemoveClause.RemoveKey(Variable("x"), Key("employed")),
+            RemoveClause.RemoveKey(Variable("y"), Key("employed")),
+            RemoveClause.RemoveLabel(Variable("x"), Label("A1"))
+          )
+        ),
+        pattern = Match(
+          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          when = Set(
+            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false)),
+            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true)),
+            WhenClause.HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(Variable("y"), Key("name"), Value.StringValue("Tim")),
+            WhenClause.HasKeyValue(Variable("y"), Key("employed"), Value.BooleanValue(true)),
+            WhenClause.HasLabel(Variable("x"), Label("A")),
+            WhenClause.HasLabel(Variable("x"), Label("A1")),
+            WhenClause.HasLabel(Variable("y"), Label("B")),
+            WhenClause.HasLabel(Variable("e"), Label("c")),
+          )
+        )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2001).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(43).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("y"), Key("age").toIri, Value.IntValue(43).toIri),
+          AtomicPattern.VPL(Var("y"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VAC(Var("e"), Label("c").toIri),
+          AtomicPattern.VAC(Var("x"), Label("A").toIri),
+          AtomicPattern.VAC(Var("x"), Label("A2").toIri),
+          AtomicPattern.VAC(Var("y"), Label("B").toIri),
+        ), 
+        pattern = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VPL(Var("e"), Key("since").toIri, Value.IntValue(2000).toIri),
+          AtomicPattern.VPL(Var("e"), Key("role").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("e"), Key("manager").toIri, Value.BooleanValue(false).toIri),
+          AtomicPattern.VPL(Var("x"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("x"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("x"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+          AtomicPattern.VPL(Var("y"), Key("age").toIri, Value.IntValue(42).toIri),
+          AtomicPattern.VPL(Var("y"), Key("name").toIri, Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(Var("y"), Key("employed").toIri, Value.BooleanValue(true).toIri),
+          AtomicPattern.VAC(Var("e"), Label("c").toIri),
+          AtomicPattern.VAC(Var("x"), Label("A").toIri),
+          AtomicPattern.VAC(Var("x"), Label("A1").toIri),
+          AtomicPattern.VAC(Var("y"), Label("B").toIri),
         )
       )
     )

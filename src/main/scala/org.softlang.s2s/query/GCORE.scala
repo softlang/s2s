@@ -22,6 +22,8 @@ class GCORE(
   def show(implicit state: BackendState): String =
     "CONSTRUCT " ++ template.show ++ "\nMATCH " ++ pattern.show
 
+  /** Generate node patterns, given the graph pattern (fgp) the variables in edge patterns (vars),
+   *  and a mapping from variables to WhenClauses (may be joined with Set/Remove clauses; see generateAtomic). */
   private def generateNodes(fgp: FullGraphPattern, vars: Set[Var], lok: Map[Variable, List[WhenClause]]): Option[Set[AtomicPattern]] = 
     // Iterate all NodePattern.
     Util.sequence(fgp.toList.map { 
@@ -31,21 +33,40 @@ class GCORE(
           case WhenClause.HasLabel(_, l) => Some(l)
           case _ => None
         }
-        // TODO: Incorporate key-value pairs.
-        // Must be at least one for a valid SCCQ, or 'x' must be in vars.
-        if labels.isEmpty && !vars.contains(x.toVar) then None
+        // Find all key-value pairs for x.
+        val kvs = lok.getOrElse(x, Nil).flatMap { x => x match
+          case WhenClause.HasKeyValue(_, k, v) => Some((k,v))
+          case _ => None
+        }
+        // Find all key assertions (note: only for pattern).
+        val keys = lok.getOrElse(x, Nil).flatMap { x => x match
+          case WhenClause.HasKey(_, k) => Some(k)
+          case _ => None
+        }
+        // Must be at least one label/k(v) for a valid SCCQ, or 'x' must be in vars.
+        if labels.isEmpty && kvs.isEmpty && keys.isEmpty && !vars.contains(x.toVar) then None
         else 
           val vx = x.toVar
-          // Generate VAC pattern for all labels.
-          Some(labels.map { l =>
-            AtomicPattern.VAC(vx, l.toIri)
-          })
+          // Generate VAC pattern for all 
+          // labels, key-values, and keys.
+          Some(
+            labels.map { l =>
+              AtomicPattern.VAC(vx, l.toIri)
+            }.concat(
+            kvs.map { (k,v) =>
+              AtomicPattern.VPL(vx, k.toIri, v.toIri)
+            }).concat(
+            keys.map { k =>
+              AtomicPattern.VPV(vx, k.toIri, Variable(x.name ++ "_" ++ k.keyname).toVar)
+            }))
       case BasicGraphPattern.EdgePattern(x, e, y) => for 
         n1 <- generateNodes(Set(BasicGraphPattern.NodePattern(x)), vars, lok)
         n2 <- generateNodes(Set(BasicGraphPattern.NodePattern(y)), vars, lok)
       yield n1.union(n2)
     }).map(_.flatten.toSet)
 
+  /** Encode EdgePatterns in fgp to include out/in patterns and call NodePattern for edge variables. 
+   *  Must be at least one edge label or property, else None. */
   private def generateEdges(fgp: FullGraphPattern, lok: Map[Variable, List[WhenClause]]): Option[Set[AtomicPattern]] =
     // Iterate all EdgePattern.
     Util.sequence(fgp.toList.map {
@@ -55,17 +76,20 @@ class GCORE(
           case WhenClause.HasLabel(_, l) => Some(l)
           case _ => None
         }
-        // TODO: Incorporate key-value pairs.
+        // Find all key-value pairs for e.
+        val kvs = lok.getOrElse(e, Nil).flatMap { p => p match
+          case WhenClause.HasKeyValue(_, k, v) => Some((k,v))
+          case _ => None
+        }
         // Must be at least one for a valid SCCQ.
-        if labels.isEmpty then None
+        if labels.isEmpty && kvs.isEmpty then None
         else 
           val vx = x.toVar
           val vy = y.toVar
           val ve = e.toVar
           val s = Set(
-            // TODO: Use different namespaces for 'user' vs. 's2s' (in/out).
-            AtomicPattern.VPV(vx, Label("out").toIri, ve),
-            AtomicPattern.VPV(ve, Label("in").toIri, vy)
+            AtomicPattern.VPV(vx, outIri, ve),
+            AtomicPattern.VPV(ve, inIri, vy)
           )
           generateNodes(Set(BasicGraphPattern.NodePattern(e)), Set(), lok).map(_.union(s))
       case BasicGraphPattern.NodePattern(_) => Some(Nil)
@@ -85,11 +109,19 @@ class GCORE(
   def toSCCQ: Option[SCCQ] =
     for h <- generateAtomic(
           template.fullGraphPattern, 
-          pattern.when
-            .union(template.set.map(_.asWhen))
-            .diff(template.remove.map(_.asWhen)))
+          // Merge clauses w.r.t. GCORE semantics.
+          mergeClauses(
+            from = pattern.when,
+            set = template.set,
+            remove = template.remove
+          )
+          // Remove HasKey clauses (only relevant in patter).
+          .filter(x => x match
+            case WhenClause.HasKey(_, _) => false
+            case _ => true))
         p <- generateAtomic(
           pattern.fullGraphPattern, 
+          // Simply include the full when clause (including HasKey).
           pattern.when)
     yield SCCQ(
       template = h,
@@ -101,17 +133,22 @@ object GCORE:
   case class Variable(name: String) extends Showable:
     def show(implicit state: BackendState): String = name
 
+    /** Convert wCORE variable to SCCQ variable. */
     def toVar: Var = Var(name)
 
   case class Key(keyname: String) extends Showable:
     def show(implicit state: BackendState): String = "." ++ keyname
 
+    /** Encode this key as IRI. */
+    def toIri: Iri = 
+      Iri.fromString(s"<https://github.com/softlang/s2s/key/${keyname}>").toOption.get
+
   case class Label(labelname: String) extends Showable:
     def show(implicit state: BackendState): String = ":" ++ labelname
 
+    /** Encode this label as IRI. */
     def toIri: Iri = 
-      // Hack.
-      Iri.fromString("<https://github.com/softlang/s2s/" ++ labelname ++">").toOption.get
+      Iri.fromString(s"<https://github.com/softlang/s2s/label/${labelname}>").toOption.get
   
   enum Value extends Showable:
     case IntValue(int: Int)
@@ -122,6 +159,13 @@ object GCORE:
       case IntValue(i) => i.toString
       case StringValue(s) => s"\"$s\""
       case BooleanValue(b) => b.toString
+
+    /** Encode this value as IRI. */
+    def toIri: Iri = this match
+      // TODO: Value encoding is broken, fails for, e.g., ' '. Must URL encode.
+      case IntValue(i) => Iri.fromString(s"<https://github.com/softlang/s2s/int/${i}>").toOption.get
+      case StringValue(s) => Iri.fromString(s"<https://github.com/softlang/s2s/string/${s}>").toOption.get
+      case BooleanValue(b) => Iri.fromString(s"<https://github.com/softlang/s2s/boolean/${b}>").toOption.get
 
   //type Query = BasicGraphQuery
 
@@ -207,7 +251,32 @@ object GCORE:
     /** Get a mapping from getVar to this WhenClause. */
     def toVarTuple: (Variable, WhenClause) = (this.getVar -> this)
 
-    // TODO ...
+  /** Merge when, set and remove clauses according to GCORE semantics. */
+  def mergeClauses(from: Set[WhenClause], set: Set[SetClause], remove: Set[RemoveClause]): Set[WhenClause] = 
+    // Map set and remove to when (only relevant for syntax).
+    val wset = set.map(_.asWhen)
+    val wremove = remove.map(_.asWhen)
+    // Take all when clauses.
+    from
+      // Remove when clauses that are overwritten by set clause (key-value).
+      .filterNot { c => c match
+        case WhenClause.HasKeyValue(x, k, _) =>
+          wset.exists { w => w match
+            case WhenClause.HasKeyValue(xi, ki, _) => x == xi && k == ki
+            case _ => false
+          }
+        case _ => false
+      }
+      // Join with all set clauses.
+      .concat(wset)
+      // Filter remove clauses.
+      .filterNot { c => c match
+        case WhenClause.HasKey(x, k) => wremove.contains(c)
+        // HasKeyValue is also removedby HasKey (in remove clause).
+        case WhenClause.HasKeyValue(x, k, v) => 
+          wremove.contains(WhenClause.HasKey(x, k)) || wremove.contains(c)
+        case WhenClause.HasLabel(x, k) => wremove.contains(c)
+      }
 
   // MATCH
   case class Match(fullGraphPattern: FullGraphPattern, when: Set[WhenClause]) extends Showable:
@@ -231,4 +300,10 @@ object GCORE:
   private def fgpToSCCQ(fgp: FullGraphPattern, wc: WhenClause): S2STry[AtomicPatterns] = Right(Nil) // TODO
 
   private def fgpToSCCQ(fgp: FullGraphPattern): S2STry[AtomicPatterns] = Right(Nil) // TODO
+
+  /** Internal IRI for 'out' edges. */
+  val outIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/out>").toOption.get
+
+  /** Internal IRI for 'in' edges. */
+  val inIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/in>").toOption.get
 
