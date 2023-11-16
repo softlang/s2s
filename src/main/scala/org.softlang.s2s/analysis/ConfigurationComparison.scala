@@ -84,8 +84,8 @@ class ConfigurationComparison(
   /** Compare for specific input (String encoded). */
   def input(q: String, sin: Set[String]): S2STry[Boolean] =
     for
-      qp <- s1.parseQuery(q)
-      sp <- s1.parseShapes(sin)
+      qp <- s1.parseSCCQQuery(q)
+      sp <- s1.parseSHACLShapes(sin)
     yield input(qp, sp.toList.toSet)
 
   /** Compare for specific input. */

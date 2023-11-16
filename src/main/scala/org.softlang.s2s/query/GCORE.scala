@@ -107,26 +107,31 @@ class GCORE(
 
   /** Convert this query to a SCCQ. */
   def toSCCQ: Option[SCCQ] =
-    for h <- generateAtomic(
-          template.fullGraphPattern, 
-          // Merge clauses w.r.t. GCORE semantics.
-          mergeClauses(
-            from = pattern.when,
-            set = template.set,
-            remove = template.remove
-          )
-          // Remove HasKey clauses (only relevant in patter).
-          .filter(x => x match
-            case WhenClause.HasKey(_, _) => false
-            case _ => true))
-        p <- generateAtomic(
-          pattern.fullGraphPattern, 
-          // Simply include the full when clause (including HasKey).
-          pattern.when)
-    yield SCCQ(
-      template = h,
-      pattern = p
-    )
+    for h <- sccqTemplate
+        p <- sccqPattern
+    yield SCCQ(template = h, pattern = p)
+
+  /** Generate the corresponding SCCQ template. */
+  def sccqTemplate: Option[List[AtomicPattern]] =
+    generateAtomic(
+      template.fullGraphPattern, 
+      // Merge clauses w.r.t. GCORE semantics.
+      mergeClauses(
+        from = pattern.when,
+        set = template.set,
+        remove = template.remove
+      )
+      // Remove HasKey clauses (only relevant in patter).
+      .filter(x => x match
+        case WhenClause.HasKey(_, _) => false
+        case _ => true))
+
+  /** Generate the corresponding SCCQ pattern. */
+  def sccqPattern: Option[List[AtomicPattern]] =
+    generateAtomic(
+      pattern.fullGraphPattern, 
+      // Simply include the full when clause (including HasKey). 
+      pattern.when)
 
 object GCORE:
 

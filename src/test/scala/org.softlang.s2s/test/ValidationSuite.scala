@@ -53,9 +53,9 @@ abstract class ValidationSuite extends munit.FunSuite:
       val actualSOut = actualSOutS.map(descope)
 
       // Parse the test case (and move T to Scope.Template).
-      val exactlyOut = parseShapes(exactly)
-      val atleastOut = parseShapes(atleast)
-      val notOut = parseShapes(not)
+      val exactlyOut = parseSHACLShapes(exactly)
+      val atleastOut = parseSHACLShapes(atleast)
+      val notOut = parseSHACLShapes(not)
 
       // Parsing and input error assertions.
       // (Only for detecting errors in tests early.)

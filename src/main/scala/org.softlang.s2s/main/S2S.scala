@@ -9,6 +9,7 @@ import scala.util.Try
 
 /** Shapes2Shapes application entry point. */
 object S2S:
+
   // Output (system) errors, if files can not be opened.
   private def handle[T](t: Try[T]): Unit =
     t match

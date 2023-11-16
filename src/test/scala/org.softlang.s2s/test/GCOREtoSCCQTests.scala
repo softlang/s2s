@@ -33,9 +33,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     val conv = g.toSCCQ
     assert(conv.isEmpty)
 
-  // Tests dealing with node labels.
+  // Tests dealing node labels.
 
-  test("Converting GCORE with pure node fails") {
+  test("pure node fails") {
     assertInvalid(
       GCORE(
         template = Construct(
@@ -51,7 +51,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with single when succeeds") {
+  test("single when succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -77,7 +77,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with when = remove fails") {
+  test("when = remove fails") {
     assertInvalid(
       GCORE(
         template = Construct(
@@ -97,7 +97,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with when <:< remove fails") {
+  test("when <:< remove fails") {
     assertInvalid(
       GCORE(
         template = Construct(
@@ -118,7 +118,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with when <:< remove succeeds, if set") {
+  test("when <:< remove succeeds, if set") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -148,7 +148,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting (valid) GCORE with labels succeeds") {
+  test("labels succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -177,12 +177,12 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with edge labels.
+  // Tests dealing edge labels.
   
   val out = GCORE.outIri
   val in = GCORE.inIri
 
-  test("Converting GCORE with pure edge fails") {
+  test("pure edge fails") {
     assertInvalid(
       GCORE(
         template = Construct(
@@ -198,7 +198,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with pure edge fails, even with non-empty nodes") {
+  test("pure edge fails, even non-empty nodes") {
     assertInvalid(
       GCORE(
         template = Construct(
@@ -217,7 +217,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with single edge label (when)") {
+  test("single edge label (when)") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -247,7 +247,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with multiple edge label (when)") {
+  test("multiple edge label (when)") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -280,7 +280,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with multiple edge labels") {
+  test("multiple edge labels") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -317,9 +317,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with node and edge labels.
+  // Tests dealing node and edge labels.
   
-  test("Converting GCORE with both labels") {
+  test("both labels") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -359,7 +359,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with other labels") {
+  test("other labels") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -399,7 +399,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with many labels") {
+  test("many labels") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -450,9 +450,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with node key-value pairs.
+  // Tests dealing node key-value pairs.
 
-  test("Converting GCORE with single key-value succeeds") {
+  test("single key-value succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -478,7 +478,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with multiple key-value succeeds") {
+  test("multiple key-value succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -510,7 +510,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with set/remove for key-value succeeds") {
+  test("set/remove for key-value succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -543,7 +543,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with set for same key succeeds") {
+  test("set for same key succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -571,7 +571,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  test("Converting GCORE with many key-values succeeds") {
+  test("many key-values succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -606,9 +606,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with edge key-value pairs.
+  // Tests dealing edge key-value pairs.
 
-  test("Converting GCORE with many key-values for edges succeeds") {
+  test("many key-values for edges succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -647,9 +647,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with edge and node key-value pairs.
+  // Tests dealing edge and node key-value pairs.
 
-  test("Converting GCORE with many key-values for edges succeeds") {
+  test("many key-values for edges succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(
@@ -708,9 +708,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     )
   }
 
-  // Tests dealing with edge and node key-value pairs and labels.
+  // Tests dealing edge and node key-value pairs and labels.
 
-  test("Converting GCORE with many key-values for edges succeeds") {
+  test("many key-values for edges succeeds") {
     assertConvertsTo(
       GCORE(
         template = Construct(

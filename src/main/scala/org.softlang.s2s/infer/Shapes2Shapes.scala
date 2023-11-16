@@ -43,7 +43,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val sccqParser = SCCQParser(shar)
 
   /** Attempt to parse a SCCQ query. */
-  def parseQuery(query: String): S2STry[SCCQ] =
+  def parseSCCQQuery(query: String): S2STry[SCCQ] =
     for
       qi <- sccqParser.parse(query)
       q <- SCCQ.validate(qi, config.renameToken)
@@ -53,7 +53,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   private val shapeParser = ShapeParser(shar)
 
   /** Attempt to parse a set of Simple SHACL shapes. */
-  def parseShapes(
+  def parseSHACLShapes(
       shapes: Set[String]
   ): S2STry[Set[SHACLShape]] =
     for s <- Util
@@ -97,9 +97,9 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val sOut = for
       // Parse and validate query.
-      q <- parseQuery(query)
+      q <- parseSCCQQuery(query)
       // Parse and validate input shapes.
-      s <- parseShapes(shapes)
+      s <- parseSHACLShapes(shapes)
       // Run the algorithm.
       r <- algorithm(q, s, log)
     yield r
@@ -114,12 +114,11 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       q: SCCQ,
       s: Set[SimpleSHACLShape],
       log: Log
-  ): S2STry[Set[SHACLShape]] = Algorithm(
-    config, 
-    shar, 
-    q, 
-    Left(s.map(_.inScopeS(Scope.In))), 
-    log)(scopes)()
+  ): S2STry[Set[SHACLShape]] = 
+    Algorithm(config, shar, 
+      // Call with SCCQ and SimpleSHACLShapes.
+      AlgorithmInput.SCCQSimpleSHACL(q, s.map(_.inScopeS(Scope.In))),
+      log)(scopes)()
 
   /** Apply the algorithm, only. */
   def algorithm(
@@ -127,9 +126,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       s: Set[SHACLShape],
       log: Log
   ): S2STry[Set[SHACLShape]] = 
-    Algorithm(
-      config, 
-      shar, 
-      q,
-      Right(s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
+    Algorithm(config, shar, 
+      // Call with SCCQ and Axioms.
+      AlgorithmInput.SCCQAxioms(q, s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
       log)(scopes)()
