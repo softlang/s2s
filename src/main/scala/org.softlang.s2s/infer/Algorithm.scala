@@ -30,21 +30,21 @@ enum AlgorithmInput:
   def template(implicit scopes: Scopes): S2STry[AtomicPatterns] = this match
     case SCCQAxioms(q, _) => Right(q.template.inScope(Scope.Out))
     case SCCQSimpleSHACL(q, _) => Right(q.template.inScope(Scope.Out))
-    case GCOREAxioms(q, _) => q.toSCCQ match
+    case GCOREAxioms(q, _) => q.sccqTemplate match
       case None => Left(
         UnsupportedQueryError(q, details = "This GCORE query can not be converted to SPARQL.")
       )
-      case Some(q) => Right(q.template.inScope(Scope.Out))
+      case Some(t) => Right(t.inScope(Scope.Out))
 
   /** Get the pattern of the input query. */
   def pattern(implicit scopes: Scopes): S2STry[AtomicPatterns] = this match
     case SCCQAxioms(q, _) => Right(q.pattern.inScope(Scope.Med))
     case SCCQSimpleSHACL(q, _) =>  Right(q.pattern.inScope(Scope.Med))
-    case GCOREAxioms(q, _) => q.toSCCQ match
+    case GCOREAxioms(q, _) => q.sccqPattern match
       case None => Left(
         UnsupportedQueryError(q, details = "This GCORE query can not be converted to SPARQL.")
       )
-      case Some(q) => Right(q.pattern.inScope(Scope.Med))
+      case Some(p) => Right(p.inScope(Scope.Med))
 
   /** Return input constraints as axioms. */
   def shapeAxioms: Set[Axiom] = this match
@@ -217,18 +217,26 @@ class Algorithm(
     // log.profileStart("build")
 
     for
-      // Infer axioms from query and shapes.
+      // Infer axioms from the query pattern.
       patternAxioms <- processPattern(log)
-      templateAxioms <- processTemplate(log)
+      // Transform inout shapes (or axioms) to axioms.
       shapeAxioms = input.shapeAxioms
-      initialAxioms = shapeAxioms.union(patternAxioms).union(templateAxioms)
-      // Extend axioms, using shapes / initial constraints.
-      extendedAxioms <- extendAxioms(initialAxioms, log)
-      axioms = initialAxioms.union(extendedAxioms)
+      // Generate axioms from mapping components, using previous axioms.
+      mappingSubs <- extendMapping(shapeAxioms.union(patternAxioms), log)
+      // Generate axioms from template.
+      templateAxioms <- processTemplate(log)
+      // Generate axioms for properties.
+      props <- extendProperties(mappingSubs, log)
+      // Finally, join all axioms inferred here.
+      axioms = patternAxioms
+        .union(shapeAxioms)
+        .union(mappingSubs)
+        .union(templateAxioms)
+        .union(props)
     yield axioms 
 
   /** Perform the KB construction extension step of the algorithm. */
-  def extendAxioms(initialAxioms: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
+  def extendMapping(initialAxioms: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
     for 
       shapes <- input.extensionShapes(() => convert(initialAxioms))
       p <- input.pattern
@@ -241,6 +249,12 @@ class Algorithm(
         log.profileEnd("build-mapping")
         mappingSubs
       }
+    yield mappingSubs
+
+  /** Perform the KB construction extension step of the algorithm. */
+  def extendProperties(mappingSubs: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
+    for 
+      p <- input.pattern
       t <- input.template
       props = {
         log.profileStart("build-properties")
@@ -249,7 +263,7 @@ class Algorithm(
         log.profileEnd("build-properties")
         props
       }
-    yield mappingSubs.union(props)
+    yield props
 
   /** Add input query and shapes to log. */
   private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =

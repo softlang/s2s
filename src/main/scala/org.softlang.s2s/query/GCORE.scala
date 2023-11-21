@@ -133,6 +133,14 @@ class GCORE(
       // Simply include the full when clause (including HasKey). 
       pattern.when)
 
+  /** Extend the set part of the Construct pattern. */
+  def extendConstructSet(clauses: Set[SetClause]): GCORE = GCORE(
+    GCORE.Construct(
+      this.template.fullGraphPattern, 
+      this.template.set.union(clauses), 
+      this.template.remove),
+    this.pattern)
+
 object GCORE:
 
   case class Variable(name: String) extends Showable:
