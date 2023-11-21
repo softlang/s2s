@@ -177,12 +177,15 @@ class Algorithm(
     //log.profileStart("filter")
 
     for 
+      // First, construct all axioms.
       axioms <- axioms()
+      // Generate candidate shapes from template.
       t <- input.template
       canGen = CandidateGenerator(
         t.vocabulary,
         heuristic = config.shapeHeuristic
       )(scopes)
+      // Filter candidates, checking entailment with axioms.
       result <- {
         var result: S2STry[Set[SHACLShape]] = Right(Set())
         var all: Set[SHACLShape] = Set()
@@ -207,6 +210,7 @@ class Algorithm(
     //log.profileEnd("filter")
     //log.profileEnd("algorithm")
 
+  /** Run algorithm, returning a set of axioms. */
   def axioms(): S2STry[Set[Axiom]] =
 
     //log.profileStart("algorithm")
@@ -235,10 +239,11 @@ class Algorithm(
         .union(props)
     yield axioms 
 
-  /** Perform the KB construction extension step of the algorithm. */
-  def extendMapping(initialAxioms: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
+  /** Generate additional axioms using the component mapping approach. */
+  def extendMapping(patternShapeAxioms: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
     for 
-      shapes <- input.extensionShapes(() => convert(initialAxioms))
+      // Get shapes from input, or construt using pre-existing axioms.
+      shapes <- input.extensionShapes(() => convert(patternShapeAxioms))
       p <- input.pattern
       mappingSubs = {
         log.profileStart("build-mapping")
@@ -251,7 +256,7 @@ class Algorithm(
       }
     yield mappingSubs
 
-  /** Perform the KB construction extension step of the algorithm. */
+  /** Generate additional axioms from property subsumptions. */
   def extendProperties(mappingSubs: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
     for 
       p <- input.pattern
