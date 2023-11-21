@@ -27,10 +27,10 @@ enum AlgorithmInput:
   case GCOREAxioms(q: GCORE, axioms: Set[Axiom] = Set())
 
   /** Get the template of the input query. */
-  def template(implicit scopes: Scopes): S2STry[AtomicPatterns] = this match
+  def template(extraClauses: Set[GCORE.SetClause])(implicit scopes: Scopes): S2STry[AtomicPatterns] = this match
     case SCCQAxioms(q, _) => Right(q.template.inScope(Scope.Out))
     case SCCQSimpleSHACL(q, _) => Right(q.template.inScope(Scope.Out))
-    case GCOREAxioms(q, _) => q.sccqTemplate match
+    case GCOREAxioms(q, _) => q.sccqTemplate(extraClauses) match
       case None => Left(
         UnsupportedQueryError(q, details = "This GCORE query can not be converted to SPARQL.")
       )
@@ -161,9 +161,9 @@ class Algorithm(
     dcaH.union(cwaH).union(una)
 
   /** Process the query template. */
-  def processTemplate(log: Log): S2STry[Set[Axiom]] = 
+  def processTemplate(extraClauses: Set[GCORE.SetClause], log: Log): S2STry[Set[Axiom]] = 
     for 
-      t <- input.template
+      t <- input.template(extraClauses)
       p <- input.pattern
     yield buildAxiomsTemplate(
       template = t, 
@@ -178,9 +178,11 @@ class Algorithm(
 
     for 
       // First, construct all axioms.
-      axioms <- axioms()
+      extraClausesAxioms <- axiomsInternal()
+      extraClauses = extraClausesAxioms._1
+      axioms = extraClausesAxioms._2
       // Generate candidate shapes from template.
-      t <- input.template
+      t <- input.template(extraClauses)
       canGen = CandidateGenerator(
         t.vocabulary,
         heuristic = config.shapeHeuristic
@@ -211,7 +213,10 @@ class Algorithm(
     //log.profileEnd("algorithm")
 
   /** Run algorithm, returning a set of axioms. */
-  def axioms(): S2STry[Set[Axiom]] =
+  private def axioms(): S2STry[Set[Axiom]] = axiomsInternal().map(_._2)
+
+  /** Run algorithm, returning a set of axioms. */
+  private def axiomsInternal(): S2STry[(Set[GCORE.SetClause], Set[Axiom])] =
 
     //log.profileStart("algorithm")
 
@@ -227,17 +232,19 @@ class Algorithm(
       shapeAxioms = input.shapeAxioms
       // Generate axioms from mapping components, using previous axioms.
       mappingSubs <- extendMapping(shapeAxioms.union(patternAxioms), log)
+      // Generate additional clauses for GCORE queries, persisting labels and properties.
+      extraClauses <- extendConstruct(patternAxioms.union(shapeAxioms).union(mappingSubs), log)
       // Generate axioms from template.
-      templateAxioms <- processTemplate(log)
+      templateAxioms <- processTemplate(extraClauses, log)
       // Generate axioms for properties.
-      props <- extendProperties(mappingSubs, log)
+      props <- extendProperties(mappingSubs, extraClauses, log)
       // Finally, join all axioms inferred here.
       axioms = patternAxioms
         .union(shapeAxioms)
         .union(mappingSubs)
         .union(templateAxioms)
         .union(props)
-    yield axioms 
+    yield (extraClauses, axioms)
 
   /** Generate additional axioms using the component mapping approach. */
   def extendMapping(patternShapeAxioms: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
@@ -257,10 +264,10 @@ class Algorithm(
     yield mappingSubs
 
   /** Generate additional axioms from property subsumptions. */
-  def extendProperties(mappingSubs: Set[Axiom], log: Log): S2STry[Set[Axiom]] =
+  def extendProperties(mappingSubs: Set[Axiom], extraClauses: Set[GCORE.SetClause], log: Log): S2STry[Set[Axiom]] =
     for 
       p <- input.pattern
-      t <- input.template
+      t <- input.template(extraClauses)
       props = {
         log.profileStart("build-properties")
         val props = PropertySubsumption(p, mappingSubs, t).axioms
@@ -269,6 +276,19 @@ class Algorithm(
         props
       }
     yield props
+
+  /** Extend construct (set clauses), if GCORE query. */
+  def extendConstruct(axioms: Set[Axiom], log: Log): S2STry[Set[GCORE.SetClause]] = input match
+    case AlgorithmInput.SCCQAxioms(_, _) => Right(Set())
+    case AlgorithmInput.SCCQSimpleSHACL(_, _) => Right(Set())
+    case AlgorithmInput.GCOREAxioms(q, _) => 
+      val cand = generateExtensionCandidates()
+      for 
+        f <- filter(cand, AxiomSet(axioms), log, config.retry, config.timeout.millis)
+        r <- S2SError.sequence(f.map(GCORE.shapeToSetClause(_)))
+      yield r
+
+  private def generateExtensionCandidates(): Set[SHACLShape] = Set()
 
   /** Add input query and shapes to log. */
   private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =

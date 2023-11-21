@@ -56,6 +56,10 @@ extension (i: Iri)
   def dropScope(implicit scopes: Scopes): Iri =
     if i.isVariable then i else i.getBase(scopes)
 
+  /** Also drop scopes for variables. Only for GCORE support. */
+  def dropScopeVariableInternal(implicit scopes: Scopes): Iri =
+    i.getBase(scopes)
+
 extension (c: Concept)
   def inScope(scope: Scope)(implicit scopes: Scopes): Concept = c match
     case NamedConcept(i) => NamedConcept(i.inScope(scope))

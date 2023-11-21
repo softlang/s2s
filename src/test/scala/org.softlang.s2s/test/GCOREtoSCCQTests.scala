@@ -1,8 +1,10 @@
 package org.softlang.s2s.test
 
 import de.pseifer.shar.Shar
+import de.pseifer.shar.core.Iri
 
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.query.GCORE
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.AtomicPattern
@@ -13,6 +15,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   val shar = Shar()
   import shar._
 
+  implicit val scopes: Scopes = Scopes("•", in = 0, med = 1, out = 2, variable = -1)
+
   // GCORE 'g' converts successfully to SCCQ, test vs 's'.
   def assertConvertsTo(g: GCORE, s: SCCQ, debug: Boolean = false): Unit =
     if debug then
@@ -21,8 +25,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       println("\n-- given gcore")
       println(g.show)
       println("\n-- converted gcore -> sccq")
-      println(g.toSCCQ.map(_.show))
-    val conv = g.toSCCQ
+      println(g.toSCCQ(Set()).map(_.show))
+    val conv = g.toSCCQ(Set())
     assert(conv.isDefined)
     assert(SCCQ.validate(conv.get, "invalidForThisTest&*@!!!!").isRight)
     assertEquals(conv.get.template.toSet, s.template.toSet)
@@ -30,8 +34,52 @@ class GCOREtoSCCQTests extends munit.FunSuite:
 
   // Given query can not be converted to a valid SCCQ.
   def assertInvalid(g: GCORE): Unit =
-    val conv = g.toSCCQ
+    val conv = g.toSCCQ(Set())
     assert(conv.isEmpty)
+
+  // Basic conversion between Iri/Var and Label, Key, Variable, and Values.
+  
+  test("label conversion works correctly") {
+    val l1 = Label("test")
+    assertEquals(Label.fromIri(l1.toIri), l1)
+    val l2 = Label("AnotherTest")
+    assertEquals(Label.fromIri(l2.toIri), l2)
+    val l3 = Label("")
+    assertEquals(Label.fromIri(l3.toIri), l3)
+  }
+
+  test("key conversion works correctly") {
+    val k1 = Key("test")
+    assertEquals(Key.fromIri(k1.toIri), k1)
+    val k2 = Key("AnotherTest")
+    assertEquals(Key.fromIri(k2.toIri), k2)
+    val k3 = Key("")
+    assertEquals(Key.fromIri(k3.toIri), k3)
+  }
+
+  test("value conversion works correctly") {
+    val v1 = Value.IntValue(0)
+    assertEquals(Value.fromIri(v1.toIri), v1)
+    val v2 = Value.IntValue(42)
+    assertEquals(Value.fromIri(v2.toIri), v2)
+    val v3 = Value.BooleanValue(true)
+    assertEquals(Value.fromIri(v3.toIri), v3)
+    val v4 = Value.BooleanValue(false)
+    assertEquals(Value.fromIri(v4.toIri), v4)
+    val v5 = Value.StringValue("")
+    assertEquals(Value.fromIri(v5.toIri), v5)
+    val v6 = Value.StringValue("test")
+    assertEquals(Value.fromIri(v6.toIri), v6)
+  }
+
+  test("variable conversion works correctly") {
+    val v1 = Variable("x")
+    assertEquals(Variable.fromIri(v1.toIri), v1)
+    assertEquals(Variable.fromVar(v1.toVar), v1)
+    val v2 = Variable("abc")
+    assertEquals(Variable.fromIri(v2.toIri), v2)
+    assertEquals(Variable.fromVar(v2.toVar), v2)
+  }
 
   // Tests dealing node labels.
 

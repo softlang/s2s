@@ -6,9 +6,13 @@ import de.pseifer.shar.core.Iri
 
 import org.softlang.s2s.core.S2STry
 import org.softlang.s2s.core.Util
+import org.softlang.s2s.core.isVariable
 import org.softlang.s2s.core.UnsupportedQueryError
+import org.softlang.s2s.core.UnconvertableShapeError
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.query.AtomicPattern
+import org.softlang.s2s.core.SHACLShape
 
 /** Representation of a G-CORE (query) as match and construct clause.
   */
@@ -106,19 +110,19 @@ class GCORE(
     yield edges.union(nodes).toList
 
   /** Convert this query to a SCCQ. */
-  def toSCCQ: Option[SCCQ] =
-    for h <- sccqTemplate
+  def toSCCQ(extraClauses: Set[GCORE.SetClause]): Option[SCCQ] =
+    for h <- sccqTemplate(extraClauses)
         p <- sccqPattern
     yield SCCQ(template = h, pattern = p)
 
   /** Generate the corresponding SCCQ template. */
-  def sccqTemplate: Option[List[AtomicPattern]] =
+  def sccqTemplate(extraClauses: Set[GCORE.SetClause]): Option[List[AtomicPattern]] =
     generateAtomic(
       template.fullGraphPattern, 
       // Merge clauses w.r.t. GCORE semantics.
       mergeClauses(
         from = pattern.when,
-        set = template.set,
+        set = template.set.union(extraClauses),
         remove = template.remove
       )
       // Remove HasKey clauses (only relevant in patter).
@@ -133,14 +137,6 @@ class GCORE(
       // Simply include the full when clause (including HasKey). 
       pattern.when)
 
-  /** Extend the set part of the Construct pattern. */
-  def extendConstructSet(clauses: Set[SetClause]): GCORE = GCORE(
-    GCORE.Construct(
-      this.template.fullGraphPattern, 
-      this.template.set.union(clauses), 
-      this.template.remove),
-    this.pattern)
-
 object GCORE:
 
   case class Variable(name: String) extends Showable:
@@ -149,6 +145,12 @@ object GCORE:
     /** Convert wCORE variable to SCCQ variable. */
     def toVar: Var = Var(name)
 
+    def toIri(implicit scopes: Scopes): Iri = this.toVar.toIri
+
+  object Variable:
+    def fromVar(c: Var): Variable = Variable(c.v)
+    def fromIri(i: Iri)(implicit scopes: Scopes): Variable = fromVar(Var.fromIriUnsafe(i))
+
   case class Key(keyname: String) extends Showable:
     def show(implicit state: BackendState): String = "." ++ keyname
 
@@ -156,12 +158,22 @@ object GCORE:
     def toIri: Iri = 
       Iri.fromString(s"<https://github.com/softlang/s2s/key/${keyname}>").toOption.get
 
+  object Key:
+    def fromIri(i: Iri): Key = 
+      val base = Iri.fromString("<https://github.com/softlang/s2s/key/>").toOption.get
+      Key(i.retracted(base).get)
+
   case class Label(labelname: String) extends Showable:
     def show(implicit state: BackendState): String = ":" ++ labelname
 
     /** Encode this label as IRI. */
     def toIri: Iri = 
       Iri.fromString(s"<https://github.com/softlang/s2s/label/${labelname}>").toOption.get
+
+  object Label:
+    def fromIri(i: Iri): Label = 
+      val base = Iri.fromString("<https://github.com/softlang/s2s/label/>").toOption.get
+      Label(i.retracted(base).get)
   
   enum Value extends Showable:
     case IntValue(int: Int)
@@ -179,6 +191,22 @@ object GCORE:
       case IntValue(i) => Iri.fromString(s"<https://github.com/softlang/s2s/int/${i}>").toOption.get
       case StringValue(s) => Iri.fromString(s"<https://github.com/softlang/s2s/string/${s}>").toOption.get
       case BooleanValue(b) => Iri.fromString(s"<https://github.com/softlang/s2s/boolean/${b}>").toOption.get
+
+  object Value:
+    def fromIri(i: Iri): Value = 
+      val look = i.toString
+      if look.startsWith("<https://github.com/softlang/s2s/int/") then
+        val base = Iri.fromString("<https://github.com/softlang/s2s/int/>").toOption.get
+        val enc = i.retracted(base).get
+        Value.IntValue(enc.toInt)
+      else if look.startsWith("<https://github.com/softlang/s2s/boolean/") then
+        val base = Iri.fromString("<https://github.com/softlang/s2s/boolean/>").toOption.get
+        val enc = i.retracted(base).get
+        Value.BooleanValue(enc.toBoolean)
+      else
+        val base = Iri.fromString("<https://github.com/softlang/s2s/string/>").toOption.get
+        val enc = i.retracted(base).get
+        Value.StringValue(enc)
 
   //type Query = BasicGraphQuery
 
@@ -310,13 +338,24 @@ object GCORE:
         case NodePattern(v) => s"(${v.show})"
         case EdgePattern(x, z, y) => s"(${x.show})-[${z.show}]->(${y.show})"
 
-  private def fgpToSCCQ(fgp: FullGraphPattern, wc: WhenClause): S2STry[AtomicPatterns] = Right(Nil) // TODO
-
-  private def fgpToSCCQ(fgp: FullGraphPattern): S2STry[AtomicPatterns] = Right(Nil) // TODO
-
   /** Internal IRI for 'out' edges. */
   val outIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/out>").toOption.get
 
   /** Internal IRI for 'in' edges. */
   val inIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/in>").toOption.get
+
+  /** Convert a SHACL Shape to a SetClause. */
+  def shapeToSetClause(shape: SHACLShape)(implicit scopes: Scopes): S2STry[SetClause] = 
+    import de.pseifer.shar.dl._
+    shape.axiom.c match
+      case NamedConcept(ci) if ci.isVariable => 
+        //TODO conceptToClause(shape.axiom.d, ci)
+        //val v = Variable(Var.nameFromIri(ci)) // might fail hard, but should not.
+        //shape.axiom.d match
+        //  case NamedConcept(c) => 
+        Left(UnconvertableShapeError(shape))
+      case _ =>
+        Left(UnconvertableShapeError(shape))
+
+
 

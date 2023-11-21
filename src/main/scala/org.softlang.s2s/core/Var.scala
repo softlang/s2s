@@ -13,12 +13,18 @@ final case class Var(v: String) extends Showable:
   def asConcept(implicit scopes: Scopes): Concept =
     NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get).inScope(Scope.Variable)
 
+  def toIri(implicit scopes: Scopes): Iri = 
+    this.asConcept.asInstanceOf[NamedConcept].c
+
   /** Is a fresh variable instantiated by Var.fresh(). */
   def isFresh: Boolean = v.contains(Var.freshToken)
 
 object Var:
   def freshToken = "?"
   private var freshCounter = -1
+
+  def fromIriUnsafe(i: Iri)(implicit scopes: Scopes): Var = 
+    Var(i.dropScopeVariableInternal(scopes).retracted(Iri.shar).get)
 
   def counterReset(): Unit =
     freshCounter = -1

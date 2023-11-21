@@ -43,8 +43,17 @@ class UnsupportedQueryError(msg: Showable, details: String = "")
 class UnparsableShapeError(msg: String)
     extends BasicS2SError("Unparsable shape", msg)
 
+class UnconvertableShapeError(msg: Showable)
+    extends ShowableS2SError("Unconvertable shape", msg)
+
 class NotAShapeError(msg: Showable)
     extends ShowableS2SError("Concept is not a shape", msg)
 
 class NotSimpleError(msg: Showable)
     extends ShowableS2SError("Not a Simple SHACL shape", msg)
+
+object S2SError:
+  def sequence[A](s: Set[S2STry[A]]): S2STry[Set[A]] =
+    s.foldRight(Right(Set()): S2STry[Set[A]]) {
+      (e, acc) => for (xs <- acc; x <- e) yield xs.incl(x)
+    }
