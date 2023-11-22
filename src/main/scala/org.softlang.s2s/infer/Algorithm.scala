@@ -5,6 +5,7 @@ import de.pseifer.shar.dl.Equality
 import de.pseifer.shar.dl.Subsumption
 import de.pseifer.shar.dl.Axiom
 import de.pseifer.shar.reasoning._
+
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate.CandidateGenerator
 import org.softlang.s2s.query.AtomicPatterns
@@ -282,13 +283,24 @@ class Algorithm(
     case AlgorithmInput.SCCQAxioms(_, _) => Right(Set())
     case AlgorithmInput.SCCQSimpleSHACL(_, _) => Right(Set())
     case AlgorithmInput.GCOREAxioms(q, _) => 
-      val cand = generateExtensionCandidates()
       for 
+        t <- input.pattern
+        sv = input.shapeAxioms.map(_.vocab)
+        cand = generateExtensionCandidates(t.vocabulary, sv)
         f <- filter(cand, AxiomSet(axioms), log, config.retry, config.timeout.millis)
         r <- S2SError.sequence(f.map(GCORE.shapeToSetClause(_)))
       yield r
 
-  private def generateExtensionCandidates(): Set[SHACLShape] = Set() // TODO
+  /** Generate set-clause validating shapes. */
+  private def generateExtensionCandidates(pvoc: Vocabulary, svocs: Set[Vocabulary]): Set[SHACLShape] = 
+    val svoc = svocs.fold(Vocabulary(Set(), Set(), Set(), Set()))(_.union(_))
+    val thevoc = svoc.diff(pvoc)
+    val theconcepts = thevoc.concepts
+    val thevars = pvoc.variables
+    for 
+      v <- thevars
+      c <- theconcepts
+    yield SHACLShape(Subsumption(v.asConcept, c))
 
   /** Add input query and shapes to log. */
   private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =

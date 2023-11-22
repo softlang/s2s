@@ -3,6 +3,23 @@ package org.softlang.s2s.core
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl._
 
+extension (axiom: Axiom)
+  def vocab: Vocabulary =
+    def findNominals() = axiom match
+      case Subsumption(c, d)  => 
+        var nominals: Set[Iri] = Set()
+        Concept.foreach(ci => ci match
+          case NominalConcept(i) => nominals += i
+          case _ => ()
+        , c)
+        nominals
+      case _ => Set()
+    Vocabulary(
+      variables = Set(), 
+      concepts = axiom.concepts.map(NamedConcept(_)), 
+      properties = axiom.properties.map(NamedRole(_)), 
+      nominals = findNominals())
+
 extension (i: Iri)
 
   /** Append some String to an IRI. */

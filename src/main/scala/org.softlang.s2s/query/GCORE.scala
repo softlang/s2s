@@ -349,13 +349,14 @@ object GCORE:
     import de.pseifer.shar.dl._
     shape.axiom.c match
       case NamedConcept(ci) if ci.isVariable => 
-        //TODO conceptToClause(shape.axiom.d, ci)
-        //val v = Variable(Var.nameFromIri(ci)) // might fail hard, but should not.
-        //shape.axiom.d match
-        //  case NamedConcept(c) => 
-        Left(UnconvertableShapeError(shape))
+        val v = Variable.fromIri(ci)
+        shape.axiom.d match
+          case NamedConcept(d) => 
+            Right(SetClause.SetLabel(v, Label.fromIri(d)))
+          case Existential(NamedRole(r), NominalConcept(i)) =>
+            Right(SetClause.SetKeyValue(v, Key.fromIri(r), Value.fromIri(i)))
+          case _ => 
+            Left(UnconvertableShapeError(shape))
       case _ =>
         Left(UnconvertableShapeError(shape))
-
-
 

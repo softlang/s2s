@@ -2,9 +2,11 @@ package org.softlang.s2s.test
 
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
+import de.pseifer.shar.dl._
 
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.query.GCORE
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.AtomicPattern
@@ -79,6 +81,22 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     val v2 = Variable("abc")
     assertEquals(Variable.fromIri(v2.toIri), v2)
     assertEquals(Variable.fromVar(v2.toVar), v2)
+  }
+
+  // Tests for conversion of Shapes to SetClause.
+  
+  test("shape to set clause") {
+    val v1 = Variable("x")
+    val l1 = Label("Person")
+    assertEquals(GCORE.shapeToSetClause(
+      SHACLShape(Subsumption(NamedConcept(v1.toIri), NamedConcept(l1.toIri)))
+    ), Right(SetClause.SetLabel(v1, l1)))
+
+    val k1 = Key("hasName")
+    val a1 = Value.StringValue("Tim")
+    assertEquals(GCORE.shapeToSetClause(
+      SHACLShape(Subsumption(NamedConcept(v1.toIri), Existential(NamedRole(k1.toIri), NominalConcept(a1.toIri))))
+    ), Right(SetClause.SetKeyValue(v1, k1, a1)))
   }
 
   // Tests dealing node labels.
