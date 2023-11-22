@@ -288,7 +288,7 @@ class Algorithm(
         r <- S2SError.sequence(f.map(GCORE.shapeToSetClause(_)))
       yield r
 
-  private def generateExtensionCandidates(): Set[SHACLShape] = Set()
+  private def generateExtensionCandidates(): Set[SHACLShape] = Set() // TODO
 
   /** Add input query and shapes to log. */
   private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
