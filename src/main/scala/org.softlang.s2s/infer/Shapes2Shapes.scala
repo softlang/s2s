@@ -8,7 +8,9 @@ import de.pseifer.shar.dl.Axiom
 import org.softlang.s2s.core._
 import org.softlang.s2s.parser.SCCQParser
 import org.softlang.s2s.parser.ShapeParser
+import org.softlang.s2s.parser.GCOREParser
 import org.softlang.s2s.query.SCCQ
+import org.softlang.s2s.query.GCORE
 
 // TODO: Add more functionality to this API;
 // simplify Algorithm.
@@ -39,7 +41,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
   protected def descope(shapes: Set[SHACLShape]): Set[SHACLShape] =
     shapes.map(_.dropScope)
 
-  /** The query parser. */
+  /** The SCCQ query parser. */
   private val sccqParser = SCCQParser(shar)
 
   /** Attempt to parse a SCCQ query. */
@@ -47,6 +49,18 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     for
       qi <- sccqParser.parse(query)
       q <- SCCQ.validate(qi, config.renameToken)
+    yield q
+
+  /** The GCORE query parser. */
+  private val gcoreParser = GCOREParser()
+
+  // TODO: Add function that tries to parse one, 
+  // then the other, and only fails if both parsers fail.
+
+  /** Attempt to parse a GCORE query. */
+  def parseGCOREQuery(query: String): S2STry[GCORE] =
+    for 
+      q <- gcoreParser(query)
     yield q
 
   /** The shape parser. */
@@ -129,4 +143,15 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
     Algorithm(config, shar, 
       // Call with SCCQ and Axioms.
       AlgorithmInput.SCCQAxioms(q, s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
+      log)(scopes)()
+
+  /** Apply the algorithm, only. */
+  def algorithm(
+      q: GCORE,
+      s: Set[SHACLShape],
+      log: Log
+  ): S2STry[Set[SHACLShape]] = 
+    Algorithm(config, shar, 
+      // Call with SCCQ and Axioms.
+      AlgorithmInput.GCOREAxioms(q, s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
       log)(scopes)()
