@@ -230,8 +230,8 @@ object GCORE:
     def show(implicit state: BackendState): String = this match
       case Construct(fgp, s, r) => 
         val bs = fgp.map(_.show).mkString(", ")
-        val ss = if s.nonEmpty then "\nSET" ++ s.map(_.show).mkString(" AND ") else ""
-        val rs = if s.nonEmpty then "\nREMOVE" ++ r.map(_.show).mkString(" AND ") else ""
+        val ss = if s.nonEmpty then "\nSET " ++ s.map(_.show).mkString(" AND ") else ""
+        val rs = if s.nonEmpty then "\nREMOVE " ++ r.map(_.show).mkString(" AND ") else ""
         bs ++ ss ++ rs
 
     //case ConstructWhen(fullGraphPattern: FullGraphPattern, booleanCondition: WhenClause)

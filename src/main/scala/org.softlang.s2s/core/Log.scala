@@ -160,7 +160,7 @@ class Log(
   def print(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true,
-      prettyScopes: Boolean = true
+      prettyScopes: Boolean = false
   ): Unit =
     println(format(hidecolon, prettyVariableConcepts, prettyScopes))
 

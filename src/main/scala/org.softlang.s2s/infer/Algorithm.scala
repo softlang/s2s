@@ -1,9 +1,11 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.Shar
+import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.dl.Equality
 import de.pseifer.shar.dl.Subsumption
 import de.pseifer.shar.dl.Axiom
+import de.pseifer.shar.dl.Concept
 import de.pseifer.shar.reasoning._
 
 import org.softlang.s2s.core._
@@ -59,6 +61,21 @@ enum AlgorithmInput:
       case SCCQSimpleSHACL(_, s) => Right(s.map(_.asInstanceOf[SHACLShape]))
       case SCCQAxioms(_, _) => converted()
       case GCOREAxioms(_, _) => converted()
+
+  /** Write input to log. */
+  def log(log: Log)(implicit state: BackendState): Unit = this match
+    case SCCQSimpleSHACL(q, s) => 
+      log.info("q", q.show)
+      log.debug("Σ(q)", q.vocabulary.show)
+      log.info("S_in", s.map(_.show).toList)
+    case SCCQAxioms(q, a) => 
+      log.info("q", q.show)
+      log.debug("Σ(q)", q.vocabulary.show)
+      log.info("S_in", a.map(_.show).toList)
+    case GCOREAxioms(q, a) =>
+      log.info("q", q.show)
+      log.debug("Σ(q)", q.toSCCQ(Set()).map(_.vocabulary.show).getOrElse(""))
+      log.info("S_in", a.map(_.show).toList)
 
 /** Full implementation of Algorithm 1. */
 class Algorithm(
@@ -220,10 +237,8 @@ class Algorithm(
   private def axiomsInternal(): S2STry[(Set[GCORE.SetClause], Set[Axiom])] =
 
     //log.profileStart("algorithm")
+    input.log(log)
 
-    // Log input. TODO
-    // if inConstraints.isLeft then 
-    //   logInput(preQ, inConstraints.swap.toOption.get.map(_.asInstanceOf[SHACLShape]), log)
     // log.profileStart("build")
 
     for
@@ -303,10 +318,10 @@ class Algorithm(
     yield SHACLShape(Subsumption(v.asConcept, c))
 
   /** Add input query and shapes to log. */
-  private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
-    log.info("q", q.show)
-    log.debug("Σ(q)", q.vocabulary.show)
-    log.info("S_in", s.map(_.show).toList)
+  //private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
+  //  log.info("q", q.show)
+  //  log.debug("Σ(q)", q.vocabulary.show)
+  //  log.info("S_in", s.map(_.show).toList)
 
   private def convert(axioms: Set[Axiom])(implicit scopes: Scopes): S2STry[Set[SHACLShape]] = 
     // Make shapes from candidates over (input scope) vocabulary of query.

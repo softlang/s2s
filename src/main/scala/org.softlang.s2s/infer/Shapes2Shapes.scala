@@ -59,6 +59,18 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
   /** Attempt to parse a GCORE query. */
   def parseGCOREQuery(query: String): S2STry[GCORE] =
+
+    // Add GCORE prefixes.
+    for
+      pl <- Prefix.fromString("l:")
+      il <- Iri.fromString("<https://github.com/softlang/s2s/label/>")
+      pk <- Prefix.fromString("k:")
+      ik <- Iri.fromString("<https://github.com/softlang/s2s/key/>")
+    do {
+      shar.state.prefixes.add(pl, il)
+      shar.state.prefixes.add(pk, ik)
+    }
+    
     for 
       q <- gcoreParser(query)
     yield q
@@ -111,11 +123,15 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     val sOut = for
       // Parse and validate query.
-      q <- parseSCCQQuery(query)
-      // Parse and validate input shapes.
+      q <- parseSCCQQuery(query).map(q => sa => AlgorithmInput.SCCQAxioms(q, sa)).orElse {
+        parseGCOREQuery(query).map(q => sa => AlgorithmInput.GCOREAxioms(q, sa))
+      }
+      // Parse and validate input shapes. Note: Depends on order! GCORE prefixes
+      // are only set on GCORE parse (i.e., if SCCQ parse fails).
       s <- parseSHACLShapes(shapes)
+      sa = s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])
       // Run the algorithm.
-      r <- algorithm(q, s, log)
+      r <- algorithm(q(sa), log)
     yield r
 
     // Output (first) error, if any.
@@ -123,7 +139,14 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
 
     (sOut, log)
 
-  /** Apply the algorithm, only. */
+  /** Apply the algorithm with given AlgorithmInput. */
+  def algorithm(
+      input: AlgorithmInput,
+      log: Log
+  ): S2STry[Set[SHACLShape]] = 
+    Algorithm(config, shar, input, log)(scopes)()
+
+  /** Apply the algorithm, only, with SimpleSHACLShapes. */
   def algorithmFast(
       q: SCCQ,
       s: Set[SimpleSHACLShape],
@@ -151,7 +174,7 @@ class Shapes2Shapes(config: Configuration = Configuration.default):
       s: Set[SHACLShape],
       log: Log
   ): S2STry[Set[SHACLShape]] = 
+    // Call algorithm with GCORE query and axioms.
     Algorithm(config, shar, 
-      // Call with SCCQ and Axioms.
       AlgorithmInput.GCOREAxioms(q, s.map(_.inScope(Scope.In).axiom.asInstanceOf[Axiom])),
       log)(scopes)()
