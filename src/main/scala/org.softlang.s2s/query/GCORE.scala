@@ -92,8 +92,8 @@ class GCORE(
           val vy = y.toVar
           val ve = e.toVar
           val s = Set(
-            AtomicPattern.VPV(vx, outIri, ve),
-            AtomicPattern.VPV(ve, inIri, vy)
+            AtomicPattern.VPV(vx, nodeToEdgeIri, ve),
+            AtomicPattern.VPV(ve, edgeToNodeIri, vy)
           )
           generateNodes(Set(BasicGraphPattern.NodePattern(e)), Set(), lok).map(_.union(s))
       case BasicGraphPattern.NodePattern(_) => Some(Nil)
@@ -339,10 +339,10 @@ object GCORE:
         case EdgePattern(x, z, y) => s"(${x.show})-[${z.show}]->(${y.show})"
 
   /** Internal IRI for 'out' edges. */
-  val outIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/out>").toOption.get
+  val nodeToEdgeIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/nodeToEdge>").toOption.get
 
   /** Internal IRI for 'in' edges. */
-  val inIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/in>").toOption.get
+  val edgeToNodeIri = Iri.fromString(s"<https://github.com/softlang/s2s/system/edgeToNode>").toOption.get
 
   /** Convert a SHACL Shape to a SetClause. */
   def shapeToSetClause(shape: SHACLShape)(implicit scopes: Scopes): S2STry[SetClause] = 

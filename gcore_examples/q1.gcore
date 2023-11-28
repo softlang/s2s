@@ -1,0 +1,5 @@
+CONSTRUCT (x)
+SET x:Cat
+REMOVE x:Dog
+MATCH (x)
+WHERE x:Person AND x:Dog

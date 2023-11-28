@@ -134,7 +134,7 @@ class Algorithm(
     log.debug("RS(q, S_in)", shapeProps)
 
     log.profileEnd("build-properties")
-
+    
     // Return union of components.
     shapeProps
       .union(dcaP)
@@ -145,8 +145,8 @@ class Algorithm(
     for 
       p <- input.pattern
     yield buildAxiomsPattern(p, log)
-
-  /** Build axioms for the query pattern. */
+ 
+  /** Build xioms for the query pattern. */
   def buildAxiomsTemplate(template: AtomicPatterns, pattern: AtomicPatterns, log: Log): Set[Axiom] = 
 
     // DCA for query template.
@@ -312,16 +312,11 @@ class Algorithm(
     val thevoc = svoc.diff(pvoc)
     val theconcepts = thevoc.concepts
     val thevars = pvoc.variables
+    // TODO: Generate key-value constraints as well.
     for 
       v <- thevars
       c <- theconcepts
     yield SHACLShape(Subsumption(v.asConcept, c))
-
-  /** Add input query and shapes to log. */
-  //private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
-  //  log.info("q", q.show)
-  //  log.debug("Σ(q)", q.vocabulary.show)
-  //  log.info("S_in", s.map(_.show).toList)
 
   private def convert(axioms: Set[Axiom])(implicit scopes: Scopes): S2STry[Set[SHACLShape]] = 
     // Make shapes from candidates over (input scope) vocabulary of query.

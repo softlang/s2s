@@ -245,8 +245,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
 
   // Tests dealing edge labels.
   
-  val out = GCORE.outIri
-  val in = GCORE.inIri
+  val out = GCORE.nodeToEdgeIri
+  val in = GCORE.edgeToNodeIri
 
   test("pure edge fails") {
     assertInvalid(
