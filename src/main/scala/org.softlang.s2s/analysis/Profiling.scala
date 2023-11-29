@@ -24,7 +24,9 @@ class Profiling(
     noisy: Boolean,
     logTime: Boolean = false,
     logNoisy: Boolean = false
-):
+) extends Shapes2Shapes(config):
+
+  implicit val scopes: Scopes = defaultScopes
 
   /** Primitive progress tracker. */
   private class ProgressBar(trials: Int):
@@ -61,12 +63,10 @@ class Profiling(
       trialID: Int
   ): ProfileAnalysis =
 
-    val s2s = Shapes2Shapes(config)
-
     // Format problem.
 
-    val qS = q.show(s2s.shar.state)
-    val sinS = s.map(_.show(s2s.shar.state)).mkString(",")
+    val qS = q.show(shar.state)
+    val sinS = s.map(_.show(shar.state)).mkString(",")
 
     if noisy then println(s"Query: $qS")
     if noisy then println(s"Shapes: $sinS")
@@ -78,13 +78,13 @@ class Profiling(
       debugging = true,
       profiling = logTime,
       noisy = logNoisy
-    )(s2s.scopes)
+    )(scopes)
 
     log.problem(q, s, qS, sinS)
 
     val analysis =
       try {
-        val t = Try(s2s.algorithm(q, s, log))
+        val t = Try(algorithm(q, s, log))
         // Create performance profile analysis.
         log.profile.analyze(
           t.toEither.map(r =>
@@ -92,7 +92,7 @@ class Profiling(
               r.toOption.getOrElse(Set()),
               r.toOption
                 .getOrElse(Set())
-                .map(_.show(s2s.shar.state))
+                .map(_.show(shar.state))
                 .mkString(",")
             )
           ),
@@ -128,7 +128,7 @@ class Profiling(
   ): Unit =
 
     object Sampler:
-      val gen = ProblemGenerator(genConfig)(Shapes2Shapes(config).scopes)
+      val gen = ProblemGenerator(genConfig)(scopes)
       var cachedSample = gen.sample()
       var counter = 0
       def sample(repeat: Int): (SCCQ, Set[SHACLShape]) =

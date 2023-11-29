@@ -47,7 +47,7 @@ abstract class ValidationSuite extends munit.FunSuite:
       // Do not run test, if the suite is disabled.
       if disabled then return
 
-      val (actualSOutS, log) = validate(q, sin)
+      val (actualSOutS, log) = constructShapes(q, sin)
 
       // Remove internal scope.
       val actualSOut = actualSOutS.map(descope)
@@ -92,6 +92,64 @@ abstract class ValidationSuite extends munit.FunSuite:
         // Otherwise, use both the given subset and not allowed shapes.
         else assert(aout.intersect(n).isEmpty && a.diff(aout).isEmpty, msg)
 
+    /** Defines a test case. 
+    def workG(
+        sin: Set[String],
+        q: String,
+        exactly: Set[String] = Set(),
+        atleast: Set[String] = Set(),
+        not: Set[String] = Set()
+    )(implicit loc: munit.Location): Unit =
+
+      // Do not run test, if the suite is disabled.
+      if disabled then return
+
+      val (actualSOutS, log) = constructAxioms(q, sin)
+
+      // Remove internal scope.
+      val actualSOut = actualSOutS.map(descope)
+
+      // Parse the test case (and move T to Scope.Template).
+      val exactlyOut = parseSHACLShapes(exactly)
+      val atleastOut = parseSHACLShapes(atleast)
+      val notOut = parseSHACLShapes(not)
+
+      // Parsing and input error assertions.
+      // (Only for detecting errors in tests early.)
+      assert(exactlyOut.isRight, "error in test case: exactlyOut")
+      assert(atleastOut.isRight, "error in test case: atLeastOut")
+      assert(notOut.isRight, "error in test case: notOut")
+
+      // Assert that no internal failure occurred.
+      assert(actualSOut.isRight, "internal failure")
+
+      val success = for
+        e <- exactlyOut
+        a <- atleastOut
+        n <- notOut
+        aout <- actualSOut
+      do
+        // Build clue error message.
+        val ob = aout.diff(e.union(a))
+        val fo = n.intersect(aout)
+        val mi = e.union(a).diff(aout)
+        val msg = List(
+          (true, "\n"),
+          (true, log.format(hidecolon = true)),
+          (ob.nonEmpty, s"Obtained unexpectedly:\n${RED}${formatResults(ob)}${RESET}"),
+          (fo.nonEmpty, s"Obtained, even though forbidden:\n${RED}${formatResults(fo)}${RESET}"),
+          (mi.nonEmpty, s"Missing results:\n${RED}${formatResults(mi)}${RESET}"),
+          (true, "\n")
+        ).filter(_._1).map(_._2).mkString("")
+
+        // If neither subset of negative samples are given, check with exactlyOut.
+        // Note: Using == instead of assertEquals, since diff is calculated in
+        // 's' to be more readable (using Show instance for SHACLShapes).
+        if a.isEmpty && n.isEmpty then assert(e == aout, msg)
+        // Otherwise, use both the given subset and not allowed shapes.
+        else assert(aout.intersect(n).isEmpty && a.diff(aout).isEmpty, msg)
+  */
+
   private val validation = ValidationS2S("some-name")
 
   /** Defines a test case. */
@@ -101,10 +159,14 @@ abstract class ValidationSuite extends munit.FunSuite:
       q: String,
       exactly: Set[String] = Set(),
       atleast: Set[String] = Set(),
-      not: Set[String] = Set()
+      not: Set[String] = Set(),
+      gcore: Boolean = false
   )(implicit loc: munit.Location): Unit =
     test(description) {
-      validation.work(sin, q, exactly, atleast, not)
+      if gcore then
+        validation.work(sin, q, exactly, atleast, not) // TODO change!
+      else
+        validation.work(sin, q, exactly, atleast, not)
     }
 
   /** Empty set of shapes. */

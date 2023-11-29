@@ -61,3 +61,8 @@ case class Vocabulary(
     ) || properties.exists(p => p.r.contains(s)) || nominals.exists(n =>
       n.contains(s)
     )
+
+object Vocabulary:
+  /** An empty vocabulary. */
+  def empty: Vocabulary = 
+    Vocabulary(Set(), Set(), Set(), Set())

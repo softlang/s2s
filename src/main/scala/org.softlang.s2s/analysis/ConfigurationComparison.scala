@@ -19,13 +19,11 @@ class ConfigurationComparison(
     stopAfterFirstResult: Boolean = true,
     title1: String = "",
     title2: String = ""
-):
+) extends Shapes2Shapes:
 
   import scala.language.implicitConversions
 
-  // Test S2S Instances.
-  private val s1 = Shapes2Shapes(c1)
-  private val s2 = Shapes2Shapes(c2)
+  implicit val scopes: Scopes = defaultScopes
 
   /** Compare results for one set of query and shapes. */
   private def compare(
@@ -33,7 +31,12 @@ class ConfigurationComparison(
       s: Set[SHACLShape],
       log1: Log,
       log2: Log
-  ): Boolean = s1.algorithm(q, s, log1) == s2.algorithm(q, s, log2)
+  ): Boolean = 
+    setConfig(c1)
+    val v1 = algorithm(q, s, log1)
+    setConfig(c2)
+    val v2 = algorithm(q, s, log2)
+    v1 == v2 
 
   /** Test with generator setup for trials many runs. */
   private def search(
@@ -52,13 +55,13 @@ class ConfigurationComparison(
         // Progress
         if verbose then
           println("\nProblem:")
-          println(q.show(s1.shar.state))
-          s.map(_.show(s1.shar.state)).foreach(println)
+          println(q.show(shar.state))
+          s.map(_.show(shar.state)).foreach(println)
         else print(".")
 
         // Initialize logs.
-        val log1 = Log(debugging = true)(s1.scopes)
-        val log2 = Log(debugging = true)(s2.scopes)
+        val log1 = Log(debugging = true)(scopes)
+        val log2 = Log(debugging = true)(scopes)
 
         // If results are different
         if !compare(q, s.toList.toSet, log1, log2) then
@@ -78,22 +81,22 @@ class ConfigurationComparison(
   /** One step, with a generator config an number of trials. */
   private def step(config: ProblemGeneratorConfig): Unit =
     print(config)
-    search(ProblemGenerator(config)(s1.scopes))
+    search(ProblemGenerator(config)(scopes))
     println("done.")
 
   /** Compare for specific input (String encoded). */
   def input(q: String, sin: Set[String]): S2STry[Boolean] =
     for
-      qp <- s1.parseSCCQQuery(q)
-      sp <- s1.parseSHACLShapes(sin)
+      qp <- parseSCCQQuery(q)
+      sp <- parseSHACLShapes(sin)
     yield input(qp, sp.toList.toSet)
 
   /** Compare for specific input. */
   def input(q: SCCQ, sin: Set[SHACLShape]): Boolean =
 
     // Initialize logs.
-    val log1 = Log(debugging = true)(s1.scopes)
-    val log2 = Log(debugging = true)(s2.scopes)
+    val log1 = Log(debugging = true)(scopes)
+    val log2 = Log(debugging = true)(scopes)
 
     val r = compare(q, sin, log1, log2)
 

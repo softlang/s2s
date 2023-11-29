@@ -5,7 +5,7 @@ import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.SHACLShape
-import org.softlang.s2s.core._
+import org.softlang.s2s.core.{vocabulary => _, _}
 import org.softlang.s2s.query._
 
 import scala.util.Random

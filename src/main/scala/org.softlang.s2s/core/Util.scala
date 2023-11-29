@@ -4,7 +4,8 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.dl._
 
 extension (axiom: Axiom)
-  def vocab: Vocabulary =
+  /** Obtain the vocabulary of this axiom. */
+  def vocabulary: Vocabulary =
     def findNominals() = axiom match
       case Subsumption(c, d)  => 
         var nominals: Set[Iri] = Set()
@@ -19,6 +20,20 @@ extension (axiom: Axiom)
       concepts = axiom.concepts.map(NamedConcept(_)), 
       properties = axiom.properties.map(NamedRole(_)), 
       nominals = findNominals())
+
+  /** Set scope for expressions in this axiom. */
+  def inScope(scope: Scope)(implicit scopes: Scopes): Axiom = axiom match
+    case Subsumption(c, d) => Subsumption(c.inScope(scope), d.inScope(scope))
+    case Equality(c, d) => Equality(c.inScope(scope), d.inScope(scope))
+    case Satisfiability(c) => Satisfiability(c.inScope(scope))
+    case RoleSubsumption(r, p) => RoleSubsumption(r.inScope(scope), p.inScope(scope))
+
+  /** Update Scopes from oldS to newS. */
+  def updateScopes(oldS: Scopes, newS: Scopes): Axiom = axiom match
+    case Subsumption(c, d) => Subsumption(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
+    case Equality(c, d) => Equality(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
+    case Satisfiability(c) => Satisfiability(c.updateScopes(oldS, newS))
+    case RoleSubsumption(r, p) => RoleSubsumption(r.updateScopes(oldS, newS), p.updateScopes(oldS, newS))
 
 extension (i: Iri)
 
@@ -40,6 +55,10 @@ extension (i: Iri)
   /** This IRI contains a substring. */
   def contains(s: String): Boolean =
     i.toString.indexOf(s) != -1
+
+  /** Update scope tokens from one Scopes to another. */
+  def updateScopes(oldS: Scopes, newS: Scopes): Iri = 
+    Iri.makeFromRawIri(oldS.updateScopeTokens(i.getRaw, newS)).toOption.get
 
   /** Get this IRI in the respective scope. */
   def inScope(scope: Scope)(implicit scopes: Scopes): Iri =
@@ -90,7 +109,6 @@ extension (c: Concept)
       Intersection(c1.inScope(scope), c2.inScope(scope))
     case c => c
 
-extension (c: Concept)
   def dropScope(implicit scopes: Scopes): Concept = c match
     case NamedConcept(i) => NamedConcept(i.dropScope)
     case Existential(r, c) =>
@@ -103,17 +121,34 @@ extension (c: Concept)
       Intersection(c1.dropScope, c2.dropScope)
     case c => c
 
+  def updateScopes(oldS: Scopes, newS: Scopes): Concept = c match
+    case NamedConcept(i) => NamedConcept(i.updateScopes(oldS, newS))
+    case Existential(r, c) =>
+      Existential(r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
+    case Universal(r, c) =>
+      Universal(r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
+    case Union(c1, c2) =>
+      Union(c1.updateScopes(oldS, newS), c2.updateScopes(oldS, newS))
+    case Intersection(c1, c2) =>
+      Intersection(c1.updateScopes(oldS, newS), c2.updateScopes(oldS, newS))
+    case c => c
+
+
 extension (r: Role)
   def inScope(scope: Scope)(implicit scopes: Scopes): Role =
     r match
       case NamedRole(i) => NamedRole(i.inScope(scope))
       case Inverse(r)   => Inverse(r.inScope(scope))
 
-extension (r: Role)
   def dropScope(implicit scopes: Scopes): Role =
     r match
       case NamedRole(i) => NamedRole(i.dropScope)
       case Inverse(r)   => Inverse(r.dropScope)
+
+  def updateScopes(oldS: Scopes, newS: Scopes): Role =
+    r match
+      case NamedRole(i) => NamedRole(i.updateScopes(oldS, newS))
+      case Inverse(r)   => Inverse(r.updateScopes(oldS, newS))
 
 /** Basic utility functions. */
 object Util:
