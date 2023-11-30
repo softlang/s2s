@@ -1,7 +1,7 @@
 package org.softlang.s2s.core
 
 /** Encoding of available scopes. */
-class Scopes(token: String, in: Int, med: Int, out: Int, variable: Int):
+case class Scopes(token: String, in: Int, med: Int, out: Int, variable: Int):
 
   /** Rule for naming/appending for the different scopes. */
   private def makeScopeToken(scope: Scope): String = scope match

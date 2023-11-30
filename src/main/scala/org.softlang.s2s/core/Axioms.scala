@@ -88,11 +88,11 @@ object Axioms:
 
   /** Join two sets of axioms, right-biased scopes. */
   def join(lhs: Axioms, rhs: Axioms): Axioms =
-    Axioms(rhs.axioms.union(lhs.axioms.map(_.updateScopes(lhs.scopes, rhs.scopes))), rhs.scopes)
+    if lhs.scopes == rhs.scopes then
+      Axioms(rhs.axioms.union(lhs.axioms), rhs.scopes)
+    else 
+      Axioms(rhs.axioms.union(lhs.axioms.map(_.updateScopes(lhs.scopes, rhs.scopes))), rhs.scopes)
 
   /** Construct an empty axioms. */
-  def empty(config: Configuration): Axioms = Axioms(Set(), Scopes.default(config.renameToken))
-
-
-
+  def empty(scopes: Scopes): Axioms = Axioms(Set(), scopes)
 
