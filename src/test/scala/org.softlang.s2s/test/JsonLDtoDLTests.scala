@@ -109,7 +109,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
       """)
   }
    
-  test("object target") {
+  test("subject target") {
     work(
       """
 {
@@ -119,7 +119,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
   },
   "@id": "s2s:PersonShape",
   "@type": "sh:NodeShape",
-  "sh:targetObjectsOf": {
+  "sh:targetSubjectsOf": {
     "@id": "s2s:knows"
   }
 }
@@ -137,14 +137,14 @@ class JsonLDtoDLTests extends munit.FunSuite:
     {
       "@id": "s2s:PersonShape",
       "@type": "sh:NodeShape",
-      "sh:targetObjectsOf": {
+      "sh:targetSubjectsOf": {
         "@id": "s2s:knows"
       }
     },
     {
       "@id": "s2s:DogShape",
       "@type": "sh:NodeShape",
-      "sh:targetObjectsOf": {
+      "sh:targetSubjectsOf": {
         "@id": "s2s:likes"
       }
     }
@@ -157,7 +157,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
       """)
   }
     
-  test("subject target") {
+  test("object target") {
     work(
       """
 {
@@ -167,7 +167,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
   },
   "@id": "s2s:PersonShape",
   "@type": "sh:NodeShape",
-  "sh:targetSubjectsOf": {
+  "sh:targetObjectsOf": {
     "@id": "s2s:knows"
   }
 }
@@ -185,14 +185,14 @@ class JsonLDtoDLTests extends munit.FunSuite:
     {
       "@id": "s2s:PersonShape",
       "@type": "sh:NodeShape",
-      "sh:targetSubjectsOf": {
+      "sh:targetObjectsOf": {
         "@id": "s2s:knows"
       }
     },
     {
       "@id": "s2s:DogShape",
       "@type": "sh:NodeShape",
-      "sh:targetSubjectsOf": {
+      "sh:targetObjectsOf": {
         "@id": "s2s:likes"
       }
     }
@@ -393,6 +393,88 @@ class JsonLDtoDLTests extends munit.FunSuite:
   }
 
   test("example shapes") {
+
+    work(
+      """
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@graph": [
+    {
+      "@id": "s2s:s1",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:A"
+      },
+      "sh:property": {
+        "sh:path": {
+          "@id": "s2s:p"
+        },
+        "sh:qualifiedValueShape": {
+          "sh:class": {
+            "@id": "s2s:B"
+          }
+        },
+        "sh:qualifiedMinCount": 1
+      }
+    },
+    {
+      "@id": "s2s:s2",
+      "@type": "sh:NodeShape",
+      "sh:targetSubjectsOf": {
+        "@id": "s2s:r"
+      },
+      "sh:class": {
+        "@id": "s2s:B"
+      }
+    },
+    {
+      "@id": "s2s:s3",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:B"
+      },
+      "sh:class": {
+        "@id": "s2s:E"
+      }
+    }
+  ]
+}
+    """,
+    """:A ⊑ ∃:p.:B
+∃:r.⊤ ⊑ :B
+:B ⊑ :E
+""")
+
+    work(
+      """
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@id": "s2s:s1",
+  "@type": "sh:NodeShape",
+  "sh:targetClass": {
+    "@id": "s2s:A"
+  },
+  "sh:property": {
+    "sh:path": {
+      "@id": "s2s:p"
+    },
+    "sh:qualifiedValueShape": {
+      "sh:class": {
+        "@id": "s2s:A"
+      }
+    },
+    "sh:qualifiedMinCount": 1
+  }
+}
+      """, 
+      ":A ⊑ ∃:p.:A")
+
     work(
       """
 {
@@ -411,5 +493,6 @@ class JsonLDtoDLTests extends munit.FunSuite:
 }
       """, 
       ":A ⊑ :B")
+
   }
 

@@ -74,8 +74,8 @@ object JsonLDParser:
   // Parse the target query as DL Concept.
   private def parseTarget(j: JsonObject): S2STry[Concept] = 
     getArray(sh._targetClass)(j).flatMap(parseT(_, getString("@id"), NamedConcept(_))).orElse(
-      getArray(sh._targetObjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(NamedRole(i), Top)))).orElse(
-        getArray(sh._targetSubjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(Inverse(NamedRole(i)), Top))))
+      getArray(sh._targetObjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(Inverse(NamedRole(i)), Top)))).orElse(
+        getArray(sh._targetSubjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(NamedRole(i), Top))))
 
   private def parsePropertyShape(j: JsonObject): S2STry[Concept] =
     
