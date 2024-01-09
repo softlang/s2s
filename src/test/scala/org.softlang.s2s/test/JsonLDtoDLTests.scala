@@ -3,17 +3,11 @@ package org.softlang.s2s.test
 import de.pseifer.shar.Shar
 import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Prefix
-// import de.pseifer.shar.core.Iri
-// import de.pseifer.shar.dl._
 
 import org.softlang.s2s.core._
-// import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.parser.JsonLDParser
-// import org.softlang.s2s.query.GCORE
-// import org.softlang.s2s.query.SCCQ
-// import org.softlang.s2s.query.AtomicPattern
 
 class JsonLDtoDLTests extends munit.FunSuite:
  
@@ -392,6 +386,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
       ":Person ⊑ ¬:Dog")
   }
 
+  // Based on paper_examples
   test("example shapes") {
 
     work(

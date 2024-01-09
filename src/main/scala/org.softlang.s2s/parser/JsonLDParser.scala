@@ -10,7 +10,6 @@ import scala.util.Try
 
 import com.apicatalog.jsonld.document.JsonDocument
 import com.apicatalog.jsonld.JsonLd
-//import com.apicatalog.jsonld.serialization.RdfToJsonld TODO: Support RDF?
 
 import jakarta.json.JsonValue
 import jakarta.json.JsonArray
@@ -21,7 +20,7 @@ import de.pseifer.shar.core.Iri
 import jakarta.json.JsonObject
 
 object JsonLDParser:
-  
+
   // SHACL definitions.
   private object sh:
     val _and = "http://www.w3.org/ns/shacl#and"
@@ -77,6 +76,7 @@ object JsonLDParser:
       getArray(sh._targetObjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(Inverse(NamedRole(i)), Top)))).orElse(
         getArray(sh._targetSubjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(NamedRole(i), Top))))
 
+  // Parse a property shape.
   private def parsePropertyShape(j: JsonObject): S2STry[Concept] =
     
     // The path, that is mandatory for property shapes.
@@ -93,54 +93,8 @@ object JsonLDParser:
       .flatMap(parseNodeShape(_))
 
     // Remaining universal constraints for this path.
-    val urhs = Right(
-      Concept.intersectionOf(
-        List(
-          // sh:class
-          Util.flipEitherHead(
-              getArray(sh._class)(j)
-                .flatMap(getString("@id"))
-                .toOption.toList.flatten
-                .map(parseIri))
-            .toOption.toList.flatten
-            .map(NamedConcept(_))
-          ,
-          // sh:not
-          getArray(sh._not)(j)
-            .flatMap(j => wrap(Try { 
-              j.iterator().asScala.toList.head.asJsonObject() 
-            }))
-            .flatMap(parseNodeShape(_))
-            .map(Complement(_)) 
-            .toOption.toList
-          ,
-          // sh:and
-          getArray(sh._and)(j)
-            .map(_.iterator().asScala.next())
-            .flatMap(j => wrap(Try { j.asJsonObject()} ))
-            .flatMap(getArray("@list"))
-            .map(_.iterator().asScala.toList
-              .map(j => parseNodeShape(j.asJsonObject()))
-              .map(_.toSeq)
-              .flatten)
-            .map(Concept.intersectionOf)
-            .toSeq
-          ,
-          // sh:or
-          getArray(sh._or)(j)
-            .map(_.iterator().asScala.next())
-            .flatMap(j => wrap(Try { j.asJsonObject()} ))
-            .flatMap(getArray("@list"))
-            .map(_.iterator().asScala.toList
-              .map(j => parseNodeShape(j.asJsonObject()))
-              .map(_.toSeq)
-              .flatten)
-            .map(Concept.unionOf)
-            .toSeq
-        ).flatten
-      )
-    )
-
+    val urhs = parseNodeShape(j)
+      
     // If qualified, existential shape:
     if ecount then
       for 
@@ -163,7 +117,7 @@ object JsonLDParser:
         u <- urhs
       yield Universal(NamedRole(p), u)
 
-  // Parse a shape.
+  // Parse a node shape.
   private def parseNodeShape(j: JsonObject): S2STry[Concept] =
     // TODO: Separate property, use function for other.
     Right(
