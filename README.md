@@ -17,6 +17,8 @@ Note, that running from a SBT session is much faster for multiple executions, du
 
 ## Usage
 
+Please also consider the full usage [tutorial](tutorial/README.md), which includes intuitive examples for the method itself, as well as the implementation.
+
 The following usage examples assume usage of the `s2s` utility script; see the quick start section for system specific information, or for information on how to run the program from a SBT session, directly.
 
 Note: On Windows, you may want or need to set the active code page to UTF-8 via command [`chcp 65001`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chcp). The included `s2s.bat` script does so, automatically.
@@ -54,7 +56,9 @@ Another relevant command-line option is `--debug`. While by default, the program
 
 ## Further Reading
 
-Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Publication. Year. URL.
+The [tutorial](tutorial/README.md), here in the repository.
+
+The full paper: Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Publication. Year. URL.
 
 ```BibTeX
 TBD: bibtex-citation
