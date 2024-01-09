@@ -50,7 +50,56 @@ Simple SHACL shapes are encoded as description logic axioms (one per line), wher
 :B ⊑ :E
 ```
 
-More examples are available in the [paper_examples](paper_examples/) folder, or in test cases.
+Alternatively, JSON-LD syntax can be used; the equivalent shape specification to the aforementioned axioms is given below. More examples are available in the [paper_examples](paper_examples/) folder, or in test cases. The syntax is determined by file extension, using `json` for JSON-LD and `shacl` for formal DL notation. 
+
+```json
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@graph": [
+    {
+      "@id": "s2s:s1",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:A"
+      },
+      "sh:property": {
+        "sh:path": {
+          "@id": "s2s:p"
+        },
+        "sh:qualifiedValueShape": {
+          "sh:class": {
+            "@id": "s2s:B"
+          }
+        },
+        "sh:qualifiedMinCount": 1
+      }
+    },
+    {
+      "@id": "s2s:s2",
+      "@type": "sh:NodeShape",
+      "sh:targetSubjectsOf": {
+        "@id": "s2s:r"
+      },
+      "sh:class": {
+        "@id": "s2s:B"
+      }
+    },
+    {
+      "@id": "s2s:s3",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:B"
+      },
+      "sh:class": {
+        "@id": "s2s:E"
+      }
+    }
+  ]
+}
+```
 
 Another relevant command-line option is `--debug`. While by default, the program outputs only the result shapes, including the `--debug` option will print detailed information about the internals of our method, including the input, output, vocabulary, all inferred axioms (annotated with the respective step of the method specification in the paper), as well as all generated candidate shapes.
 
