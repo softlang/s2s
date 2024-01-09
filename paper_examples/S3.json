@@ -1,0 +1,22 @@
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@id": "s2s:s1",
+  "@type": "sh:NodeShape",
+  "sh:targetClass": {
+    "@id": "s2s:A"
+  },
+  "sh:property": {
+    "sh:path": {
+      "@id": "s2s:p"
+    },
+    "sh:qualifiedValueShape": {
+      "sh:class": {
+        "@id": "s2s:A"
+      }
+    },
+    "sh:qualifiedMinCount": 1
+  }
+}

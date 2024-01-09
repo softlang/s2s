@@ -23,10 +23,10 @@ enum AlgorithmInput:
   // Various functions dealing with these inputs.
 
   /** The scopes associated with this input. */
-  implicit val scopes: Scopes = this match
+  implicit val composeScopes: Scopes = this match
     case SCCQSimpleSHACL(_, _, s) => s
-    case SCCQAxioms(_, a) => a.scopes
-    case GCOREAxioms(_, a) => a.scopes
+    case SCCQAxioms(_, a) => a.scopes // TODO composeScopes, but also rescope?
+    case GCOREAxioms(_, a) => a.scopes // TODO composeScopes, but also rescope?
 
   /** Get the template of the input query. */
   def template(extraClauses: Set[GCORE.SetClause]): S2STry[AtomicPatterns] = this match
@@ -50,7 +50,7 @@ enum AlgorithmInput:
 
   /** Return input constraints as axioms. */
   def shapeAxioms: Axioms = this match
-    case SCCQSimpleSHACL(_, s,  _) => Axioms(s.map(_.axiom), scopes)
+    case SCCQSimpleSHACL(_, s, _) => Axioms(s.map(_.axiom), composeScopes)
     case SCCQAxioms(_, ax) => ax
     case GCOREAxioms(_, ax) => ax
 

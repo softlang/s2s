@@ -92,7 +92,6 @@ abstract class ValidationSuite extends munit.FunSuite:
         // Otherwise, use both the given subset and not allowed shapes.
         else assert(aout.intersect(n).isEmpty && a.diff(aout).isEmpty, msg)
 
-    /** Defines a test case. 
     def workG(
         sin: Set[String],
         q: String,
@@ -101,10 +100,13 @@ abstract class ValidationSuite extends munit.FunSuite:
         not: Set[String] = Set()
     )(implicit loc: munit.Location): Unit =
 
+      /** TODO: Implement me */
+      throw new NotImplementedError
+
       // Do not run test, if the suite is disabled.
       if disabled then return
 
-      val (actualSOutS, log) = constructAxioms(q, sin)
+      val (actualSOutS, log) = constructShapes(q, sin)
 
       // Remove internal scope.
       val actualSOut = actualSOutS.map(descope)
@@ -148,7 +150,6 @@ abstract class ValidationSuite extends munit.FunSuite:
         if a.isEmpty && n.isEmpty then assert(e == aout, msg)
         // Otherwise, use both the given subset and not allowed shapes.
         else assert(aout.intersect(n).isEmpty && a.diff(aout).isEmpty, msg)
-  */
 
   private val validation = ValidationS2S("some-name")
 
@@ -164,7 +165,7 @@ abstract class ValidationSuite extends munit.FunSuite:
   )(implicit loc: munit.Location): Unit =
     test(description) {
       if gcore then
-        validation.work(sin, q, exactly, atleast, not) // TODO change!
+        validation.workG(sin, q, exactly, atleast, not)
       else
         validation.work(sin, q, exactly, atleast, not)
     }
@@ -172,8 +173,8 @@ abstract class ValidationSuite extends munit.FunSuite:
   /** Empty set of shapes. */
   def noshapes: Set[String] = Set()
 
-  /** A query with identical pattern and template. */
-  def query(pattern: String): String =
+  /** A SCCQ query with identical pattern and template. */
+  def sccq(pattern: String): String =
     s"""
     CONSTRUCT {
       $pattern
@@ -182,8 +183,8 @@ abstract class ValidationSuite extends munit.FunSuite:
     }
     """
 
-  /** A simple query from just the pattern and template. */
-  def query(template: String, pattern: String): String =
+  /** A simple SCCQ query from just the pattern and template. */
+  def sccq(template: String, pattern: String): String =
     s"""
     CONSTRUCT {
       $template
@@ -192,4 +193,17 @@ abstract class ValidationSuite extends munit.FunSuite:
     }
     """
 
+  /** A SCCQ query with identical pattern and template. */
+  def query(pattern: String): String = sccq(pattern)
+
+  /** A simple SCCQ query from just the pattern and template. */
+  def query(template: String, pattern: String): String = sccq(template, pattern)
+
+  /** A GCORE query from just the pattern and template. */
+  def gcore(construct: String, matc: String, set: String = "", remove: String = "", where: String = ""): String =
+    s"""CONSTRUCT $construct""" +
+    (if set != "" then s"""SET $set""" else "") +
+    (if set != "" then s"""REMOVE $remove""" else "") +
+    s"""MATCH $matc""" +
+    (if set != "" then s"""WHERE $where""" else "")
 

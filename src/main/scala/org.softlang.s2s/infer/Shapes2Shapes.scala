@@ -11,6 +11,7 @@ import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.parser.GCOREParser
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.GCORE
+import org.softlang.s2s.parser.JsonLDParser
 
 /** Customizable implementation of the S2S algorithm. */
 class Shapes2Shapes(private var config: Configuration = Configuration.default):
@@ -67,12 +68,15 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
   /** The shape parser. */
   private val shapeParser = ShapeParser(shar)
 
-  /** Attempt to parse a set of Simple SHACL shapes. */
+  /** Attempt to parse a set of SHACL shapes. */
   def parseSHACLShapes(
       shapes: Set[String]
   ): S2STry[Set[SHACLShape]] =
     for s <- Util
-        .flipEitherHead(shapes.map(shapeParser.parse(_)).toList)
+      .flipEitherHead(shapes.map(s => 
+          shapeParser.parseGeneral(s)
+            .orElse(JsonLDParser.parse(s)))
+            .toList)
         .map(_.toSet)
     yield s.toList.toSet
 

@@ -30,7 +30,7 @@ class Algorithm(
 
   import shar._
 
-  implicit val scopes: Scopes = input.scopes
+  implicit val scopes: Scopes = input.composeScopes
 
   /** Build axioms for the query pattern. */
   def buildAxiomsPattern(pattern: AtomicPatterns, log: Log): Axioms = 

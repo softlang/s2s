@@ -16,6 +16,19 @@ class ShapeParser(shar: Shar):
       case Right(c: Concept) => Right(c)
       case Right(c)          => Left(NotAShapeError(c))
 
+  def parseGeneral(in: String): S2STry[SHACLShape] =
+    val inn = Util.compatMap(in)
+    if inn.contains("⊑") then
+      val target = inn.splitAt(inn.indexOf("⊑"))._1.trim
+      val constraint = inn.splitAt(inn.indexOf("⊑"))._2.drop(1).trim
+
+      for
+        t <- doParse(target)
+        c <- doParse(constraint)
+        s <- SHACLShape.fromAxiom(Subsumption(t, c))
+      yield s
+    else Left(UnparsableShapeError(in))
+
   def parse(in: String): S2STry[SimpleSHACLShape] =
     val inn = Util.compatMap(in)
     if inn.contains("⊑") then

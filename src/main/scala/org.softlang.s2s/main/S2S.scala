@@ -2,7 +2,7 @@ package org.softlang.s2s.main
 
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.infer.Shapes2Shapes
-import org.softlang.s2s.parser.JsonLDToSimpleShacl
+import org.softlang.s2s.parser.JsonLDParser
 
 import scala.util.Failure
 import scala.util.Try
@@ -26,7 +26,7 @@ object S2S:
     val sft = Try(
       if conf.shapesFile().isEmpty then Set()
       else if conf.shapesFile().contains(".json") then
-        JsonLDToSimpleShacl(conf.shapesFile()).convert
+        JsonLDParser.fromFile(conf.shapesFile())
       else
         io.Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
     )

@@ -1,0 +1,46 @@
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@graph": [
+    {
+      "@id": "s2s:s1",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:A"
+      },
+      "sh:property": {
+        "sh:path": {
+          "@id": "s2s:p"
+        },
+        "sh:qualifiedValueShape": {
+          "sh:class": {
+            "@id": "s2s:B"
+          }
+        },
+        "sh:qualifiedMinCount": 1
+      }
+    },
+    {
+      "@id": "s2s:s2",
+      "@type": "sh:NodeShape",
+      "sh:targetSubjectsOf": {
+        "@id": "s2s:r"
+      },
+      "sh:class": {
+        "@id": "s2s:B"
+      }
+    },
+    {
+      "@id": "s2s:s3",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "s2s:B"
+      },
+      "sh:class": {
+        "@id": "s2s:E"
+      }
+    }
+  ]
+}
