@@ -1,5 +1,12 @@
 # From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries
 
+- [Requirements](#requirements)
+- [Quick Start](#quick-start) 
+- [Usage](#usage)
+   - [Command Line Interface](#command-line-interface)
+- [Further Reading](#further-reading)
+  - [Full Tutorial](tutorial/README.md)
+
 ## Requirements
 
 Building Shapes2Shapes requires the Scala build tool [SBT](https://www.scala-sbt.org/), as well as Java.
