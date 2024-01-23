@@ -438,10 +438,11 @@ class JsonLDtoDLTests extends munit.FunSuite:
   ]
 }
     """,
-    """:A ⊑ ∃:p.:B
+    """
+:A ⊑ ∃:p.:B
 ∃:r.⊤ ⊑ :B
 :B ⊑ :E
-""")
+    """)
 
     work(
       """
