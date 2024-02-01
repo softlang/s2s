@@ -1,7 +1,0 @@
-CONSTRUCT {
-    ?x :p ?y .
-    ?z a :A
-} WHERE {
-    ?x :p ?y .
-    ?z a :A
-}
