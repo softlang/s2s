@@ -1,7 +1,7 @@
 # Project
 
-submission
-submission.zip
+*.zip
+*.pdf
 
 # macOS
 .DS_Store

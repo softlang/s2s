@@ -1,0 +1,14 @@
+{
+  "@context": {
+    "s2s": "https://github.com/softlang/s2s/",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "@id": "s2s:s1",
+  "@type": "sh:NodeShape",
+  "sh:targetClass": {
+    "@id": "s2s:Person"
+  },
+  "sh:class": {
+    "@id": "s2s:Agent"
+  }
+}

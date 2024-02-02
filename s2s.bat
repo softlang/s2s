@@ -1,4 +1,3 @@
 @echo off
 
-chcp 65001
-sbt "runMain org.softlang.s2s.s2s %*"
+.\target\universal\stage\bin\s2s.bat "%*"

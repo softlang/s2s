@@ -1,4 +1,14 @@
 #!/bin/sh
 
-args="$@"
-sbt "runMain org.softlang.s2s.s2s $args"
+# If in deployed project, run from 'bin' folder.
+if [ -d "bin" ]; then
+	./bin/s2s "$@"
+# Otherwise, run from local build.
+else
+	# Build first, if required.
+	if [ ! -d "target/universal/stage/bin/" ]; then
+		sbt stage
+	fi
+	# Run shapes 2 shapes, forward arguments.
+	./target/universal/stage/bin/s2s "$@"
+fi

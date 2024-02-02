@@ -1,47 +1,38 @@
 import scala.sys.process._
 import sbt._
+import NativePackagerHelper._
 
-val scala3Version = "3.3.0"
-val jarName = "s2s.jar" // fat jar produced by 'assembly' plugin
+val scala3Version = "3.3.1"
 
 // The Shar framework for reasoning as a Git dependeny.
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
 
-// Command to clean the staging folder, such that Shar dependency is refreshed.
-def stagingClean = Command.command("staging-clean") { currentState =>
-  val os = sys.props("os.name").toLowerCase
-  if (os.contains("windows")) {
-    val dir = "C:" + sys.env("HOMEPATH") + "\\.sbt\\1.0\\staging\\"
-    ("cmd /C rd /s /q " + dir).!
-  } else {
-    val dir = sys.env("HOME") + "/.sbt/1.0/staging/"
-    ("rm -rf " + dir).!
-  }
-  currentState
-}
+// Native Packager plugin.
+enablePlugins(JavaAppPackaging)
 
 lazy val root = project
   .in(file("."))
   .dependsOn(shar)
   .settings(
-    // Project settings.
-    name := "shapes2shapes",
+    // Project metadata.
+    name := "s2s",
+    maintainer := "pseifer@uni-koblenz.de",
     organization := "org.softlang",
     version := "0.0.1",
+    // Project settings.
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput),
     run / javaOptions += "-Xmx4G",
     run / javaOptions += "-Dfile.encoding=UTF-8",
     scalaVersion := scala3Version,
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
-    // Settings for assembly (fat jar).
-    assembly / mainClass := Some("org.softlang.s2s.s2s"),
-    assembly / assemblyJarName := jarName,
-    assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", _*) => MergeStrategy.discard
-      case _                        => MergeStrategy.first
-    },
-    commands += stagingClean,
+    // Settings for native packer.
+    Compile / mainClass := Some("org.softlang.s2s.s2s"),
+    Compile / discoveredMainClasses := Seq(),
+    Universal / mappings ++= directory("tutorial"),
+    Universal / mappings += file("README.md") -> "README.md",
+    Universal / mappings += file("s2s") -> "s2s",
+    // Dependencies.
     // Development dependency; local only - install manually and comment dependsOn(shar);
     // this is only needed so metals works correctly with the GitHub dependency for SHAR.
     //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",

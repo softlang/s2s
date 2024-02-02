@@ -1,0 +1,9 @@
+CONSTRUCT {
+    ?x a :Person .
+    ?y a :Person .
+    ?y a :Agent
+} WHERE {
+    ?x a :Person .
+    ?x a :Teacher .
+    ?y a :Agent
+}
