@@ -1,6 +1,6 @@
 # Tutorial: From Shapes to Shapes
 
-This tutorial will give a step-by-step introduction to the *From Shapes to Shapes* method. Input files (queries and shapes) for all examples can be found in the [examples](examples) folder. The tutorial will instruct you to execute examples. To this end, make sure to read the main [README](../README.md), which includes details on how to use the `s2s` tool. In this document, we will refer to `s2s` for executing examples and expect readers to be familiar with how to run the tool on their platform.
+This tutorial will give a step-by-step introduction to the *From Shapes to Shapes* method. Input files (queries and shapes) for all examples can be found in the [examples](ex/tut) folder. The tutorial will instruct you to execute examples. To this end, make sure to read the main [README](../README.md), which includes details on how to use the `s2s` tool. In this document, we will refer to `s2s` for executing examples and expect readers to be familiar with how to run the tool on their platform.
 
 - [Quick Start](#quick-start)
 - [Introduction: The Problem](#introduction-the-problem)
@@ -9,7 +9,7 @@ This tutorial will give a step-by-step introduction to the *From Shapes to Shape
 
 ## Quick Start
 
-`s2s` refers to the command line tool in all CLI examples in this tutorial. Generally, you will need to input `./s2s`, `.\s2s.bat`, or `.\bin\s2s.bat` depending on your system and installation method. Using `s2s --help` generates helpful information about using `s2s`.
+`s2s` refers to the command line tool in all CLI examples in this tutorial. Generally, you will need to input `./s2s`, `.\s2s.bat`, or `.\bin\s2s.bat` depending on your system and installation method (see the main [README](../README.md) for more information). Using `s2s --help` generates helpful information about using `s2s`.
 
 ## Introduction: The Problem
 
@@ -39,7 +39,7 @@ Now consider that the input graph for this query -- that is, the graph that this
 In *From Shapes to Shapes* we ask the question: Which set of output shapes `S_out` applies to the output graphs (i.e., the graphs constructed by a SPARQL `CONSTRUCT` query), given that we know about the query and a set of input shapes, but we do not know about which concrete graph instances may be encountered in the future. More formally, therefore, we want a function `s2s : (S_in, q) → S_out`. The `s2s` tool implements precisely this function (where tq1 is the query and tS1 the set of shapes from the previous example)
 
 ```sh
-> s2s example/tq1.sparql example/tS1.shacl
+> s2s docs/ex/tut/q1.sparql docs/ex/tut/S1.shacl
 ```
 
 produces the single shape `:Person` ⊑ `:Agent`.
@@ -61,7 +61,7 @@ CONSTRUCT {
 ```
 
 ```sh
-> s2s example/tq2.sparql example/tS2.shacl
+> s2s docs/ex/tut/q2.sparql docs/ex/tut/S2.shacl
 ```
 
 which produces `:Agent` ⊑ `:Person` and `:Person` ⊑ `:Agent`.
@@ -91,7 +91,7 @@ Let us now investigate the extensions of the concepts *Person_0*, *Person_1*, an
 We can use S2S in order to visualize this as well, by passing the `--debug` flag.
 
 ```sh
-> s2s --debug example/tq2.sparql example/tS2.shacl
+> s2s --debug docs/ex/tut/q2.sparql docs/ex/tut/S2.shacl
 ```
 
 ## Reducing the Problem

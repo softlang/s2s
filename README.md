@@ -5,7 +5,7 @@
    - [Command Line Interface](#command-line-interface)
    - [Application Programming Interface](#application-programming-interface)
 - [Further Reading](#further-reading)
-  - [Full Tutorial](docs/README.md)
+  - [Tutorial](docs/README.md)
   - [Paper](https://google.de)
 
 ## Quick Start
@@ -19,17 +19,15 @@ Running the release version of S2S requires Java.
 0. Download ...
 1. Unzip to chosen location.
 3. Run an example, using the included launcher script:
-    * GNU/Linux or macOS: `./s2s docs/examples/q1.sparql docs/examples/S1.shacl`
-    * Windows: `.\bin\s2s.bat .\docs\examples\q1.sparql .\docs\examples\S1.shacl`
+    * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
+    * Windows: `.\bin\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
 
-In summary, assuming a *nix environment:
+In summary:
 
 ```sh
 curl ...
 unzip s2s-0.0.1.zip
 cd s2s-0.0.1
-
-./s2s docs/examples/q1.sparql docs/examples/S1.shacl
 ```
 
 ### Building from Source
@@ -40,17 +38,15 @@ Building S2S from source requires the Scala build tool [SBT](https://www.scala-s
 1. Clone this repository.
 2. Run `sbt stage`.
 3. Run an example, using the local launcher script:
-    * GNU/Linux or macOS: `./s2s docs/examples/q1.sparql docs/examples/S1.shacl`
-    * Windows: `.\s2s.bat .\docs\examples\q1.sparql .\docs\examples\S1.shacl`
+    * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
+    * Windows: `.\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
 
-In summary, assuming a *nix environment:
+In summary:
 
 ```sh
 git clone https://github.com/softlang/s2s
 cd s2s
 sbt stage
-
-./s2s docs/examples/q1.sparql docs/examples/S1.shacl
 ```
 
 ## Usage
@@ -84,7 +80,7 @@ Simple SHACL shapes are encoded as description logic axioms (one per line), wher
 :B ⊑ :E
 ```
 
-Alternatively, JSON-LD syntax can be used; the equivalent shape specification to the aforementioned axioms is given below. More examples are available in the [docs/examples](docs/examples/) folder. The syntax is determined by file extension, using `.json` for JSON-LD and `.shacl` for formal DL notation. Note, that JSON-LD support is still experimental.
+Alternatively, JSON-LD syntax can be used; the equivalent shape specification to the aforementioned axioms is given below. More examples are available in the [docs/ex](docs/ex/) folder. The syntax is determined by file extension, using `.json` for JSON-LD and `.shacl` for formal DL notation. Note, that JSON-LD support is still experimental.
 
 ```json
 {
@@ -177,9 +173,9 @@ object Example:
 
 ## Further Reading
 
-The [tutorial](docs/README.md), here in the repository.
+The [tutorial](docs/README.md), here in the [repository](https://github.com/softlang/s2s).
 
-The full paper: Philipp Seifer, Daniel Hernandez, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Publication. Year. URL.
+The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Staab. 2024. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. In Proc. of WWW 2024. ACM. URL-TBD.
 
 An extended version is available on [arXiv](https://google.de).
 
