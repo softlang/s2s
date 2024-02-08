@@ -17,9 +17,9 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
   footer(
     "\n" +
       """For more information about the algorithm, see the full paper: 
-      |  ...TBD...
+      |  TODO: DOI
       |and the repository at
-      |  ...URL...
+      |  https://github.com/softlang/s2s
       |""".stripMargin
   )
 
