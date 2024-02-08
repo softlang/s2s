@@ -6,11 +6,11 @@
    - [Application Programming Interface](#application-programming-interface)
 - [Further Reading](#further-reading)
   - [Tutorial](docs/README.md)
-  - [Paper](https://google.de) (TBD)
+  - [Paper](https://doi.org) (TBD)
 
 ## Quick Start
 
-This section introduces two ways of using Shapes2Shapes (S2S).
+This section introduces two ways of using *Shapes to Shapes* (S2S).
 
 ### Release Version
 
@@ -169,14 +169,22 @@ object Example:
 
 ## Further Reading
 
-The full [tutorial](docs/README.md), with additional examples and an intuitive description of the underlying method.
+The [tutorial](docs/README.md), with additional examples and an intuitive description of the underlying method.
 
-The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Staab. 2024. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. In Proc. of WWW 2024. ACM. DOI-TBD.
-
-An extended version is available on [arXiv](https://google.de) (TBD).
+The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Proceedings of the ACM Web Conference 2024. ACM. DOI/URL (TBD).
 
 ```BibTeX
-TBD
+@inproceedings{SeiferHLS24,
+  author       = {Philipp Seifer and
+                  Daniel Hern{\'{a}}ndez and
+                  Ralf L{\"{a}}mmel and
+                  Steffen Staab},
+  title        = {From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries},
+  booktitle    = {Proceedings of the {ACM} Web Conference 2024, {WWW} 2024}
+  publisher    = {{ACM}},
+  year         = {2024},
+  doi          = {TBD},
+}
 ```
 
-For reference (e.g., in releases) the git repository is available [here](https://github.com/softlang/s2s).
+An extended version is available on [arXiv](https://doi.org) (TBD). For reference, the git repository is available [here](https://github.com/softlang/s2s).

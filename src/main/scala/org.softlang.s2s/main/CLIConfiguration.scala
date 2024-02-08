@@ -8,7 +8,7 @@ import org.softlang.s2s.core.ActiveReasoner
 class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
     extends ScallopConf(arguments):
   version(
-    "Shapes2Shapes 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz"
+    "s2s 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz"
   )
   banner("\n" + """Usage: s2s [OPTIONS] <query-file> <shapes-file?>
            |
