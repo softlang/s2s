@@ -29,12 +29,12 @@ lazy val root = project
     // Settings for native packer.
     Compile / mainClass := Some("org.softlang.s2s.s2s"),
     Compile / discoveredMainClasses := Seq(),
-    Universal / mappings ++= directory("tutorial"),
+    Universal / mappings ++= directory("docs"),
     Universal / mappings += file("README.md") -> "README.md",
     Universal / mappings += file("s2s") -> "s2s",
     // Dependencies.
-    // Development dependency; local only - install manually and comment dependsOn(shar);
-    // this is only needed so metals works correctly with the GitHub dependency for SHAR.
+    // Development dependency, local only - install manually and comment out 'dependsOn(shar)'.
+    // Note: This is only needed so metals works correctly with the GitHub dependency for SHAR.
     //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
     // Dependencies.
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
