@@ -16,18 +16,19 @@ This section introduces two ways of using Shapes2Shapes (S2S).
 
 Running the release version of S2S requires Java.
 
-0. Download ...
+0. Download the [latest universal release](https://github.com/softlang/s2s/releases/latest/download/s2s.zip).
 1. Unzip to chosen location.
-3. Run an example, using the included launcher script:
+3. Run an [example](docs/ex/paper), using the included launcher script:
     * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
     * Windows: `.\bin\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
+
 
 In summary:
 
 ```sh
-curl ...
-unzip s2s-0.0.1.zip
-cd s2s-0.0.1
+curl "https://github.com/softlang/s2s/releases/latest/download/s2s.zip"
+unzip s2s.zip
+cd s2s
 ```
 
 ### Building from Source
@@ -37,14 +38,14 @@ Building S2S from source requires the Scala build tool [SBT](https://www.scala-s
 0. Install the requirements.
 1. Clone this repository.
 2. Run `sbt stage`.
-3. Run an example, using the local launcher script:
+3. Run an [example](docs/ex/paper), using the local launcher script:
     * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
     * Windows: `.\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
 
 In summary:
 
 ```sh
-git clone https://github.com/softlang/s2s
+git clone "https://github.com/softlang/s2s"
 cd s2s
 sbt stage
 ```
