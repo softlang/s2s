@@ -111,27 +111,38 @@ All axioms listed are part of a single T-Box. Consider first the axiom labelled 
 More interesting are the axioms inferred for the WHERE clause (also called the *pattern*) of the CONSTRUCT query. The first part, labelled with 'step 1', defines the concept names (in the intermediate or WHERE-clause namespace •1) in terms of filtering the input-namespace (•0) concept names with the respective query variables -- or rather, with concept names that are used as stand-ins for the query variables, using the suffix •-1. That is, axiom Agent•1 ≡ (Agent•0)⊓(?y•-1) says that Agent•1 is the same as Agent•0 filtered by some concept ?y•-1, which essentially includes the bindings of variable `y`.
 
 > CWA(q.P), step 1 =
->   Agent•1 ≡ (Agent•0)⊓(?y•-1),
->   Person•1 ≡ (Person•0)⊓(?x•-1),
->   Teacher•1 ≡ (Teacher•0)⊓(?x•-1)
+>
+>>   Agent•1 ≡ (Agent•0)⊓(?y•-1),
+>>
+>>   Person•1 ≡ (Person•0)⊓(?x•-1),
+>>
+>>  Teacher•1 ≡ (Teacher•0)⊓(?x•-1)
 
 How is ?y•-1 defined, then? Well, the axioms labelled with 'step 3' define ?y•-1 in terms of the constraints arising from the WHERE-clause: Agent•0 ≡ ?y•-1, though expressed as both inclusions, since sometimes one direction can not be ensured; see the paper for more details. Perhaps more interesting is the definition for variable `x`, namely (Person•0)⊓(Teacher•0) ≡ ?x•-1. Here, ?x•-1 is defined as the intersection of the two concept names that occur in the patterns of the WHERE-clause, since bindings for `x` are required to be instances of both *Person* and *Teacher*.
  
 > CWA(q.P), step 3. =
->   (Person•0)⊓(Teacher•0) ⊑ ?x•-1,
->   Agent•0 ⊑ ?y•-1,
->   ?x•-1 ⊑ (Person•0)⊓(Teacher•0),
->   ?y•-1 ⊑ Agent•0
+>
+>>   (Person•0)⊓(Teacher•0) ⊑ ?x•-1,
+>>
+>>   Agent•0 ⊑ ?y•-1,
+>>
+>>   ?x•-1 ⊑ (Person•0)⊓(Teacher•0),
+>>
+>>   ?y•-1 ⊑ Agent•0
 
 Finally, we define concept names of the output namespace (•2) in terms of the query variables that partake in their construction, only ?y•-1 for Agent•2, and the union of both ?x•-1 and ?y•-1 for Person•2.
 
 > CWA(q.H), step 2. =
->   Agent•2 ≡ ?y•-1,
->   Person•2 ≡ (?x•-1)⊔(?y•-1)
+>
+>>   Agent•2 ≡ ?y•-1,
+>>
+>>   Person•2 ≡ (?x•-1)⊔(?y•-1)
 
 With these axioms, we can then filter the set of candidate shapes and obtain the shapes listed in S_out as the only ones entailed by the axioms above.
 
 > S_out =
->   Agent•2 ⊑ Person•2,
->   Person•2 ⊑ Agent•2
+>
+>>   Agent•2 ⊑ Person•2,
+>>
+>>   Person•2 ⊑ Agent•2
 
