@@ -1,5 +1,0 @@
-CONSTRUCT (x)-[e]->(y), (y)-[f]->(z)
-SET y:Cat
-REMOVE y:Person
-MATCH (x)-[e]->(y), (y)-[f]->(z)
-WHERE x:Person AND e:knows AND f:knows AND y:Person

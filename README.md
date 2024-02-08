@@ -1,4 +1,4 @@
-# From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries
+# From Shapes to Shapes
 
 - [Quick Start](#quick-start)
 - [Usage](#usage)
