@@ -18,7 +18,8 @@ lazy val root = project
     name := "s2s",
     maintainer := "pseifer@uni-koblenz.de",
     organization := "org.softlang",
-    version := "0.0.1",
+    organizationName := "Softlang, University of Koblenz",
+    version := "1.0.0",
     // Project settings.
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput),
@@ -43,13 +44,13 @@ lazy val root = project
     libraryDependencies += "org.slf4j" % "slf4j-nop" % "2.0.6",
     // Openllet reasoner support.
     libraryDependencies += "com.github.galigator.openllet" % "openllet-owlapi" % "2.6.5",
-    // JSON-LD
+    // JSON-LD and JSON (Akarta).
     libraryDependencies += "com.apicatalog" % "titanium-json-ld" % "1.3.1",
     libraryDependencies += "org.glassfish" % "jakarta.json" % "2.0.1",
-    // CLI Application.
+    // CLI application.
     libraryDependencies += "org.rogach" %% "scallop" % "4.1.0",
-    // Testing
-    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test,
-    // Parsing
-    libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0"
+    // Parser combinator.
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0",
+    // Testing dependencies.
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
   )

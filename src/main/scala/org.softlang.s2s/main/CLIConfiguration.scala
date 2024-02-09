@@ -7,8 +7,15 @@ import org.softlang.s2s.core.ActiveReasoner
 /** Command line interface definition. */
 class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
     extends ScallopConf(arguments):
+  
+  val pkg = getClass.getPackage
+
+  val version = pkg.getImplementationVersion
+  val name = pkg.getImplementationTitle
+  val vendor = pkg.getImplementationVendor
+
   version(
-    "s2s 0.0.1 - Philipp Seifer @ Softlang, University of Koblenz"
+    s"$name $version - Copyright (C) Philipp Seifer ($vendor)"
   )
   banner("\n" + """Usage: s2s [OPTIONS] <query-file> <shapes-file?>
            |
@@ -16,10 +23,10 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
            |""".stripMargin)
   footer(
     "\n" +
-      """For more information about the algorithm, see the full paper: 
-      |  TODO: DOI
-      |and the repository at
-      |  https://github.com/softlang/s2s
+      """This program is free sofware and comes without warranty of any kind.
+      |For more information, including associated publications, please see the repository at
+      |    https://github.com/softlang/s2s
+      |or the LICENSE document included with this distribution.
       |""".stripMargin
   )
 
