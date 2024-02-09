@@ -20,7 +20,7 @@ Running the release version of S2S requires Java.
 1. Unzip to chosen location.
 
 ```sh
-curl "https://github.com/softlang/s2s/releases/latest/download/s2s.zip" && unzip s2s.zip && cd s2s
+curl -L0 "https://github.com/softlang/s2s/releases/latest/download/s2s.zip" --output "s2s.zip" && unzip s2s.zip && cd s2s
 ```
 
 ### Building from Source
