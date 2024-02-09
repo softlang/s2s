@@ -80,15 +80,15 @@ object Profile:
   // See ./wikidata/Readme.md
 
   val wikidata_small = small.copy(
-    inputFile = Some("wikidata/queries_clean")
+    inputFile = Some("docs/evaluation/wikidata/queries_clean")
   )
 
   val wikidata_medium = medium.copy(
-    inputFile = Some("wikidata/queries_clean")
+    inputFile = Some("docs/evaluation/wikidata/queries_clean")
   )
 
   val wikidata_large = large.copy(
-    inputFile = Some("wikidata/queries_clean")
+    inputFile = Some("docs/evaluation/wikidata/queries_clean")
   )
 
   def run(): Unit =

@@ -133,11 +133,10 @@ class Algorithm(
 
   /** Run the algorithm, obtaining a full set of shapes. */
   def shapes: S2STry[Set[SHACLShape]] =
-    //log.profileEnd("build")
-    //log.profileStart("candidates")
-    //log.profileStart("filter")
+    log.profileStart("candidates")
+    log.profileStart("filter")
 
-    for 
+    val shapes = for 
       // First, construct all axioms.
       extraClausesAxioms <- axiomsInternal()
       extraClauses = extraClausesAxioms._1
@@ -163,15 +162,17 @@ class Algorithm(
           yield r.union(p)
           all = all.union(current)
           current = canGen.getNext(previous)
+
+        log.candidates(all)
         result
       }
     yield result
 
-    //log.candidates(current)
+    log.profileEnd("candidates")
+    log.profileEnd("filter")
+    log.profileEnd("algorithm")
 
-    //log.profileEnd("candidates")
-    //log.profileEnd("filter")
-    //log.profileEnd("algorithm")
+    shapes
 
   /** Run algorithm, returning only the set of axioms. */
   def axioms: S2STry[Axioms] = axiomsInternal().map(_._2)
@@ -179,12 +180,12 @@ class Algorithm(
   /** Run algorithm, returning a set of axioms. */
   private def axiomsInternal(): S2STry[(Set[GCORE.SetClause], Axioms)] =
 
-    //log.profileStart("algorithm")
+    log.profileStart("algorithm")
     input.log(log)
 
-    // log.profileStart("build")
+    log.profileStart("build")
 
-    for
+    val axioms = for
       // Infer axioms from the query pattern.
       patternAxioms <- processPattern(log)
       // Transform inout shapes (or axioms) to axioms.
@@ -204,6 +205,10 @@ class Algorithm(
         .join(templateAxioms)
         .join(props)
     yield (extraClauses, axioms)
+
+    log.profileEnd("build")
+
+    axioms
 
   /** Generate additional axioms using the component mapping approach. */
   def extendMapping(patternShapeAxioms: Axioms, log: Log): S2STry[Axioms] =
