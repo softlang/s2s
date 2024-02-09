@@ -33,6 +33,8 @@ lazy val root = project
     Universal / mappings ++= directory("docs"),
     Universal / mappings += file("README.md") -> "README.md",
     Universal / mappings += file("s2s") -> "s2s",
+    Universal / mappings += file("s2s.bat") -> "s2s.bat",
+    Universal / packageName := "s2s",
     // Dependencies.
     // Development dependency, local only - install manually and comment out 'dependsOn(shar)'.
     // Note: This is only needed so metals works correctly with the GitHub dependency for SHAR.
