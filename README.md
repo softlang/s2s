@@ -6,7 +6,7 @@
    - [Application Programming Interface](#application-programming-interface)
 - [Further Reading](#further-reading)
   - [Tutorial](docs/README.md)
-  - [Paper](https://doi.org) (TBD)
+  - [Paper](https://doi.org/10.1145/3589334.3645550)
 
 ## Quick Start
 
@@ -171,7 +171,7 @@ object Example:
 
 The [tutorial](docs/README.md), with additional examples and an intuitive description of the underlying method.
 
-The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Staab. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. Proceedings of the ACM Web Conference 2024. ACM. DOI/URL (TBD).
+The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Staab. 2024. From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries. In Proceedings of the ACM Web Conference 2024 (WWW ’24). ACM. [10.1145/3589334.3645550](https://doi.org/10.1145/3589334.3645550).
 
 ```BibTeX
 @inproceedings{SeiferHLS24,
@@ -180,11 +180,11 @@ The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Sta
                   Ralf L{\"{a}}mmel and
                   Steffen Staab},
   title        = {From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries},
-  booktitle    = {Proceedings of the {ACM} Web Conference 2024, {WWW} 2024}
+  booktitle    = {Proceedings of the {ACM} Web Conference 2024, ({WWW} '24)},
   publisher    = {{ACM}},
   year         = {2024},
-  doi          = {TBD},
+  doi          = {10.1145/3589334.3645550},
 }
 ```
 
-An extended version is available on [arXiv](https://doi.org) (TBD). For reference, the git repository is available [here](https://github.com/softlang/s2s).
+An extended version is available on [arXiv](https://arxiv.org) (TBD). For reference, the git repository is available [here](https://github.com/softlang/s2s).
