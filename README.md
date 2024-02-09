@@ -18,11 +18,6 @@ Running the release version of S2S requires Java.
 
 0. Download the [latest universal release](https://github.com/softlang/s2s/releases/latest/download/s2s.zip).
 1. Unzip to chosen location.
-3. Run an [example](docs/ex/paper), using the included launcher script:
-    * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
-    * Windows: `.\bin\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
-
-In summary:
 
 ```sh
 curl "https://github.com/softlang/s2s/releases/latest/download/s2s.zip" && unzip s2s.zip && cd s2s
@@ -35,14 +30,17 @@ Building S2S from source requires the Scala build tool [SBT](https://www.scala-s
 0. Install the requirements.
 1. Clone this repository.
 2. Run `sbt stage`.
-3. Run an [example](docs/ex/paper), using the local launcher script:
-    * GNU/Linux or macOS: `./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl`
-    * Windows: `.\s2s.bat .\docs\ex\paper\q1.sparql .\docs\ex\paper\S1.shacl`
-
-In summary:
 
 ```sh
 git clone "https://github.com/softlang/s2s" && cd s2s && sbt stage
+```
+
+### Running an Example
+
+Run an [example](docs/ex/paper), using the included launcher script (replacing `s2s` with `s2s.bat` on Windows):
+
+```sh
+./s2s docs/ex/paper/q1.sparql docs/ex/paper/S1.shacl
 ```
 
 ## Usage
