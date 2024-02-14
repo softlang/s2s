@@ -185,4 +185,4 @@ The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Sta
 }
 ```
 
-An extended version is available on [arXiv](https://arxiv.org). For reference, the git repository is available [here](https://github.com/softlang/s2s).
+An extended version is available on [arXiv](https://arxiv.org/abs/2402.08509). For reference, the git repository is available [here](https://github.com/softlang/s2s).
