@@ -1,10 +1,6 @@
 package org.softlang.s2s.core
 
-import de.pseifer.shar.dl.Axiom
-import de.pseifer.shar.dl.Concept
-import de.pseifer.shar.dl.NamedConcept
-import de.pseifer.shar.dl.NamedRole
-import de.pseifer.shar.dl.Role
+import de.pseifer.shar.dl._
 
 import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Iri
@@ -36,9 +32,25 @@ class Axioms(
   def properties: Set[Role] = axioms.flatMap(_.properties).toSet.map(NamedRole(_))
 
   /** Get the vocabulary of the axioms. */
-  def vocabulary: Vocabulary = 
+  def vocabulary: Vocabulary =
     axioms.map(_.vocabulary).foldLeft(Vocabulary.empty)(_.union(_))
-  
+
+  /** Drop the scope. */
+  def dropScope: Axioms =
+    Axioms(axioms.map(s => s match
+        case Subsumption(c, d) => Subsumption(
+          c.dropScope(scopes),
+          d.dropScope(scopes))
+        case Equality(c, d) => Equality(
+          c.dropScope(scopes),
+          d.dropScope(scopes))
+        case RoleSubsumption(c, d) => RoleSubsumption(
+          c.dropScope(scopes),
+          d.dropScope(scopes))
+        case Satisfiability(c) => Satisfiability(
+          c.dropScope(scopes))
+    ), scopes)
+
   // Reasoner instances for this set of shapes, that are instantiated
   // with configs when first required. Usually, only one instance
   // is used.
@@ -61,7 +73,7 @@ class Axioms(
     axioms.map(_.show(state)).mkString(token)
 
   /** Map a function on all concepts. */
-  def map(f: Concept => Concept): Axioms = 
+  def map(f: Concept => Concept): Axioms =
     import de.pseifer.shar.dl._
     Axioms(axioms.map { m =>
       m match
@@ -90,9 +102,8 @@ object Axioms:
   def join(lhs: Axioms, rhs: Axioms): Axioms =
     if lhs.scopes == rhs.scopes then
       Axioms(rhs.axioms.union(lhs.axioms), rhs.scopes)
-    else 
+    else
       Axioms(rhs.axioms.union(lhs.axioms.map(_.updateScopes(lhs.scopes, rhs.scopes))), rhs.scopes)
 
   /** Construct an empty axioms. */
   def empty(scopes: Scopes): Axioms = Axioms(Set(), scopes)
-

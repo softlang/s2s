@@ -80,16 +80,16 @@ extension (aps: AtomicPatterns)
     */
   def depth: Int =
     aps.filter(_.isPropertyPattern).size
-  
+
   /** True, if the variable connectivity graph is cyclic. */
-  def hasCyclicVCG: Boolean = 
-    def hasEdge(s1: Set[Var], s2: Set[Var]): Boolean = 
+  def hasCyclicVCG: Boolean =
+    def hasEdge(s1: Set[Var], s2: Set[Var]): Boolean =
       s1.intersect(s2).nonEmpty
 
-    def hasCycleOne(lst: List[Set[Var]]): Boolean = 
+    def hasCycleOne(lst: List[Set[Var]]): Boolean =
       lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(lst.head, lst.last)
 
-    def hasCycle(lst: List[Set[Var]]): Boolean = 
+    def hasCycle(lst: List[Set[Var]]): Boolean =
       (3 to lst.size).map { i =>
         lst.take(i)
       }.exists(hasCycleOne)
@@ -100,17 +100,71 @@ extension (aps: AtomicPatterns)
       .permutations
       .exists(hasCycle)
 
+/**
+  * Extended query data.
+  *
+  * @param filter Filter conditions.
+  * @param nodeVariables Variables that are node variables.
+  * @param edgeVariables Variables that are edge variables.
+  */
+class ECCQ(
+  val filter: Set[FilterPattern] = Set(),
+  val nodeVariables: Set[Var] = Set(),
+  val edgeVariables: Set[Var] = Set()
+)
+
 /** Representation of a SCCQ (query) as template and pattern as List of
   * AtomicPattern.
   */
 class SCCQ(
     val template: List[AtomicPattern],
-    val pattern: List[AtomicPattern]
+    val pattern: List[AtomicPattern],
+    // Extension: ECCQ queries with filter patterns.
+    val eccq: Option[ECCQ] = None
 ) extends Showable:
 
   def show(implicit state: BackendState): String =
-    "CONSTRUCT { " ++ template.map(_.show).mkString("", " . ", "") ++
-      " } WHERE { " ++ pattern.map(_.show).mkString("", " . ", "") ++ " }"
+    val to = template.map(_.show)
+    val po = pattern.map(_.show)
+
+    // Take only node and edge variables into consideration, not any variables generated for
+    // properties by the conversion from G-CORE to SPARQL.
+    val patternVariables = eccq.map(e => e.nodeVariables.union(e.edgeVariables)).getOrElse(Set())
+
+    // Generate two fresh variables, for each variable v.
+    val pv = patternVariables.map(v => (v -> (Var.fresh(), Var.fresh()))).toMap
+
+    // Filter for variables that occur in the template.
+    val tv = pv.view.filterKeys(v => template.variables.contains(v))
+
+    val p = if isECCQ then po ++ pv.map(additionalTriples) else po
+    val t = if isECCQ then to ++ tv.map(additionalTriples) else to
+    val f = if isECCQ then eccq.map(e => e.filter.map(makeFilter(_, pv))).getOrElse(Set()).mkString(" ") else ""
+    val m = if isECCQ then pv.flatMap(metaFilters).mkString(" ") else ""
+
+    "CONSTRUCT { " ++ t.mkString("", " . ", "") ++
+      " } WHERE { " ++ p.mkString("", " . ", "") ++ " " ++ f ++ " " ++ m ++ "}"
+
+  // Generate a triple pattern from a variable v, and a (fresh) property and object variable.
+  private def additionalTriples(v: Var, po: (Var, Var)): String =
+    s"${v.showNB} ${po._1.showNB} ${po._2.showNB}"
+
+  private def makeFilter(f: FilterPattern, mv: Map[Var, (Var, Var)]): String = f match
+    case FilterPattern.notC(v, c) =>
+      val vc = mv(v)
+      s"FILTER ( ${vc._2.showNB} !=  ${c.encode} )"
+    case FilterPattern.notP(v, p) =>
+      val vc = mv(v)
+      s"FILTER ( ${vc._1.showNB} != ${p.encode} )"
+
+  /** Make filter patterns for the generic parts. */
+  private def metaFilters(v: Var, po: (Var, Var)): List[String] = List(
+    s"FILTER ( ${po._1.showNB} != ${GCORE.nodeToEdgeIri.encode} )",
+    s"FILTER ( ${po._1.showNB} != ${GCORE.edgeToNodeIri.encode} )",
+    // Note: These *should* be copied to the output graph!
+    // s"FILTER ( ${po._2.showNB} != ${GCORE.node.encode} )",
+    // s"FILTER ( ${po._2.showNB} != ${GCORE.edge.encode} )",
+  )
 
   /** Get all variables in this query. */
   def variables: Set[Var] = template.variables.union(pattern.variables)
@@ -125,7 +179,14 @@ class SCCQ(
   def nominals: Set[Iri] = template.nominals.union(pattern.nominals)
 
   /** Get the vocabulary (variables, concepts, properties, nominals). */
-  def vocabulary: Vocabulary = template.vocabulary.union(pattern.vocabulary)
+  def vocabulary: Vocabulary =
+    template
+      .vocabulary
+      .union(pattern.vocabulary)
+      .diff(GCORE.removeVoc)
+
+  /** True if this is an extended query. */
+  def isECCQ: Boolean = eccq.isDefined
 
 object SCCQ:
 

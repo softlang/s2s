@@ -1,4 +1,4 @@
-package org.softlang.s2s.test.suites
+package org.softlang.s2s.test.sccq
 
 import org.softlang.s2s.test.ValidationSuite
 
@@ -7,7 +7,7 @@ class GeneralSCCQTests extends ValidationSuite:
 
   val q0 = query("?x :q ?y . ?x a :B", "?x :r ?y . ?x a :A")
 
-  work(
+  includes(
     "general_0_0",
     noshapes,
     q0,
@@ -20,7 +20,7 @@ class GeneralSCCQTests extends ValidationSuite:
 
   val q1 = query("?x :q ?y . ?y a :B", "?x :r ?y . ?y a :A")
 
-  work(
+  includes(
     "general_1_0",
     noshapes,
     q1,
@@ -36,7 +36,7 @@ class GeneralSCCQTests extends ValidationSuite:
     "?x a :A . ?x :r ?y . ?y a :A"
   )
 
-  work(
+  includes(
     "general_2_0",
     noshapes,
     q2,
@@ -55,7 +55,7 @@ class GeneralSCCQTests extends ValidationSuite:
     "?x a :A . ?x :r ?y . ?y a :B"
   )
 
-  work(
+  includes(
     "general_3_0",
     noshapes,
     q3,
@@ -71,7 +71,7 @@ class GeneralSCCQTests extends ValidationSuite:
     )
   )
 
-  work(
+  includes(
     "general_3_1",
     Set(
       ":A ⊑ :B",
@@ -92,7 +92,7 @@ class GeneralSCCQTests extends ValidationSuite:
 
   val q4 = query("?x :q ?x . ?x a :B", "?x :r ?x . ?x a :A")
 
-  work(
+  includes(
     "general_4_0",
     noshapes,
     q4,
@@ -112,9 +112,9 @@ class GeneralSCCQTests extends ValidationSuite:
 
   val q5 = query("?x :q ?y . ?z a :B", "?x :r ?y . ?z a :A")
 
-  work("general_5_0", noshapes, q5, noshapes)
+  includes("general_5_0", noshapes, q5, noshapes)
 
-  work(
+  includes(
     "general_5_1",
     Set("∃:r.⊤ ⊑ :A"),
     q5,
@@ -127,22 +127,22 @@ class GeneralSCCQTests extends ValidationSuite:
 
   val q6 = query("?x a :B . ?y a :C", "?x :p ?x . ?y a :A")
 
-  work("general_6_0", noshapes, q6, noshapes)
+  includes("general_6_0", noshapes, q6, noshapes)
 
-  work("general_6_1", Set(":A ⊑ ∃:p.:A"), q6, noshapes)
+  includes("general_6_1", Set(":A ⊑ ∃:p.:A"), q6, noshapes)
 
   val q7 = query("?x a :B . ?y a :C", "?y :q ?x . ?x a :A")
 
-  work("general_7_0", Set("∃:q.⊤ ⊑ :A"), q7, noshapes)
+  includes("general_7_0", Set("∃:q.⊤ ⊑ :A"), q7, noshapes)
 
   val q8 = query("?x a :B . ?y a :C", "?y :q ?x . ?x :p ?y . ?y a :A")
 
-  work("general_8_0", Set("∃:q.⊤ ⊑ ∃:p.:A"), q8, noshapes)
+  includes("general_8_0", Set("∃:q.⊤ ⊑ ∃:p.:A"), q8, noshapes)
 
   val q9 = query("?x a :B . ?y a :C", "?y :p ?x . ?x :p ?y")
 
-  work("general_9_0", noshapes, q9, Set(":B ⊑ :C", ":C ⊑ :B"))
+  includes("general_9_0", noshapes, q9, Set(":B ⊑ :C", ":C ⊑ :B"))
 
   val q10 = query("?x :l ?y . ?z a :D", "?x :l ?y . ?z a :D")
 
-  work("general_10_0", Set(":D ⊑ ∃:l.:D"), q10, Set(":D ⊑ ∃:l.:D"))
+  includes("general_10_0", Set(":D ⊑ ∃:l.:D"), q10, Set(":D ⊑ ∃:l.:D"))

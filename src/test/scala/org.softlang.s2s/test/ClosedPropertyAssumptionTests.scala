@@ -4,16 +4,18 @@ import de.pseifer.shar.dl._
 import org.softlang.s2s.infer._
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.core.Scope
+import org.softlang.s2s.core.Axioms
+import org.softlang.s2s.core.Scopes
 
 class ClosedPropertyAssumptionTests extends munit.FunSuite with TestData:
 
   // The function under test here.
   
   def workH(sccq: SCCQ): Set[Axiom] =
-    ClosedPropertyAssumption(sccq.template, Scope.Out).axioms
+    ClosedPropertyAssumption(sccq.template, Scope.Out, AlgorithmInput.SCCQAxioms(sccq, Axioms(Set(), Scopes("--not-required--", 0, 1, 2, 3)))).axioms
 
   def workP(sccq: SCCQ): Set[Axiom] =
-    ClosedPropertyAssumption(sccq.pattern, Scope.Med).axioms
+    ClosedPropertyAssumption(sccq.pattern, Scope.Med, AlgorithmInput.SCCQAxioms(sccq, Axioms(Set(), Scopes("--not-required--", 0, 1, 2, 3)))).axioms
 
   //  Empty
 

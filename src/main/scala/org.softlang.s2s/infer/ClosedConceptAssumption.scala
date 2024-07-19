@@ -3,15 +3,35 @@ package org.softlang.s2s.infer
 import de.pseifer.shar.dl._
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
+import org.softlang.s2s.core.dropScope
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.inScope
 import org.softlang.s2s.core.isVariable
 import org.softlang.s2s.query._
+import org.softlang.s2s.query.GCORE.Label
 
 class ClosedConceptAssumptionTemplate(
-    a: AtomicPatterns
+    a: AtomicPatterns,
+    input: AlgorithmInput
 )(implicit scopes: Scopes)
     extends ClosedConceptAssumption(a, true, false)(scopes):
+
+  override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
+    if input.isECCQ then
+      axioms.map(_ match
+        case Equality(l @ NamedConcept(lc), r) =>
+          val gens = 
+            if Label.isNodeLabel(lc) then
+              input.nodeVariables.flatMap(v =>
+                v.asConceptComponent(input.filters, l).toSet)
+            else
+              input.edgeVariables.flatMap(v =>
+                v.asConceptComponent(input.filters, l).toSet)
+          Equality(l, Concept.unionOf(r :: gens.toList))
+        case a => a
+      )
+    else
+      axioms
 
   val leftScope = Scope.Out
   val rightScope = Scope.Out

@@ -1,20 +1,20 @@
 package org.softlang.s2s.generate
 
-import de.pseifer.shar.dl._
 import org.softlang.s2s.core.S2STry
-import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.core.ShapeHeuristic
 import org.softlang.s2s.core.Vocabulary
-import org.softlang.s2s.core.inScope
+
+import de.pseifer.shar.core.Iri
 
 /** Candidate shape generator. */
 class CandidateGenerator(
     voc: Vocabulary,
-    heuristic: ShapeHeuristic
+    heuristic: ShapeHeuristic,
+    excludeTarget: Set[Iri] = Set()
 )(implicit scopes: Scopes)
-    extends ShapeGenerator(voc, heuristic):
+    extends ShapeGenerator(voc, heuristic, excludeTarget):
 
   private var count = 0
 
@@ -22,10 +22,14 @@ class CandidateGenerator(
   def getNext(
       accepted: S2STry[Set[SHACLShape]] = Right(Set())
   ): Set[SHACLShape] =
-    if heuristic.simpleShapes && count == 0 then
-      count += 1
-      generate
-    else Set()
+    heuristic match
+      case _:ShapeHeuristic.SimpleShapes if count == 0 =>
+        count += 1
+        generate
+      case _:ShapeHeuristic.MediumProGS if count == 0 =>
+        count += 1
+        generate
+      case _ => Set()
     // TODO: Multiple phases depending on input.
     // TODO: Extend for phase-wise, optimize generation
     // of arbitrary DL SHACL shapes.

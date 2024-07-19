@@ -2,6 +2,9 @@
 
 *.zip
 *.pdf
+validation/data
+validation/venv
+validation/__*
 
 # macOS
 .DS_Store

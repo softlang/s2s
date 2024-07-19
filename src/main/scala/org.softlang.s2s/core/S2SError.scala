@@ -43,6 +43,9 @@ class UnsupportedQueryError(msg: Showable, details: String = "")
 class UnparsableShapeError(msg: String)
     extends BasicS2SError("Unparsable shape", msg)
 
+class UnprintableShapeError(msg: String)
+    extends BasicS2SError("Unprintable shape", msg)
+
 class UnconvertableShapeError(msg: Showable)
     extends ShowableS2SError("Unconvertable shape", msg)
 

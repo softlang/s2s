@@ -8,9 +8,10 @@ import org.softlang.s2s.core._
 import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.parser.ShapeParser
 import org.softlang.s2s.parser.JsonLDParser
+import org.antlr.v4.parse.GrammarTreeVisitor.astOperand_return
 
 class JsonLDtoDLTests extends munit.FunSuite:
- 
+
   // Utility: Parse SHACL shapes from concept notation.
 
   val shar = Shar()
@@ -22,12 +23,13 @@ class JsonLDtoDLTests extends munit.FunSuite:
 
   private val shapeParser = ShapeParser(shar)
 
+  // Utility: Parse formal axioms.
   def parseFormal(formal: String): Set[SHACLShape] =
     val sp = for s <- Util
         .flipEitherHead(formal
           .linesIterator
           .map(_.trim)
-          .filter(_.nonEmpty) 
+          .filter(_.nonEmpty)
           .map(shapeParser.parseGeneral(_))
           .toList)
         .map(_.toSet)
@@ -35,9 +37,8 @@ class JsonLDtoDLTests extends munit.FunSuite:
     assert(sp.isRight, "error in test case (can not parse control)")
     sp.toOption.get
 
-  // Utility: Parse jsonLD
-  
-  def parseJson(shapes: String): Set[SHACLShape] = 
+  // Utility: Parse JSON-LD encoded shapes.
+  def parseJson(shapes: String): Set[SHACLShape] =
     val ps = JsonLDParser.fromString(shapes)
     val sp = for s <- Util
         .flipEitherHead(ps.map(JsonLDParser.parse(_)).toList)
@@ -46,12 +47,32 @@ class JsonLDtoDLTests extends munit.FunSuite:
     assert(sp.isRight, "unable to parse test case")
     sp.toOption.get
 
-  // Work
+  // Utility: Pretty print and then re-parse shapes.
+  def unAndReparse(shapes: Set[SHACLShape]) =
+    val up = JsonLDParser.unparse(shapes)
+    assert(up.isRight, "unable to pretty-print test case")
+    parseJson(up.toOption.get)
 
-  def work(json: String, formal: String): Unit = 
+  // Construct a single test case.
+  def work(json: String, formal: String): Unit =
+    // Compare JSON versus formal axioms.
     val s1 = parseJson(json)
     val s2 = parseFormal(formal)
     assertEquals(s1, s2)
+    // Ensure pretty-print and parsing are inverse relations.
+    val s3 = unAndReparse(s1)
+    val s4 = unAndReparse(s3)
+    assertEquals(s1, s3)
+    assertEquals(s1, s4)
+
+  // Construct a single test case from only formal inputs.
+  def work(formal: String): Unit =
+    val s = parseFormal(formal)
+    // Ensure pretty-print and parsing are inverse relations.
+    val s1 = unAndReparse(s)
+    val s2 = unAndReparse(s1)
+    assertEquals(s, s1)
+    assertEquals(s, s2)
 
   // Test cases.
 
@@ -69,7 +90,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "@id": "s2s:Person"
   }
 }
-      """, 
+      """,
       ":Person ⊑ ⊤")
 
     work(
@@ -96,13 +117,13 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   ]
 }
-      """, 
+      """,
       """
       :Person ⊑ ⊤
       :Dog ⊑ ⊤
       """)
   }
-   
+
   test("subject target") {
     work(
       """
@@ -117,7 +138,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "@id": "s2s:knows"
   }
 }
-      """, 
+      """,
       "∃:knows.⊤ ⊑ ⊤")
 
     work(
@@ -144,13 +165,13 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   ]
 }
-      """, 
+      """,
       """
       ∃:knows.⊤ ⊑ ⊤
       ∃:likes.⊤ ⊑ ⊤
       """)
   }
-    
+
   test("object target") {
     work(
       """
@@ -165,7 +186,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "@id": "s2s:knows"
   }
 }
-      """, 
+      """,
       "∃-:knows.⊤ ⊑ ⊤")
 
     work(
@@ -192,7 +213,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   ]
 }
-      """, 
+      """,
       """
       ∃-:knows.⊤ ⊑ ⊤
       ∃-:likes.⊤ ⊑ ⊤
@@ -216,7 +237,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "@id": "s2s:Agent"
   }
 }
-      """, 
+      """,
       ":Person ⊑ :Agent")
 
     work(
@@ -240,7 +261,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   ]
 }
-      """, 
+      """,
       ":Person ⊑ :Agent ⊓ :Dog")
   }
 
@@ -266,7 +287,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   }
 }
-      """, 
+      """,
       ":Person ⊑ ∀:knows.:Person")
   }
 
@@ -295,7 +316,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "sh:qualifiedMinCount": 1
   }
 }
-      """, 
+      """,
       ":Person ⊑ ∃:knows.:Person")
   }
 
@@ -327,10 +348,10 @@ class JsonLDtoDLTests extends munit.FunSuite:
     ]
   }
 }
-      """, 
+      """,
       ":Person ⊑ :Agent ⊓ :Dog")
   }
-  
+
   test("or") {
     work(
       """
@@ -359,10 +380,10 @@ class JsonLDtoDLTests extends munit.FunSuite:
     ]
   }
 }
-      """, 
+      """,
       ":Person ⊑ :Agent ⊔ :Dog")
   }
-  
+
   test("not") {
     work(
       """
@@ -382,7 +403,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     }
   }
 }
-      """, 
+      """,
       ":Person ⊑ ¬:Dog")
   }
 
@@ -468,7 +489,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "sh:qualifiedMinCount": 1
   }
 }
-      """, 
+      """,
       ":A ⊑ ∃:p.:A")
 
     work(
@@ -487,8 +508,7 @@ class JsonLDtoDLTests extends munit.FunSuite:
     "@id": "s2s:B"
   }
 }
-      """, 
+      """,
       ":A ⊑ :B")
 
   }
-

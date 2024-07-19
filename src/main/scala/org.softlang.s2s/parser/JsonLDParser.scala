@@ -21,6 +21,13 @@ import jakarta.json.JsonObject
 
 object JsonLDParser:
 
+  // Generator for fresh shape names.
+  private object ShapeGen:
+      private var count = 0
+      def next(): String =
+        count += 1
+        s"https://github.com/softlang/s2s/shape-generated-names/s$count"
+
   // SHACL definitions.
   private object sh:
     val _and = "http://www.w3.org/ns/shacl#and"
@@ -29,11 +36,14 @@ object JsonLDParser:
     val _or = "http://www.w3.org/ns/shacl#or"
     val _property = "http://www.w3.org/ns/shacl#property"
     val _path = "http://www.w3.org/ns/shacl#path"
+    val _inversePath = "http://www.w3.org/ns/shacl#inversePath"
     val _qualifiedValueShape = "http://www.w3.org/ns/shacl#qualifiedValueShape"
     val _qualifiedMinCount = "http://www.w3.org/ns/shacl#qualifiedMinCount"
+    val _minCount = "http://www.w3.org/ns/shacl#minCount"
     val _targetClass = "http://www.w3.org/ns/shacl#targetClass"
     val _targetObjectsOf = "http://www.w3.org/ns/shacl#targetObjectsOf"
     val _targetSubjectsOf = "http://www.w3.org/ns/shacl#targetSubjectsOf"
+    val _nodeShape = "http://www.w3.org/ns/shacl#NodeShape"
 
   // Wrap nullable values in errors.
   private def wrapn[T](t: T): S2STry[T] =
@@ -48,12 +58,12 @@ object JsonLDParser:
   // Parse an Iri, converting to the appropriate error type on failure.
   private def parseIri(s: String): S2STry[Iri] =
     Iri.fromString("<" ++ s ++ ">") match
-      case Left(e) => Left(UnparsableShapeError(e.show) )
+      case Left(e) => Left(UnparsableShapeError(e.show))
       case Right(v) => Right(v)
 
   // TODO
   private def parseT(j: JsonArray, jfn: JsonArray => S2STry[List[String]], fn: Iri => Concept): S2STry[Concept] =
-    for 
+    for
       s <- jfn(j).map(_.head)
       i <- parseIri(s)
     yield fn(i)
@@ -63,22 +73,22 @@ object JsonLDParser:
     (j: JsonObject) => wrapn(j.getJsonArray(s))
 
   // Get string from a singleton array, as object.
-  private def getString(str: String): JsonArray => S2STry[List[String]] = 
+  private def getString(str: String): JsonArray => S2STry[List[String]] =
     (j: JsonArray) => wrap(Try { j.iterator().asScala.toList.map(_.asJsonObject().getString(str)) })
-  
+
   // Get string from a singleton array, as object.
-  private def getInt(str: String): JsonArray => S2STry[List[Int]] = 
+  private def getInt(str: String): JsonArray => S2STry[List[Int]] =
     (j: JsonArray) => wrap(Try { j.iterator().asScala.toList.map(_.asJsonObject().getInt(str)) })
 
   // Parse the target query as DL Concept.
-  private def parseTarget(j: JsonObject): S2STry[Concept] = 
+  private def parseTarget(j: JsonObject): S2STry[Concept] =
     getArray(sh._targetClass)(j).flatMap(parseT(_, getString("@id"), NamedConcept(_))).orElse(
       getArray(sh._targetObjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(Inverse(NamedRole(i)), Top)))).orElse(
         getArray(sh._targetSubjectsOf)(j).flatMap(parseT(_, getString("@id"), i => Existential(NamedRole(i), Top))))
 
   // Parse a property shape.
   private def parsePropertyShape(j: JsonObject): S2STry[Concept] =
-    
+
     // The path, that is mandatory for property shapes.
     val path = getArray(sh._path)(j)
       .flatMap(getString("@id"))
@@ -94,14 +104,14 @@ object JsonLDParser:
 
     // Remaining universal constraints for this path.
     val urhs = parseNodeShape(j)
-      
+
     // If qualified, existential shape:
     if ecount then
-      for 
+      for
         p <- path
         u <- urhs
-        e <- erhs 
-      yield 
+        e <- erhs
+      yield
         // Do not include universal part for top.
         if u == Top then
           Existential(NamedRole(p), e)
@@ -112,7 +122,7 @@ object JsonLDParser:
             Existential(NamedRole(p), e))
     // If no qualified shape, include only univeral part.
     else
-      for 
+      for
         p <- path
         u <- urhs
       yield Universal(NamedRole(p), u)
@@ -143,11 +153,11 @@ object JsonLDParser:
           ,
           // sh:not
           getArray(sh._not)(j)
-            .flatMap(j => wrap(Try { 
-              j.iterator().asScala.toList.head.asJsonObject() 
+            .flatMap(j => wrap(Try {
+              j.iterator().asScala.toList.head.asJsonObject()
             }))
             .flatMap(parseNodeShape(_))
-            .map(Complement(_)) 
+            .map(Complement(_))
             .toOption.toList
           ,
           // sh:and
@@ -181,7 +191,7 @@ object JsonLDParser:
   private def parseConstraint(j: JsonObject): S2STry[Concept] = parseNodeShape(j)
 
   // Parse a single shape from a JsonValue string.
-  def parse(a: String): S2STry[SHACLShape] = 
+  def parse(a: String): S2STry[SHACLShape] =
     for
       v <- wrap(Try {
             val jdoc = JsonDocument.of(StringReader(a))
@@ -202,4 +212,111 @@ object JsonLDParser:
     val jDoc = JsonDocument.of(StringReader(input))
     val arr = JsonLd.expand(jDoc).get()
     arr.iterator.asScala.map(j => j.toString()).toSet
- 
+
+
+
+  // Here be dragons (unparse*).
+
+  private def formatIri(i: String): String =
+    // Remove surrounding '<' and '>', as well as inverse '-'.
+    "\"" ++ i.filterNot(c => c == '<' || c == '>').dropWhile(c => c == '-') ++ "\""
+
+  // Unprase a target query.
+  private def unparseTarget(c: Concept): S2STry[String] = c match
+    case NamedConcept(n) => Right(s""""${sh._targetClass}":{"@id": ${formatIri(c.toString)}}""")
+    case Existential(NamedRole(r), Top) => Right(s""""${sh._targetSubjectsOf}":{"@id": ${formatIri(r.toString)}}""")
+    case Existential(Inverse(NamedRole(r)), Top) => Right(s""" "${sh._targetObjectsOf}":{"@id": ${formatIri(r.toString)}}""")
+    // This case should never really occur for any valid SHACL shape.
+    case _ => Left(UnprintableShapeError("invalid target"))
+
+  // Unprase a query constraint.
+  private def unparseBuild(target: String, constraint: String): String =
+    val c = if constraint == "" then "" else s", ${constraint}"
+    s"""{"@id": "${ShapeGen.next()}", "@type": "${sh._nodeShape}", ${target}${c}}"""
+
+  // Unprase a query constraint.
+  private def unparseConstraint(c: Concept): S2STry[String] = c match
+    case Top => Right("")
+    case NamedConcept(n) => Right(s""" "${sh._class}": { "@id": ${formatIri(c.toString)} } """)
+    case Intersection(c1, c2) =>
+      for
+          c1s <- unparseConstraint(c1)
+          c2s <- unparseConstraint(c2)
+      yield s""" "${sh._and}": { "@list": [{${c1s}}, {${c2s}}]  } """
+    case Union(c1, c2) =>
+      for
+          c1s <- unparseConstraint(c1)
+          c2s <- unparseConstraint(c2)
+      yield s""" "${sh._or}": { "@list": [{${c1s}}, {${c2s}}]  } """
+    case Complement(c) =>
+      for cs <- unparseConstraint(c)
+      yield s""" "${sh._not}": { ${cs} } """
+    case Existential(r, Top) =>
+      r match
+        case Inverse(NamedRole(_)) =>
+          Right(s""" "${sh._property}": { "${sh._path}": { "${sh._inversePath}": { "@id": ${formatIri(r.toString)} } , "${sh._minCount}": 1 } """)
+        case _ =>
+          Right(s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(r.toString)} }, "${sh._minCount}": 1 } """)
+    case Universal(r, Top) =>
+      r match
+        case Inverse(NamedRole(_)) =>
+          Right(s""" "${sh._property}": { "${sh._path}": { "${sh._inversePath}": { "@id": ${formatIri(r.toString)} } } } """)
+        case _ =>
+          Right(s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(r.toString)} } } """)
+    case Existential(r, ci) =>
+      r match
+        case Inverse(NamedRole(_)) =>
+          for cs <- unparseConstraint(ci)
+          yield s""" "${sh._property}": { "${sh._path}": { "${sh._inversePath}": { "@id": ${formatIri(r.toString)} } }, "${sh._qualifiedValueShape}": { ${cs} }, "${sh._qualifiedMinCount}": 1} """
+        case _ =>
+          for cs <- unparseConstraint(ci)
+          yield s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(r.toString)} }, "${sh._qualifiedValueShape}": { ${cs} }, "${sh._qualifiedMinCount}": 1} """
+    case Universal(r, ci) =>
+      r match
+        case Inverse(NamedRole(_)) =>
+          for cs <- unparseConstraint(ci)
+          yield s""" "${sh._property}": { "${sh._path}": { "${sh._inversePath}": { "@id": ${formatIri(r.toString)} } }, ${cs} } """
+        case _ =>
+          for cs <- unparseConstraint(ci)
+          yield s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(r.toString)} }, ${cs} } """
+    case _ => Left(UnprintableShapeError("invalid or unsupported constraint"))
+
+  private def unparseShape[T <: SHACLShape](shape: T): S2STry[String] = shape match
+    case SHACLShape(Subsumption(c, d)) =>
+      for
+        target <- unparseTarget(c)
+        constraint <- unparseConstraint(d)
+      yield
+        unparseBuild(target, constraint)
+
+  // Pretty-print a SHACL shape as JSON-LD.
+  def unparse[T <: SHACLShape](shapes: Set[T]): S2STry[String] =
+    val unparsed = Util.flipEitherHead(
+      for
+        shape <- shapes.toList
+      yield unparseShape(shape))
+
+    unparsed.map(unparsedShapes =>
+      s"""{"@context": {}, "@graph": [${unparsedShapes.mkString(",")}]}"""
+    )
+
+  private def unparseAxiom(axiom: Axiom): S2STry[String] = axiom match
+    case Subsumption(c, d) =>
+      for
+        target <- unparseTarget(c)
+        constraint <- unparseConstraint(d)
+      yield
+        unparseBuild(target, constraint)
+    // TODO: Do Equality as two subsumption.
+    case _ => Left(UnprintableShapeError("unsupported axiom"))
+
+  // Pretty-print any Axiom shape as JSON-LD.
+  def unparse(axioms: Axioms): S2STry[String] =
+    val unparsed = Util.flipEitherHead(
+      for
+        axiom <- axioms.toSet.toList
+      yield unparseAxiom(axiom))
+
+    unparsed.map(unparsedShapes =>
+      s"""{"@context": {}, "@graph": [${unparsedShapes.mkString(",")}]}"""
+    )

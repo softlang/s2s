@@ -1,8 +1,7 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.Shar
-import de.pseifer.shar.dl.Equality
-import de.pseifer.shar.dl.Subsumption
+import de.pseifer.shar.dl._
 import de.pseifer.shar.reasoning._
 
 import org.softlang.s2s.core._
@@ -13,8 +12,13 @@ import org.softlang.s2s.query.GCORE
 import org.softlang.s2s.query.SCCQ
 import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.vocabulary
+import org.softlang.s2s.core.{inScope => cinScope}
 
 import scala.concurrent.duration.*
+import org.softlang.s2s.query.variables
+import org.softlang.s2s.query.FilterPattern
+import org.softlang.s2s.query.GCORE.Label
+import org.softlang.s2s.query.GCORE.Key
 
 /** Full implementation of Algorithm 1. */
 class Algorithm(
@@ -31,9 +35,10 @@ class Algorithm(
   import shar._
 
   implicit val scopes: Scopes = input.composeScopes
+  implicit val ishar: Shar = shar
 
   /** Build axioms for the query pattern. */
-  def buildAxiomsPattern(pattern: AtomicPatterns, log: Log): Axioms = 
+  def buildAxiomsPattern(pattern: AtomicPatterns, log: Log): Axioms =
     log.profileStart("build-dca-p")
 
     // DCA for query pattern.
@@ -62,13 +67,16 @@ class Algorithm(
 
     log.profileStart("build-cwa-p")
 
-    val cwaP = ClosedPropertyAssumption(pattern, Scope.Med).axioms
+    // TODO Should this step be extended in the same way as Step 5?
+    // Why should it not be? Only because it is quite irrelevant?
+    // I think the produced axioms are false!!! TODO
+    val cwaP = ClosedPropertyAssumption(pattern, Scope.Med, input).axioms
     log.debug("CWA(q.P), step 4.", cwaP)
 
     log.profileEnd("build-cwa-p")
 
     // Property subsumption.
-    
+
     log.profileStart("build-properties")
 
     val shapeProps = ShapePropertySubsumption(pattern).axioms
@@ -84,18 +92,18 @@ class Algorithm(
       scopes)
 
   /** Process the query pattern. */
-  def processPattern(log: Log): S2STry[Axioms] = 
-    for 
+  def processPattern(log: Log): S2STry[Axioms] =
+    for
       p <- input.pattern
     yield buildAxiomsPattern(p, log)
 
   /** Build axioms for the query pattern. */
-  def buildAxiomsTemplate(template: AtomicPatterns, pattern: AtomicPatterns, log: Log): Axioms = 
+  def buildAxiomsTemplate(template: AtomicPatterns, pattern: AtomicPatterns, log: Log): Axioms =
 
     // DCA for query template.
     log.profileStart("build-dca-t")
 
-    val dcaH = ClosedConceptAssumptionTemplate(template).axioms
+    val dcaH = ClosedConceptAssumptionTemplate(template, input).axioms
     log.debug("CWA(q.H), step 2.", dcaH)
 
     log.profileEnd("build-dca-t")
@@ -104,10 +112,57 @@ class Algorithm(
 
     log.profileStart("build-cwa-t")
 
-    val cwaH = ClosedPropertyAssumption(template, Scope.Out).axioms
+    val cwaH = ClosedPropertyAssumption(template, Scope.Out, input).axioms
     log.debug("CWA(q.H), step 5.", cwaH)
 
     log.profileEnd("build-cwa-t")
+
+    val rule6: Set[Axiom] =
+      if !input.isECCQ then Set()
+      else
+        val vC = input.vocabulary.concepts.map(_.cinScope(Scope.In)).map(_.asInstanceOf[NamedConcept])
+        val nvC = vC.filter(c => Label.isNodeLabel(c.c))
+        val evC = vC.filter(c => Label.isEdgeLabel(c.c))
+
+        val ncs: Set[Axiom] = for
+          nv <- input.nodeVariables
+          c <- nvC
+          lhs <- nv.asConceptComponent(input.filters, c)
+        yield Subsumption(lhs, Intersection(nv.asConcept, c))
+
+        val ecs: Set[Axiom] = for
+          ev <- input.edgeVariables
+          c <- evC
+          lhs <- ev.asConceptComponent(input.filters, c)
+        yield Subsumption(lhs, Intersection(ev.asConcept, c))
+
+        ncs.union(ecs)
+
+    log.debug("CWA(q.H), step 6.", rule6)
+
+    val rule7: Set[Axiom] =
+      if !input.isECCQ then Set()
+      else
+        val vP = input.vocabulary.properties.map(_.cinScope(Scope.In)).map(_.asInstanceOf[NamedRole])
+        val nvP = vP.filter(r => Key.isNodeKey(r.r))
+        val evP = vP.filter(r => Key.isEdgeKey(r.r))
+
+        val nps: Set[Axiom] = for
+          nv <- input.nodeVariables
+          p <- nvP
+          (lhs, o) <- nv.asRoleObjectComponent(input.filters, p)
+        yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
+
+        val eps: Set[Axiom] = for
+          ev <- input.edgeVariables
+          p <- evP
+          (lhs, o) <- ev.asRoleObjectComponent(input.filters, p)
+        yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
+
+        nps.union(eps)
+
+
+    log.debug("CWA(q.H), step 7.", rule7)
 
     // UNA for query template & pattern.
 
@@ -119,16 +174,16 @@ class Algorithm(
     log.profileEnd("build-una")
 
     // Return the complete set of axioms.
-    Axioms(dcaH.union(cwaH).union(una), scopes)
+    Axioms(dcaH.union(cwaH).union(rule6).union(rule7).union(una), scopes)
 
   /** Process the query template. */
-  def processTemplate(extraClauses: Set[GCORE.SetClause], log: Log): S2STry[Axioms] = 
-    for 
-      t <- input.template(extraClauses)
+  def processTemplate(/*extraClauses: Set[GCORE.SetClause],*/ log: Log): S2STry[Axioms] =
+    for
+      t <- input.template
       p <- input.pattern
     yield buildAxiomsTemplate(
-      template = t, 
-      pattern = p, 
+      template = t,
+      pattern = p,
       log)
 
   /** Run the algorithm, obtaining a full set of shapes. */
@@ -136,16 +191,17 @@ class Algorithm(
     log.profileStart("candidates")
     log.profileStart("filter")
 
-    val shapes = for 
+    val shapes = for
       // First, construct all axioms.
-      extraClausesAxioms <- axiomsInternal()
-      extraClauses = extraClausesAxioms._1
-      axioms = extraClausesAxioms._2
+      //extraClausesAxioms <- axiomsInternal()
+      //extraClauses = extraClausesAxioms._1
+      axioms <- axiomsInternal()
       // Generate candidate shapes from template.
-      t <- input.template(extraClauses)
+      t <- input.template
       canGen = CandidateGenerator(
         t.vocabulary,
-        heuristic = config.shapeHeuristic
+        heuristic = config.shapeHeuristic,
+        excludeTarget = Set(GCORE.nodeToEdgeIri, GCORE.edgeToNodeIri)
       )(scopes)
       // Filter candidates, checking entailment with axioms.
       result <- {
@@ -155,7 +211,7 @@ class Algorithm(
 
         while current.nonEmpty do
           val previous =
-            filter(current, axioms, log, config.retry, config.timeout.millis)
+            Algorithm.filter(current, axioms, log, config)
           result = for
             p <- previous
             r <- result
@@ -175,10 +231,10 @@ class Algorithm(
     shapes
 
   /** Run algorithm, returning only the set of axioms. */
-  def axioms: S2STry[Axioms] = axiomsInternal().map(_._2)
+  def axioms: S2STry[Axioms] = axiomsInternal()
 
   /** Run algorithm, returning a set of axioms. */
-  private def axiomsInternal(): S2STry[(Set[GCORE.SetClause], Axioms)] =
+  private def axiomsInternal(): S2STry[Axioms] =
 
     log.profileStart("algorithm")
     input.log(log)
@@ -193,26 +249,25 @@ class Algorithm(
       // Generate axioms from mapping components, using previous axioms.
       mappingSubs <- extendMapping(shapeAxioms.join(patternAxioms), log)
       // Generate additional clauses for GCORE queries, persisting labels and properties.
-      extraClauses <- extendConstruct(patternAxioms.join(shapeAxioms).join(mappingSubs), log)
+      //extraClauses <- extendConstruct(patternAxioms.join(shapeAxioms).join(mappingSubs), log)
       // Generate axioms from template.
-      templateAxioms <- processTemplate(extraClauses, log)
+      templateAxioms <- processTemplate(log)
       // Generate axioms for properties.
-      props <- extendProperties(mappingSubs, extraClauses, log)
+      props <- extendProperties(mappingSubs, log)
       // Finally, join all axioms inferred here.
       axioms = patternAxioms
         .join(shapeAxioms)
         .join(mappingSubs)
         .join(templateAxioms)
         .join(props)
-    yield (extraClauses, axioms)
+    yield axioms
 
     log.profileEnd("build")
-
     axioms
 
   /** Generate additional axioms using the component mapping approach. */
   def extendMapping(patternShapeAxioms: Axioms, log: Log): S2STry[Axioms] =
-    for 
+    for
       // Get shapes from input, or construt using pre-existing axioms.
       shapes <- input.extensionShapes(() => convert(patternShapeAxioms))
       p <- input.pattern
@@ -228,10 +283,10 @@ class Algorithm(
     yield Axioms(mappingSubs, scopes)
 
   /** Generate additional axioms from property subsumptions. */
-  def extendProperties(mappingSubs: Axioms, extraClauses: Set[GCORE.SetClause], log: Log): S2STry[Axioms] =
-    for 
+  def extendProperties(mappingSubs: Axioms, /*extraClauses: Set[GCORE.SetClause],*/ log: Log): S2STry[Axioms] =
+    for
       p <- input.pattern
-      t <- input.template(extraClauses)
+      t <- input.template
       props = {
         log.profileStart("build-properties")
         val props = PropertySubsumption(p, mappingSubs.toSet, t).axioms
@@ -242,27 +297,27 @@ class Algorithm(
     yield Axioms(props, scopes)
 
   /** Extend construct (set clauses), if GCORE query. */
-  def extendConstruct(axioms: Axioms, log: Log): S2STry[Set[GCORE.SetClause]] = input match
-    case AlgorithmInput.SCCQAxioms(_, _) => Right(Set())
-    case AlgorithmInput.SCCQSimpleSHACL(_, _, _) => Right(Set())
-    case AlgorithmInput.GCOREAxioms(q, _) => 
-      for 
-        t <- input.pattern
-        sv = input.shapeAxioms.vocabulary
-        cand = generateExtensionCandidates(t.vocabulary, sv)
-        f <- filter(cand, axioms, log, config.retry, config.timeout.millis)
-        r <- S2SError.sequence(f.map(GCORE.shapeToSetClause(_)))
-      yield r
+  //def extendConstruct(axioms: Axioms, log: Log): S2STry[Set[GCORE.SetClause]] = input match
+  //  case AlgorithmInput.SCCQAxioms(_, _) => Right(Set())
+  //  case AlgorithmInput.SCCQSimpleSHACL(_, _, _) => Right(Set())
+  //  case AlgorithmInput.GCOREAxioms(q, _) =>
+  //    for
+  //      t <- input.pattern
+  //      sv = input.shapeAxioms.vocabulary
+  //      cand = generateExtensionCandidates(t.vocabulary, sv)
+  //      f <- filter(cand, axioms, Log(), config.retry, config.timeout.millis)
+  //      r <- S2SError.sequence(f.map(GCORE.shapeToSetClause(_)))
+  //    yield r
 
   /** Generate set-clause validating shapes. */
-  private def generateExtensionCandidates(pvoc: Vocabulary, svoc: Vocabulary): Set[SHACLShape] = 
-    val thevoc = svoc.diff(pvoc)
-    val theconcepts = thevoc.concepts
-    val thevars = pvoc.variables
-    for 
-      v <- thevars
-      c <- theconcepts
-    yield SHACLShape(Subsumption(v.asConcept, c))
+  //private def generateExtensionCandidates(pvoc: Vocabulary, svoc: Vocabulary): Set[SHACLShape] =
+  //  val thevoc = svoc.diff(pvoc)
+  //  val theconcepts = thevoc.concepts
+  //  val thevars = pvoc.variables
+  //  for
+  //    v <- thevars
+  //    c <- theconcepts
+  //  yield SHACLShape(Subsumption(v.asConcept, c))
 
   /** Add input query and shapes to log. */
   //private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
@@ -270,16 +325,16 @@ class Algorithm(
   //  log.debug("Σ(q)", q.vocabulary.show)
   //  log.info("S_in", s.map(_.show).toList)
 
-  private def convert(axioms: Axioms)(implicit scopes: Scopes): S2STry[Set[SHACLShape]] = 
+  private def convert(axioms: Axioms)(implicit scopes: Scopes): S2STry[Set[SHACLShape]] =
     // Make shapes from candidates over (input scope) vocabulary of query.
-    for 
+    for
       t <- input.pattern
       canGen = CandidateGenerator(
         t.vocabulary,
-        heuristic = ShapeHeuristic(
-          optimize = false,
-          proxyFamily = true,
-          simpleShapes = true)
+        heuristic = ShapeHeuristic.SimpleShapes(
+          opt = false,
+          proxyFamily = true),
+        excludeTarget = Set(GCORE.nodeToEdgeIri, GCORE.edgeToNodeIri)
       )(scopes)
       result = {
         var result: S2STry[Set[SHACLShape]] = Right(Set())
@@ -288,7 +343,7 @@ class Algorithm(
 
         while current.nonEmpty do
           val previous =
-            filter(current, axioms, Log(), config.retry, config.timeout.millis)
+            Algorithm.filter(current, axioms, Log(), config)
           result = for
             p <- previous
             r <- result
@@ -296,23 +351,26 @@ class Algorithm(
           all = all.union(current)
           current = canGen.getNext(previous)
         // TODO: Fix me. This is not safe (might be empty).
-        result.toOption.get 
+        result.toOption.get
       }
     yield result
 
+/** Companion object of Algorithm class, that implements
+ *  some of the re-useable steps of the algorithm. */
+object Algorithm:
+
   /** Perform the filtering step of the algorithm. */
-  private def filter(
+  def filter(
       candidates: Set[SHACLShape],
       axioms: Axioms,
       log: Log,
-      retry: Int,
-      timeout: Duration,
-      currentTry: Int = 1
-  ): S2STry[Set[SHACLShape]] =
+      config: Configuration = Configuration.default,
+      currentTry: Int = 1,
+  )(implicit scopes: Scopes, shar: Shar): S2STry[Set[SHACLShape]] =
 
     // A fresh log.
     val pLog = Log(debugging = config.debug)
-    val result = filterWithTimeout(candidates, axioms, pLog, timeout)
+    val result = filterWithTimeout(config, candidates, axioms, pLog)
 
     // Wait configured timeout for completion.
     result match
@@ -322,20 +380,20 @@ class Algorithm(
         // Return the filtered set of shapes.
         Right(pr._2)
       case None =>
-        if currentTry <= retry then
-          log.restart("filter", currentTry, retry, timeout)
-          filter(candidates, axioms, log, retry, timeout, currentTry + 1)
+        if currentTry <= config.retry then
+          log.restart("filter", currentTry, config.retry, config.timeout.millis)
+          filter(candidates, axioms, log, config, currentTry + 1)
         else
-          log.timeout("filter", retry, timeout)
+          log.timeout("filter", config.retry, config.timeout.millis)
           Left(TimeoutError(config.timeout, config.retry))
 
   /** Filter, with provided timeout value that aborts filtering. */
   private def filterWithTimeout(
+      config: Configuration,
       candidates: Set[SHACLShape],
       axioms: Axioms,
       log: Log,
-      timeout: Duration
-  ): Option[(Log, Set[SHACLShape])] =
+  )(implicit scopes: Scopes, shar: Shar): Option[(Log, Set[SHACLShape])] =
 
     var result: Option[Set[SHACLShape]] = None
 
@@ -347,9 +405,8 @@ class Algorithm(
     }
 
     t.start()
-    t.join(timeout.toMillis)
+    t.join(config.timeout.millis.toMillis)
     //t.stop()
 
-    if result.isDefined then log.info("S_out", result.get.map(_.show))
+    if result.isDefined then log.info("S_out", result.get.map(_.show(shar.state)))
     result.map((log, _))
-

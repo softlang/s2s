@@ -5,10 +5,13 @@ import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.inScope
 import org.softlang.s2s.query._
+import org.softlang.s2s.query.GCORE.Key
+import org.softlang.s2s.core.Var
 
 class ClosedPropertyAssumption(
     a: AtomicPatterns,
-    targetScope: Scope
+    targetScope: Scope,
+    input: AlgorithmInput
 )(implicit
     scopes: Scopes
 ) extends Scopable:
@@ -19,21 +22,61 @@ class ClosedPropertyAssumption(
 
   val rightScope = targetScope
 
+  val template: Boolean = targetScope == Scope.Out
+
   private def axiomize(
       all: Set[Concept],
-      role: Role,
-      cs: List[(Concept, Concept)]
+      role: NamedRole,
+      cs: List[(Concept, Concept)],
+      inverse: Boolean
   ): Set[Axiom] =
     val maps = cs.groupBy((_._1))
     all.flatMap(c =>
-      val ex = Existential(role.inScope(targetScope), c)
+      // Construct p as either the role, or Inverse(role).
+      val p = if inverse then Inverse(role) else role
+      // Left-hand side: Existential quantification.
+      val ex = Existential(p.inScope(targetScope), c)
+
       if maps.contains(c) then
+        // Construct the RHS from all occurrences in the map (i.e., query).
         val rhs = maps(c).map(_._2)
-        Some(Equality(ex, Concept.unionOf(rhs)))
-      else None
+
+        // If this is a extended query, construct additional Vx/Ox concepts.
+        if template && input.isECCQ then
+          val vx = 
+            // If inverse, use gen objects instead of variable concepts.
+            if inverse then
+              if Key.isNodeKey(role.r) then
+                input.nodeVariables.flatMap(v =>
+                  v.asRoleComponent(input.filters, role).toSet
+                )
+              else if Key.isEdgeKey(role.r) then
+                input.edgeVariables.flatMap(v =>
+                  v.asRoleComponent(input.filters, role).toSet
+                )
+              else Set()
+            else
+              if Key.isNodeKey(role.r) then
+                input.nodeVariables.map(_.asConcept)
+              else if Key.isEdgeKey(role.r) then
+                input.edgeVariables.map(_.asConcept)
+              else Set()
+          List(
+            // ∃𝑝.C ⊑ D1 ⊔ ... ⊔ Dn ⊔ ... ⊔ V1 ⊔ ... ⊔ Vm (or O1 ⊔ ... ⊔ Om for inverse)
+            Subsumption(ex, Concept.unionOf(rhs ++ vx)),
+            // D1 ⊔ ... ⊔ Dn ⊑ ∃𝑝.C
+            Subsumption(Concept.unionOf(rhs), ex)
+          )
+
+        // Otherwise, just construct the equality of ex and rhs.
+        else
+          // ∃𝑝.C ≡ D1 ⊔ ... ⊔ Dn
+          List(Equality(ex, Concept.unionOf(rhs)))
+      else Nil
     )
 
   private def specific: Set[Axiom] = a.properties.flatMap { p =>
+    // Find all the occurrences of p in regular cases.
     val vu = a.flatMap {
       case LPL(u, ip, v) if NamedRole(ip) == p =>
         Set((NominalConcept(v), NominalConcept(u)))
@@ -46,6 +89,7 @@ class ClosedPropertyAssumption(
       case _ => Set()
     }
 
+    // Find all the occurrences of p in inverse cases.
     val vui = a.flatMap {
       case LPL(v, ip, u) if NamedRole(ip) == p =>
         Set((NominalConcept(v), NominalConcept(u)))
@@ -58,16 +102,22 @@ class ClosedPropertyAssumption(
       case _ => Set()
     }
 
+    // All nominal and variable concepts of the query.
     val all = a.nominals
       .map(NominalConcept(_))
       .toList
       .concat(a.variables.map(_.asConcept).toList)
       .toSet
-    axiomize(all, p, vu).union(axiomize(all, Inverse(p), vui))
+
+    // Create the subsumption/equality axioms.
+    axiomize(all, p, vu, inverse = false)
+      .union(axiomize(all, p, vui, inverse = true))
   }
 
+  /** Construct closure over properties. */
   private val propertyClosure: Set[Axiom] =
     a.properties.flatMap { p =>
+      // Find all the occurrences of property p and their left-hand side.
       val rhs = a.flatMap {
         case LPL(is, ip, io) if p.r == ip =>
           Set(
@@ -100,14 +150,29 @@ class ClosedPropertyAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
+      else if template && input.isECCQ then
+        val vxp = 
+          if Key.isNodeKey(p.r) then
+            input.nodeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet) 
+          else if Key.isEdgeKey(p.r) then
+            input.edgeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet) 
+          else Set()
+
+        Set(
+          // ∃𝑝.⊤ ≡ (C1 ⊓ ∃𝑝.D1) ⊔ ... ⊔ (C1 ⊓ ∃𝑝.D1) ⊔ Vxp1 ⊔ ... ⊔ Vxpn
+          Equality(Existential(p, Top), Concept.unionOf(rhs ++ vxp))
+        )
       else
         Set(
+          // ∃𝑝.⊤ ≡ (C1 ⊓ ∃𝑝.D1) ⊔ ... ⊔ (C1 ⊓ ∃𝑝.D1)
           Equality(Existential(p, Top), Concept.unionOf(rhs))
         )
     }
 
+  /** Construct closure over inverse properties. */
   private val inversePropertyClosure: Set[Axiom] =
     a.properties.flatMap { p =>
+      // Find all the occurrences of property p and their right-hand side (inverse).
       val rhs = a.flatMap {
         case LPL(is, ip, io) if p.r == ip =>
           Set(
@@ -140,12 +205,24 @@ class ClosedPropertyAssumption(
         case _ => Set()
       }
       if rhs.isEmpty then Set()
+      else if template && input.isECCQ then
+        val make = (x: Var) => 
+          for 
+            (pc, oc) <- x.asRoleObjectComponent(input.filters, p)
+          yield Intersection(oc, Existential(Inverse(p), pc))
+        val vxp = 
+          if Key.isNodeKey(p.r) then
+            input.nodeVariables.flatMap(make)
+          else if Key.isEdgeKey(p.r) then
+            input.edgeVariables.flatMap(make) 
+          else Set()
+        Set(
+          Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs ++ vxp))
+        )
       else
         Set(
-          Equality(
-            Existential(Inverse(p), Top),
-            Concept.unionOf(rhs)
-          )
+          // ∃𝑝-.⊤ ≡ (C1 ⊓ ∃𝑝-.D1) ⊔ ... ⊔ (C1 ⊓ ∃𝑝-.D1)
+          Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs))
         )
     }
 

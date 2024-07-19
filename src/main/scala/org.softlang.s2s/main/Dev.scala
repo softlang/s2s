@@ -12,6 +12,7 @@ import org.softlang.s2s.generate.given_Conversion_Float_Float_FloatRange
 import org.softlang.s2s.generate.given_Conversion_Int_ConstantInt
 import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
 import org.softlang.s2s.infer.Shapes2Shapes
+import org.softlang.s2s.core.Scopes
 
 /** Stand-alone problem generator. */
 object Dev:
@@ -31,7 +32,7 @@ object Dev:
         nominals = Set()
       ),
       ShapeHeuristic.default
-    )
+    )(Scopes("-", 0, 1, 2, 3)) // not required
     gen.generate.size
 
   def run(): Unit =

@@ -1,4 +1,4 @@
-package org.softlang.s2s.test.suites
+package org.softlang.s2s.test.sccq
 
 import org.softlang.s2s.test.ValidationSuite
 
@@ -9,6 +9,6 @@ class NoConceptSCCQTests extends ValidationSuite:
 
   val q0 = query("?x :q ?y", "?x :p ?y")
 
-  work("noconcept_0_0", noshapes, q0, noshapes)
+  includes("noconcept_0_0", noshapes, q0, noshapes)
 
-  work("noconcept_0_1", Set(":A ⊑ :B"), q0, noshapes)
+  includes("noconcept_0_1", Set(":A ⊑ :B"), q0, noshapes)

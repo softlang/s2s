@@ -3,11 +3,12 @@ package org.softlang.s2s.main
 import org.rogach.scallop._
 import org.softlang.s2s.core.Configuration
 import org.softlang.s2s.core.ActiveReasoner
+import org.softlang.s2s.core.ShapeHeuristic
 
 /** Command line interface definition. */
 class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
     extends ScallopConf(arguments):
-  
+
   val pkg = getClass.getPackage
 
   val version = pkg.getImplementationVersion
@@ -122,7 +123,7 @@ class CLIConfiguration(baseConfiguration: Configuration, arguments: Seq[String])
     hidecolon = hidecolon(),
     prettyVariableConcepts = prettyVars(),
     printOutput = output(),
-    shapeHeuristic = baseConfiguration.shapeHeuristic.copy(
-      optimize = optimize()
+    shapeHeuristic = ShapeHeuristic.SimpleShapes(
+      opt = optimize()
     )
   )

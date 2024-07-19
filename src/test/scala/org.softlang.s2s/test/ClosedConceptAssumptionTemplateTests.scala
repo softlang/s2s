@@ -3,13 +3,15 @@ package org.softlang.s2s.test
 import de.pseifer.shar.dl._
 import org.softlang.s2s.infer._
 import org.softlang.s2s.query.SCCQ
+import org.softlang.s2s.core.Axioms
+import org.softlang.s2s.core.Scopes
 
 class ClosedConceptAssumptionTemplateTests extends munit.FunSuite with TestData:
 
   // The function under test here.
   
   def work(sccq: SCCQ): Set[Axiom] =
-    ClosedConceptAssumptionTemplate(sccq.pattern).axioms
+    ClosedConceptAssumptionTemplate(sccq.pattern, AlgorithmInput.SCCQAxioms(sccq, Axioms(Set(), Scopes("--not-required--", 0, 1, 2, 3)))).axioms
 
   //  Empty
 

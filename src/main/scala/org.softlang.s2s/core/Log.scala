@@ -160,15 +160,17 @@ class Log(
   def print(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true,
-      prettyScopes: Boolean = false
+      prettyScopes: Boolean = false,
+      prettySystemMappings: Boolean = true
   ): Unit =
-    println(format(hidecolon, prettyVariableConcepts, prettyScopes))
+    println(format(hidecolon, prettyVariableConcepts, prettyScopes, prettySystemMappings))
 
   /** Format this log and return String. */
   def format(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true,
-      prettyScopes: Boolean = true
+      prettyScopes: Boolean = true,
+      prettySystemMappings: Boolean = true
   ): String =
     val t1 =
       if prettyVariableConcepts then LOG.replaceAll("shar", "?")
@@ -181,6 +183,12 @@ class Log(
     val t3 =
       if prettyScopes then scopes.prettyScopeTokens(t2)
       else t2
+
+    // val t4 =
+    //   if prettySystemMappings then 
+    //     t3.replaceAll("nodeToEdge", "nte")
+    //       .replaceAll("edgeToNode", "etn")
+    //   else t3
 
     t3
 
