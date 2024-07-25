@@ -129,7 +129,7 @@ def run_case(validation_path, render_graphs=False):
             number_of_nodes=[20, 30, 40, 50, 60, 70, 80],
             concept_property_ratio=[0.3, 0.5, 0.7],
             property_label_ratio=[0.3, 0.5, 0.7],
-            multiplicator=[1.0, 1.5, 2.0],
+            multiplicator=[1.0],
             property_mode=property_mode),
         # The input shapes.
         shapes=shapes_in,

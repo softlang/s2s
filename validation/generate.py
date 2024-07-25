@@ -85,6 +85,7 @@ def _initial_graph(config, mult, cpr):
         rest = int(
             (1.0 - cpr) * non)
 
+        # Sample edges.
         for i in range(0, rest):
             # Sample two nodes, generate a fresh edge.
             node1 = random.choice(nodes)
@@ -95,9 +96,12 @@ def _initial_graph(config, mult, cpr):
             g.add((node1, config.voc.meta_nte, edge))
             g.add((edge, config.voc.meta_etn, node2))
             # TODO add meta edges node/edge
-            g.add((node1, config.voc.rdf_type, config.voc.meta_node))
-            g.add((node2, config.voc.rdf_type, config.voc.meta_node))
             g.add((edge, config.voc.rdf_type, config.voc.meta_edge))
+
+        # Add meta node type to all nodes.
+        for n in nodes:
+            g.add((n, config.voc.rdf_type, config.voc.meta_node))
+
     # In standard RDF mode, just generate the nodes.
     else:
         nodes = _gen_rdf_nodes(config, non)
