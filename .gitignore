@@ -5,6 +5,7 @@
 validation/data
 validation/venv
 validation/__*
+validation/*.csv
 
 # macOS
 .DS_Store

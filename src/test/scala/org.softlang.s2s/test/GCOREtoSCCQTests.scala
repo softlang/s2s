@@ -44,7 +44,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assert(conv.isEmpty)
 
   // Basic conversion between Iri/Var and Label, Key, Variable, and Values.
-  
+
   test("label conversion works correctly") {
     val l1 = Label("test")
     assertEquals(Label.fromIri(l1.toIri(true), true), l1)
@@ -100,7 +100,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   }
 
   // Tests for conversion of Shapes to SetClause.
-  
+
   test("shape to set clause") {
     val v1 = Variable("x")
     val l1 = Label("Person")
@@ -150,10 +150,12 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true))
-        ), 
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ())
       )
@@ -222,10 +224,12 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true))
-        ), 
+          AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
-          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true))
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -255,11 +259,13 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VAC(Var("x"), Label("Friendly").toIri(true)),
-          AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true))
-        ), 
+          AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
-          AtomicPattern.VAC(Var("x"), Label("Friendly").toIri(true))
+          AtomicPattern.VAC(Var("x"), Label("Friendly").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -271,7 +277,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   }
 
   // Tests dealing edge labels.
-  
+
   val out = GCORE.nodeToEdgeIri
   val in = GCORE.edgeToNodeIri
 
@@ -329,12 +335,18 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
-        ), 
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ())
       )
@@ -362,13 +374,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("likes").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
-        ), 
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("likes").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ())
       )
@@ -400,13 +418,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("hates").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
-        ), 
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("likes").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
-          AtomicPattern.VPV(Var("e"), in, Var("y"))
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -418,7 +442,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   }
 
   // Tests dealing node and edge labels.
-  
+
   test("both labels") {
     assertConvertsTo(
       GCORE(
@@ -446,14 +470,20 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("e"), Label("hates").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true))
-        ), 
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("likes").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true))
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -492,13 +522,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
           AtomicPattern.VAC(Var("e"), Label("likes").toIri(false)),
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true))
+          AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -545,7 +581,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("QuasiCat").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri(true)),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
@@ -555,6 +594,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("DogLover").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -586,9 +628,11 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ())
       )
@@ -617,11 +661,13 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
           AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
           AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ())
       )
@@ -651,11 +697,13 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri)
-        ), 
+          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -686,9 +734,11 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ())
       )
@@ -720,11 +770,13 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+        ),
         pattern = List(
           AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -764,13 +816,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2001).toIri),
           AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("HR").toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2000).toIri),
           AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("HR").toIri),
           AtomicPattern.VPL(Var("e"), Key("manager").toIri(false), Value.BooleanValue(false).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -824,7 +882,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(43).toIri),
           AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
@@ -837,6 +898,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(42).toIri),
           AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
           AtomicPattern.VPL(Var("y"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(
@@ -902,7 +966,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("A").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("A2").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("B").toIri(true)),
-        ), 
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
+        ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
@@ -919,6 +986,9 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("A").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("A1").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("B").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge),
         ),
         eccq = Some(ECCQ(
           filter = Set(

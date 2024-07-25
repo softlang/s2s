@@ -19,9 +19,12 @@ formula3:
 	| negated_formula
 	| universal
 	| existential
-	| greater
-	| less
-	| exactly
+    | existential_right_edge
+    | existential_left_edge
+    | universal_right_edge
+    | universal_left_edge
+    | left_node
+    | right_node
 	| top
 	| bottom
 	| nominal
@@ -41,11 +44,17 @@ universal: UNIVERSAL role DOT formula3;
 
 existential: EXISTENTIAL role DOT formula3;
 
-greater: GREATER role DOT formula3;
+existential_right_edge: EXISTENTIAL_RIGHT formula3;
 
-less: LESS role DOT formula3;
+existential_left_edge: EXISTENTIAL_LEFT formula3;
 
-exactly: EXACTLY role DOT formula3;
+universal_right_edge: UNIVERSAL_RIGHT formula3;
+
+universal_left_edge: UNIVERSAL_LEFT formula3;
+
+left_node: NODE_LEFT formula3;
+
+right_node: NODE_RIGHT formula3;
 
 top: TOP;
 
@@ -73,12 +82,6 @@ NAME: CHARACTER+;
 
 /* TOKEN */
 
-GREATER: '>=' NUMBER;
-
-LESS: '<=' NUMBER;
-
-EXACTLY: '==' NUMBER;
-
 NUMBER: ('0' .. '9')+;
 
 CHARACTER: ('0' .. '9' | 'a' .. 'z' | 'A' .. 'Z' | '_');
@@ -88,6 +91,18 @@ WHITESPACE: (' ' | '\t' | '\r' | '\n')+ -> skip;
 UNION: '|' | '⊔';
 
 INTERSECTION: '&' | '⊓';
+
+EXISTENTIAL_RIGHT: '->E' | '->∃';
+
+EXISTENTIAL_LEFT: '<-E' | '<-∃';
+
+UNIVERSAL_LEFT: '<-A' | '<-∀';
+
+UNIVERSAL_RIGHT: '->A' | '->∀';
+
+NODE_RIGHT:  '=>' | '⇒';
+
+NODE_LEFT: '<=' | '⇐';
 
 UNIVERSAL: '#A' | '∀';
 

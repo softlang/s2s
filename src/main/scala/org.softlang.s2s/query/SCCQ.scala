@@ -134,16 +134,34 @@ class SCCQ(
     // Generate two fresh variables, for each variable v.
     val pv = patternVariables.map(v => (v -> (Var.fresh(), Var.fresh()))).toMap
 
+    // Filter only nodes.
+    val pvn = pv.filter((v, _) =>
+      eccq.map(e => e.nodeVariables).getOrElse(Set()).contains(v)
+    )
+
+    // Filter only edges.
+    val pve = pv.filter((v, _) =>
+      eccq.map(e => e.edgeVariables).getOrElse(Set()).contains(v)
+    )
+
+    // Separator for lines in output.
+    val sep = " .\n    "
+
     // Filter for variables that occur in the template.
     val tv = pv.view.filterKeys(v => template.variables.contains(v))
 
     val p = if isECCQ then po ++ pv.map(additionalTriples) else po
     val t = if isECCQ then to ++ tv.map(additionalTriples) else to
-    val f = if isECCQ then eccq.map(e => e.filter.map(makeFilter(_, pv))).getOrElse(Set()).mkString(" ") else ""
-    val m = if isECCQ then pv.flatMap(metaFilters).mkString(" ") else ""
+    val f = if isECCQ then
+        // Filters from GCORE filter expressions.
+        eccq.map(e => e.filter.map(makeFilter(_, pv))).getOrElse(Nil)
+          // Filters for meta edges and nodes.
+          ++ pvn.map(metaFilterNode)
+          ++ pve.map(metaFilterEdge)
+    else Nil
 
-    "CONSTRUCT { " ++ t.mkString("", " . ", "") ++
-      " } WHERE { " ++ p.mkString("", " . ", "") ++ " " ++ f ++ " " ++ m ++ "}"
+    t.mkString("CONSTRUCT {\n    ", " .\n    ", "\n}")
+    ++ (p ++ f).mkString(" WHERE {\n    ", " .\n    ", "\n}")
 
   // Generate a triple pattern from a variable v, and a (fresh) property and object variable.
   private def additionalTriples(v: Var, po: (Var, Var)): String =
@@ -157,14 +175,13 @@ class SCCQ(
       val vc = mv(v)
       s"FILTER ( ${vc._1.showNB} != ${p.encode} )"
 
-  /** Make filter patterns for the generic parts. */
-  private def metaFilters(v: Var, po: (Var, Var)): List[String] = List(
-    s"FILTER ( ${po._1.showNB} != ${GCORE.nodeToEdgeIri.encode} )",
-    s"FILTER ( ${po._1.showNB} != ${GCORE.edgeToNodeIri.encode} )",
-    // Note: These *should* be copied to the output graph!
-    // s"FILTER ( ${po._2.showNB} != ${GCORE.node.encode} )",
-    // s"FILTER ( ${po._2.showNB} != ${GCORE.edge.encode} )",
-  )
+  /** Make filter patterns for the generic nodes. */
+  private def metaFilterNode(v: Var, po: (Var, Var)): String =
+    s"FILTER ( ${po._1.showNB} != ${GCORE.nodeToEdgeIri.encode} )"
+
+  /** Make filter patterns for the generic edges. */
+  private def metaFilterEdge(v: Var, po: (Var, Var)): String =
+    s"FILTER ( ${po._1.showNB} != ${GCORE.edgeToNodeIri.encode} )"
 
   /** Get all variables in this query. */
   def variables: Set[Var] = template.variables.union(pattern.variables)

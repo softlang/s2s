@@ -4,12 +4,12 @@ import org.softlang.s2s.test.ValidationSuite
 
 // Test cases for simple Concept ECCQ queries.
 
-class PropertyECCQTests extends ValidationSuite("e-props"):
+class PropertyECCQTests extends ValidationSuite("e_props_"):
 
   // Here, we remove name, so not enough information to infer any shapes.
 
   val q0 = gcore("(x)", "(x)", where = "x:A AND x.name", remove = "x.name")
-  includes("", noshapes, q0, noshapes)
+  includes("0_0", noshapes, q0, noshapes)
 
   // With a concrete variable set, this suffices -- as we do not remove age.
   // These shapes are included only, because we're dealing with a single variable,
@@ -27,25 +27,25 @@ class PropertyECCQTests extends ValidationSuite("e-props"):
     // Why? Because the rhs is generally true in this instance (?)
     "∃kn:age.⊤ ⊑ ∀-kn:age.ln:A"
   )
-  includes("", noshapes, q1, s1out)
+  includes("1_0", noshapes, q1, s1out)
 
   // No shapes, since we do not know about y (could be age, could be A).
   // That is, similarly to case q1, but now we can not make assumptions about age and A.
 
   val q2 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B")
-  includes("", noshapes, q2, noshapes)
+  includes("2_0", noshapes, q2, noshapes)
 
   // If we remove A and age from y explicitly, we get the shapes as in q2.
   // Now, we can make assumptions about age and A.
 
   val q3 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B", remove = "y.age AND y:A")
-  includes("", noshapes, q3, s1out)
+  includes("3_0", noshapes, q3, s1out)
 
   // Does not help to add random labels or properties. Only for B and F we can infer subsumption,
   // as B is unconstrained in the WHERE clause.
 
   val q4 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B", set = "x:E AND y:F AND x.num = 19 AND y.nnn = 0")
-  includes("", noshapes, q4, Set("ln:B ⊑ ln:F"))
+  includes("4_0", noshapes, q4, Set("ln:B ⊑ ln:F"))
 
   // This is case q5 without removal of the name property.
   // TODO Are these shapes correct? No, says the validation.

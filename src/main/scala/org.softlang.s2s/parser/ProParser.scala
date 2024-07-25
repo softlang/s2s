@@ -4,6 +4,8 @@ import org.softlang.s2s.parser.ProGSBaseVisitor
 import org.softlang.s2s.parser.{ProGSLexer, ProGSParser}
 import org.softlang.s2s.parser.ProGSParser._
 
+import org.softlang.s2s.query.GCORE
+
 import de.pseifer.shar.core.{Prefix, Iri}
 import de.pseifer.shar.parsing.AntlrBasedParser
 import de.pseifer.shar.reasoning.{DLReasoner, AxiomSet}
@@ -19,8 +21,7 @@ import scala.language.implicitConversions
 import org.antlr.v4.runtime._
 import org.antlr.v4.runtime.tree.{ParseTreeVisitor, ParseTree};
 
-/** Parse a description logics expression to a Concept.
-  */
+/** Parse a ProGS shape to a DLExpression. */
 class ProParser(state: BackendState)
     extends AntlrBasedParser[
       DLExpression,
@@ -61,19 +62,6 @@ class ProParser(state: BackendState)
         c2 <- Concept.orElse(right, ierr("visitBinary"))
       yield t(c1, c2)
 
-    /** Visit any number restriction.
-      */
-    private def visitNQuantification(
-        ctx: LessContext | GreaterContext | ExactlyContext,
-        t: (Int, Role, Concept) => DLExpression
-    ): SharTry[DLExpression] =
-      for
-        role <- visit(ctx.getChild(1))
-        rhs <- visit(ctx.getChild(3))
-        r <- Role.orElse(role, ierr("visitQuantification"))
-        c <- Concept.orElse(rhs, ierr("visitQuantification"))
-      yield t(ctx.getChild(0).toString.drop(2).toInt, r, c)
-
     /** Visit any quantification.
       */
     private def visitQuantification(
@@ -86,6 +74,18 @@ class ProParser(state: BackendState)
         r <- Role.orElse(role, ierr("visitQuantification"))
         c <- Concept.orElse(rhs, ierr("visitQuantification"))
       yield t(r, c)
+
+    /** Visit any edge constraint. */
+    private def visitEdgeConstraint(
+      ctx: Existential_left_edgeContext | Existential_right_edgeContext
+        | Universal_left_edgeContext | Universal_right_edgeContext
+        | Left_nodeContext | Right_nodeContext,
+      r: Concept => DLExpression
+    ): SharTry[DLExpression] =
+      for
+        rhs <- visit(ctx.getChild(1))
+        c <- Concept.orElse(rhs, ierr("visitEdgeConstraint"))
+      yield r(c)
 
     /** Select a single child 'i' and construct type with 't' based on child.
       */
@@ -112,21 +112,6 @@ class ProParser(state: BackendState)
       val rawIri = ctx.getChild(0).getText
       val iri = state.prefixes.expandString(rawIri)
       iri.map(NamedConcept.apply)
-
-    // A concept can either be a normal concept (prefixed or raw),
-    // or it may be a magic scaspa 'defined' concept.
-
-    // Magic Shar prefix:
-    //if rawIri.startsWith(Prefix.shar.toString) then
-    //  for name <- DefinedName.fromString(rawIri)
-    //  yield DefinedConcept(name)
-
-    //// Magic Shar IRI:
-    //else if Iri.shar.startOf(rawIri) then
-    //  for
-    //    i <- iri
-    //    name <- DefinedName.fromIri(state.prefixes, i)
-    //  yield DefinedConcept(name)
 
     // Other
 
@@ -166,14 +151,31 @@ class ProParser(state: BackendState)
     ): SharTry[DLExpression] =
       visitQuantification(ctx, Universal.apply)
 
-    override def visitLess(ctx: LessContext): SharTry[DLExpression] =
-      visitNQuantification(ctx, LessThan.apply)
+    override def visitExistential_left_edge(
+      ctx: Existential_left_edgeContext
+    ): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Existential(Inverse(GCORE.edgeToNodeRole), c))
 
-    override def visitGreater(ctx: GreaterContext): SharTry[DLExpression] =
-      visitNQuantification(ctx, GreaterThan.apply)
+    override def visitExistential_right_edge(
+      ctx: Existential_right_edgeContext
+    ): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Existential(GCORE.nodeToEdgeRole, c))
 
-    override def visitExactly(ctx: ExactlyContext): SharTry[DLExpression] =
-      visitNQuantification(ctx, Exactly.apply)
+    override def visitUniversal_left_edge(
+      ctx: Universal_left_edgeContext
+    ): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Universal(Inverse(GCORE.edgeToNodeRole), c))
+
+    override def visitUniversal_right_edge(
+      ctx: Universal_right_edgeContext
+    ): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Universal(GCORE.nodeToEdgeRole, c))
+
+    override def visitLeft_node(ctx: Left_nodeContext): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Existential(Inverse(GCORE.nodeToEdgeRole), c))
+
+    override def visitRight_node(ctx: Right_nodeContext): SharTry[DLExpression] =
+      visitEdgeConstraint(ctx, c => Existential(GCORE.edgeToNodeRole, c))
 
     override def visitNegated_formula(
         ctx: Negated_formulaContext

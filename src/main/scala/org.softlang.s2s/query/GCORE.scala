@@ -58,7 +58,7 @@ class GCORE(
 
   /** Generate node patterns, given the graph pattern (fgp) the variables in edge patterns (vars),
    *  and a mapping from variables to WhenClauses (may be joined with Set/Remove clauses; see generateAtomic). */
-  private def generateNodes(fgp: FullGraphPattern, vars: Set[Var], lok: Map[Variable, List[WhenClause]]): Option[Set[AtomicPattern]] =
+  private def generateNodes(fgp: FullGraphPattern, vars: Set[Var], lok: Map[Variable, List[WhenClause]], realnode: Boolean = true): Option[Set[AtomicPattern]] =
     // Iterate all NodePattern.
     Util.sequence(fgp.toList.map {
       case BasicGraphPattern.NodePattern(x) =>
@@ -95,7 +95,8 @@ class GCORE(
               AtomicPattern.VPV(vx, k.toIri(node = nodeVariables.contains(vx)), Variable(x.name ++ "_" ++ k.keyname).toVar)
             }).concat(
               // TODO: NEW TEST ME
-              List(AtomicPattern.VAC(vx, GCORE.node))
+              if realnode then List(AtomicPattern.VAC(vx, GCORE.node))
+              else Nil
             ))
       case BasicGraphPattern.EdgePattern(x, e, y) => for
         n1 <- generateNodes(Set(BasicGraphPattern.NodePattern(x)), vars, lok)
@@ -132,7 +133,7 @@ class GCORE(
             // TODO: NEW TEST ME
             AtomicPattern.VAC(ve, GCORE.edge)
           )
-          generateNodes(Set(BasicGraphPattern.NodePattern(e)), Set(), lok).map(_.union(s))
+          generateNodes(Set(BasicGraphPattern.NodePattern(e)), Set(), lok, realnode = false).map(_.union(s))
       case BasicGraphPattern.NodePattern(_) => Some(Nil)
     }).map(_.flatten.toSet)
 

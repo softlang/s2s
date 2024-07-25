@@ -7,7 +7,7 @@ extension (axiom: Axiom)
   /** Obtain the vocabulary of this axiom. */
   def vocabulary: Vocabulary =
     def findNominals() = axiom match
-      case Subsumption(c, d)  => 
+      case Subsumption(c, d)  =>
         var nominals: Set[Iri] = Set()
         Concept.foreach(ci => ci match
           case NominalConcept(i) => nominals += i
@@ -16,9 +16,9 @@ extension (axiom: Axiom)
         nominals
       case _ => Set()
     Vocabulary(
-      variables = Set(), 
-      concepts = axiom.concepts.map(NamedConcept(_)), 
-      properties = axiom.properties.map(NamedRole(_)), 
+      variables = Set(),
+      concepts = axiom.concepts.map(NamedConcept(_)),
+      properties = axiom.properties.map(NamedRole(_)),
       nominals = findNominals())
 
   /** Set scope for expressions in this axiom. */
@@ -57,7 +57,7 @@ extension (i: Iri)
     i.toString.indexOf(s) != -1
 
   /** Update scope tokens from one Scopes to another. */
-  def updateScopes(oldS: Scopes, newS: Scopes): Iri = 
+  def updateScopes(oldS: Scopes, newS: Scopes): Iri =
     Iri.makeFromRawIri(oldS.updateScopeTokens(i.getRaw, newS)).toOption.get
 
   /** Get this IRI in the respective scope. */
@@ -103,10 +103,16 @@ extension (c: Concept)
       Existential(r.inScope(scope), c.inScope(scope))
     case Universal(r, c) =>
       Universal(r.inScope(scope), c.inScope(scope))
+    case GreaterThan(n, r, c) =>
+      GreaterThan(n, r.inScope(scope), c.inScope(scope))
+    case LessThan(n, r, c) =>
+      LessThan(n, r.inScope(scope), c.inScope(scope))
     case Union(c1, c2) =>
       Union(c1.inScope(scope), c2.inScope(scope))
     case Intersection(c1, c2) =>
       Intersection(c1.inScope(scope), c2.inScope(scope))
+    case Complement(c) =>
+      Complement(c.inScope(scope))
     case c => c
 
   def dropScope(implicit scopes: Scopes): Concept = c match
@@ -115,10 +121,16 @@ extension (c: Concept)
       Existential(r.dropScope, c.dropScope)
     case Universal(r, c) =>
       Universal(r.dropScope, c.dropScope)
+    case GreaterThan(n, r, c) =>
+      GreaterThan(n, r.dropScope, c.dropScope)
+    case LessThan(n, r, c) =>
+      LessThan(n, r.dropScope, c.dropScope)
     case Union(c1, c2) =>
       Union(c1.dropScope, c2.dropScope)
     case Intersection(c1, c2) =>
       Intersection(c1.dropScope, c2.dropScope)
+    case Complement(c) =>
+      Complement(c.dropScope)
     case c => c
 
   def updateScopes(oldS: Scopes, newS: Scopes): Concept = c match
@@ -127,12 +139,17 @@ extension (c: Concept)
       Existential(r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
     case Universal(r, c) =>
       Universal(r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
+    case GreaterThan(n, r, c) =>
+      GreaterThan(n, r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
+    case LessThan(n, r, c) =>
+      LessThan(n, r.updateScopes(oldS, newS), c.updateScopes(oldS, newS))
     case Union(c1, c2) =>
       Union(c1.updateScopes(oldS, newS), c2.updateScopes(oldS, newS))
     case Intersection(c1, c2) =>
       Intersection(c1.updateScopes(oldS, newS), c2.updateScopes(oldS, newS))
+    case Complement(c) =>
+      Complement(c.updateScopes(oldS, newS))
     case c => c
-
 
 extension (r: Role)
   def inScope(scope: Scope)(implicit scopes: Scopes): Role =
@@ -170,8 +187,8 @@ object Util:
 
   /** Sequence a list of option to option of list. */
   def sequence[A](l: List[Option[A]]): Option[List[A]] = l.foldLeft(Option(List.empty[A])) {
-    case(Some(r), Some(v)) => Some(v :: r); 
-    case(_, _) => None 
+    case(Some(r), Some(v)) => Some(v :: r);
+    case(_, _) => None
   }
 
   /** Construct IRI for testing purposes. */

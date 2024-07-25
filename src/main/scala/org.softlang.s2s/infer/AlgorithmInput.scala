@@ -4,6 +4,7 @@ import de.pseifer.shar.core.BackendState
 
 import org.softlang.s2s.core._
 import org.softlang.s2s.query.AtomicPatterns
+import org.softlang.s2s.query.AtomicPattern
 import org.softlang.s2s.query.vocabulary
 import org.softlang.s2s.query.GCORE
 import org.softlang.s2s.query.SCCQ
@@ -39,9 +40,15 @@ enum AlgorithmInput:
       case None => Left(
         UnsupportedQueryError(q, details = "This GCORE query can not be converted to SPARQL.")
       )
-      case Some(t) => Right(t.inScope(Scope.Out))
-      // TODO: Filter VAC(_, GCORE.node) and VAC(_, GCORE.edge) patterns here?
-      // This just seems kind of silly.
+      case Some(t) =>
+        val upt = t.filter(p => p match
+          case AtomicPattern.VAC(_, GCORE.node) => false
+          case AtomicPattern.VAC(_, GCORE.edge) => false
+          case _ => true
+        )
+        // TODO: Tis' correct?
+        Right(upt.inScope(Scope.Out))
+        //Right(t.inScope(Scope.Out))
 
   /** Get the pattern of the input query. */
   val pattern: S2STry[AtomicPatterns] = this match
@@ -51,7 +58,15 @@ enum AlgorithmInput:
       case None => Left(
         UnsupportedQueryError(q, details = "This GCORE query can not be converted to SPARQL.")
       )
-      case Some(p) => Right(p.inScope(Scope.Med))
+      case Some(p) =>
+        val upp = p.filter(i => i match
+          case AtomicPattern.VAC(_, GCORE.node) => false
+          case AtomicPattern.VAC(_, GCORE.edge) => false
+          case _ => true
+        )
+        // TODO: Tis' correct?
+        Right(upp.inScope(Scope.Med))
+        //Right(p.inScope(Scope.Med))
 
   /** Node variables of a GCORE query.*/
   val nodeVariables: Set[Var] = this match

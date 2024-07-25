@@ -4,7 +4,7 @@ import NativePackagerHelper._
 
 val scala3Version = "3.3.1"
 
-// The Shar framework for reasoning as a Git dependeny.
+
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
 
 // Native Packager plugin.
@@ -12,7 +12,8 @@ enablePlugins(JavaAppPackaging)
 
 lazy val root = project
   .in(file("."))
-  .dependsOn(shar)
+  .enablePlugins(Antlr4Plugin)
+  //.dependsOn(shar)
   .settings(
     // Project metadata.
     name := "s2s",
@@ -35,10 +36,13 @@ lazy val root = project
     Universal / mappings += file("s2s") -> "s2s",
     Universal / mappings += file("s2s.bat") -> "s2s.bat",
     Universal / packageName := "s2s",
+    // Settings for Antlr4.
+    Antlr4 / antlr4Version := "4.7.2",
+    Antlr4 / antlr4GenVisitor := true,
     // Dependencies.
     // Development dependency, local only - install manually and comment out 'dependsOn(shar)'.
     // Note: This is only needed so metals works correctly with the GitHub dependency for SHAR.
-    //libraryDependencies += "de.pseifer" %% "shar" % "0.1.0-SNAPSHOT",
+    libraryDependencies += "de.pseifer" %% "shar" % "1.0.0",
     // Dependencies.
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
     // JFact reasoner support.
@@ -53,6 +57,11 @@ lazy val root = project
     libraryDependencies += "org.rogach" %% "scallop" % "4.1.0",
     // Parser combinator.
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.0",
+    // ANTLR
+    libraryDependencies ++= Seq(
+      "org.antlr" % "antlr4" % "4.7.2",
+      "org.antlr" % "antlr4-runtime" % "4.7.2"
+    ),
     // Testing dependencies.
     libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
   )

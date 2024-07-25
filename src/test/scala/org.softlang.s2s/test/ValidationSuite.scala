@@ -25,7 +25,7 @@ abstract class ValidationSuite(
   title: String = "",
   disabled: Boolean = false,
   verbose: Boolean = true,
-  generateValidation: Boolean = false
+  generateValidation: Boolean = true
 ) extends munit.FunSuite:
 
   private val validation = ValidationS2S(verbose, generateValidation, ShapeHeuristic.SimpleShapes())
@@ -59,14 +59,15 @@ abstract class ValidationSuite(
 
     // Do not run test, if the suite is disabled.
     if disabled then return
+    val name = title ++ description
 
-    test(title ++ description) {
+    test(name) {
       // If using 'extended' flag, use different heuristic.
       if extended then
-        validationExt.includes(sin, q, exactly, atleast, not, debugging)
+        validationExt.includes(sin, q, exactly, atleast, not, debugging, name)
       // Otherwise, use Simple SHACL shapes.
       else
-        validation.includes(sin, q, exactly, atleast, not, debugging)
+        validation.includes(sin, q, exactly, atleast, not, debugging, name)
     }
 
   /** Defines a test case checking for entailment in output KB. */
@@ -87,9 +88,10 @@ abstract class ValidationSuite(
 
     // Do not run test, if the suite is disabled.
     if disabled then return
+    val name = title ++ description
 
-    test(title ++ description) {
-      validation.entails(sin, q, entails, not, debugging)
+    test(name) {
+      validation.entails(sin, q, entails, not, debugging, name)
     }
 
   /** Empty set of shapes. */
@@ -143,7 +145,7 @@ class ValidationS2S(
     // Generate external validation output.
     generateValidation: Boolean,
     // Heuristic to use.
-    heuristic: ShapeHeuristic
+    heuristic: ShapeHeuristic,
 ) extends Shapes2Shapes(
       Configuration.default.copy(
         reasoner = ActiveReasoner.Hermit,
@@ -163,7 +165,9 @@ class ValidationS2S(
       exactly: Set[String] = Set(),
       atleast: Set[String] = Set(),
       not: Set[String] = Set(),
-      debugging: Boolean
+      debugging: Boolean,
+      name: String,
+      suppressValidation: Boolean = false
   )(implicit loc: munit.Location): Unit =
 
     // Obtain the test result and log.
@@ -187,8 +191,8 @@ class ValidationS2S(
     assert(actualSOut.isRight, "internal failure")
 
     // If enabled, generate data for external method validation tooling.
-    if generateValidation then
-      generateValidationData(actualSOutS.toOption.get._2, actualSOut.toOption.get)
+    if !suppressValidation && generateValidation then
+      generateValidationData(actualSOutS.toOption.get._2, actualSOut.toOption.get, name)
 
     val success = for
       e <- exactlyOut
@@ -231,7 +235,9 @@ class ValidationS2S(
       q: String,
       entails: Set[String] = Set(),
       not: Set[String] = Set(),
-      debugging: Boolean
+      debugging: Boolean,
+      name: String,
+      suppressValidation: Boolean = false
   )(implicit loc: munit.Location): Unit =
 
     // // Obtain the test result and log.
@@ -277,10 +283,10 @@ class ValidationS2S(
     // Note: Here, we use the 'expected' shapes, since we only infer axioms.
     // This validation case is thus only valid if this test case passes, and
     // we only produce the validation output in this case.
-    if generateValidation && success.getOrElse(false) then
-      generateValidationData(axiomsS.toOption.get._2, entailsOut.toOption.get)
+    if !suppressValidation && generateValidation && success.getOrElse(false) then
+      generateValidationData(axiomsS.toOption.get._2, entailsOut.toOption.get, name)
 
-  def generateValidationData(input: AlgorithmInput, output: Set[SHACLShape]): Unit =
+  def generateValidationData(input: AlgorithmInput, output: Set[SHACLShape], name: String): Unit =
       // Produce all validation data.
       val query = input.formatQuery(shar.state)
       val sin = input.formatShapes.toOption.get
@@ -300,11 +306,14 @@ class ValidationS2S(
       // The base path of the 'validation' directory.
       val base = dataPath ++ subdir ++ ValidationS2S.TestId.next()
 
-
       // Query.
       val qfile = Paths.get(base ++ "/" ++ qname)
       Files.createDirectories(qfile.getParent())
       Files.write(qfile, query.getBytes(StandardCharsets.UTF_8))
+
+      // Corresponding test case.
+      val namefile = Paths.get(base ++ "/name")
+      Files.write(namefile, name.getBytes(StandardCharsets.UTF_8))
 
       // Input shapes.
       val isfile = Paths.get(base ++ "/in.json")

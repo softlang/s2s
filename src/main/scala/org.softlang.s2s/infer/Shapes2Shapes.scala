@@ -88,7 +88,8 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
     for s <- Util
       .flipEitherHead(shapes.map(s =>
           shapeParser.parseGeneral(s)
-            .orElse(JsonLDParser.parse(s)))
+            .orElse(JsonLDParser.parse(s))
+            .orElse(shapeParser.parseProGS(s)))
             .toList)
         .map(_.toSet)
     yield s.toList.toSet
