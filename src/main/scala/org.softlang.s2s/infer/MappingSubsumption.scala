@@ -16,8 +16,8 @@ class MappingSubsumption(
 )(implicit scopes: Scopes)
     extends Inference:
 
-  private def thealgorithm(p1: (Set[Var], Set[AtomicPattern]), p2: (Set[Var], Set[AtomicPattern])): Unit = 
-    if debug then 
+  private def thealgorithm(p1: (Set[Var], Set[AtomicPattern]), p2: (Set[Var], Set[AtomicPattern])): Unit =
+    if debug then
       println("\nCase:")
       println("  Left: " + p1._1.mkString(", "))
       println("" + p1._2.mkString("\n"))
@@ -43,7 +43,7 @@ class MappingSubsumption(
     // (1) Detect all components.
     val comps = a.components
 
-    if debug then 
+    if debug then
       println("\nKnowledge Base:")
       kb.foreach{ a =>
         println("  " + a.toString)
@@ -76,7 +76,7 @@ class MappingSubsumption(
     //  // Test for each extended component, whether there is a mapping.
     //  pExt <- extended
     //yield componentMap(p1, pExt)).flatten.toSet
-    
+
     // Brute-force approach for each combination:
 
     // - For each possible mapping
@@ -85,7 +85,7 @@ class MappingSubsumption(
     //   - make constraint from this 'diff' (for variables)
     //   - for all 'targets' in original pattern (for variables)
     //     - test if target subsumed by constraint
-    
+
     // Find combinations of components.
     for
       p1 <- comps
@@ -96,4 +96,3 @@ class MappingSubsumption(
     if debug then println("\n")
 
     Set()
-

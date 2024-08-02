@@ -74,7 +74,7 @@ def store_graph(g, path, name, render_graphs):
         render(g, os.path.join(path, 'graph_' + name + '.png'))
 
 
-def run_case(validation_path, render_graphs=False):
+def run_case(validation_path, args):
     """Run validation for one sample path."""
     # Prepare the directory.
     out_path = os.path.join(validation_path, "out")
@@ -85,7 +85,7 @@ def run_case(validation_path, render_graphs=False):
     shapes_in = Graph()
     shapes_in.parse(os.path.join(validation_path, 'in.json'))
 
-    if render_graphs:
+    if args.render:
         render(shapes_in, os.path.join(out_path, 'shapes_in.png'))
 
     # Parse the sample query.
@@ -106,7 +106,7 @@ def run_case(validation_path, render_graphs=False):
     shapes_out = Graph()
     shapes_out.parse(os.path.join(validation_path, 'out.json'))
 
-    if render_graphs:
+    if args.render:
         render(shapes_out, os.path.join(out_path, 'shapes_out.png'))
 
     # Generate a suitable output graph.
@@ -125,11 +125,10 @@ def run_case(validation_path, render_graphs=False):
                     validation_path,
                     "nominals.vocabulary"),
             ),
-            number_of_triples=[100],
-            number_of_nodes=[20, 30, 40, 50, 60, 70, 80],
-            concept_property_ratio=[0.3, 0.5, 0.7],
-            property_label_ratio=[0.3, 0.5, 0.7],
-            multiplicator=[1.0],
+            number_of_triples=args.number_of_triples,
+            node_to_triple_ratio=(0.5, 0.25),
+            concept_property_ratio=(0.5, 0.25),
+            property_label_ratio=(0.5, 0.25),
             property_mode=property_mode),
         # The input shapes.
         shapes=shapes_in,
@@ -147,10 +146,10 @@ def run_case(validation_path, render_graphs=False):
             name = 'in_no_output'
         else:
             name = 'in'
-        store_graph(a["ingraph"], out_path, name, render_graphs)
+        store_graph(a["ingraph"], out_path, name, args.render)
     else:
         store_graph(a["broken_ingraph"], out_path,
-                    "in_broken", render_graphs)
+                    "in_broken", args.render)
 
     # Validate the result graph with out shapes.
     if not a["outgraph"]:
@@ -162,7 +161,7 @@ def run_case(validation_path, render_graphs=False):
         }
     else:
         # Serialize the input and result graphs; possibly create png.
-        store_graph(a["outgraph"], out_path, "out", render_graphs)
+        store_graph(a["outgraph"], out_path, "out", args.render)
 
         # Obtained suitable graph, validate against output shapes.
         is_valid, report, report_human = validate(
@@ -191,34 +190,36 @@ def run_case(validation_path, render_graphs=False):
         }
 
 
-def run_all(render_graphs):
-    """Run validation on all samples."""
-    # TODO: Indicate query type on file; then iterate all folders.
-    run_dir(os.path.join("data", "sccq"), render_graphs)
-    run_dir(os.path.join("data", "eccq"), render_graphs)
-    run_dir(os.path.join("data", "test"), render_graphs)
-
-
-def run_one(path, render_graphs):
+def run_one(path, args):
     """Run, with additional detail, a single problem instance."""
-    # Take time, and run sample.
-    start_time = time.time()
-    result = run_case(path, render_graphs) | {
-        "path": path,
-        "time": time.time() - start_time
-    }
+    # Iterate 'repetition' times.
+    for _ in range(args.repetitions):
+        # Take time, and run sample.
+        start_time = time.time()
+        result = run_case(path, args) | {
+            "path": path,
+            "time": time.time() - start_time
+        }
 
-    # Print CSV entry to stdout and result file.
-    csv_row(result, os.path.join(path, 'out', 'result.csv'))
+        # Print CSV entry to stdout and result file.
+        csv_row(result, os.path.join(path, 'out', 'result.csv'))
 
 
-def run_dir(subdir, render_graphs):
+def run_dir(subdir, args):
     """Run validation on all samples in a test directory."""
     for test in os.listdir(subdir):
         # The (relative) path of the test sample.
         path = os.path.join(subdir, test)
         print("Running: ", path, file=sys.stderr)
-        run_one(path, render_graphs)
+        run_one(path, args)
+
+
+def run_all(args):
+    """Run validation on all samples."""
+    # TODO: Iterate all folders?
+    run_dir(os.path.join("data", "sccq"), args)
+    run_dir(os.path.join("data", "eccq"), args)
+    run_dir(os.path.join("data", "test"), args)
 
 
 def csv_header():
@@ -276,6 +277,12 @@ def main():
     # Global options.
     parser.add_argument('-r', '--render', action='store_true',
                         help="generate .png files (requires graphviz)")
+    parser.add_argument('-n', '--number-of-triples', action='store',
+                        default=100, type=int,
+                        help="Number of triples (default: 100)")
+    parser.add_argument('-x', '--repetitions', action='store',
+                        default=1, type=int,
+                        help="Number of repititions per sample (default: 1)")
 
     # Parse CLI
     args = parser.parse_args()
@@ -285,11 +292,11 @@ def main():
 
     # Execute the required mode (based on the 'mode' arguments).
     if args.single:
-        run_one(args.single, args.render)
+        run_one(args.single, args)
     elif args.directory:
-        run_dir(args.directory, args.render)
+        run_dir(args.directory, args)
     elif args.run_all:
-        run_all(args.render)
+        run_all(args)
     elif args.gather_results:
         csv_gather()
     else:

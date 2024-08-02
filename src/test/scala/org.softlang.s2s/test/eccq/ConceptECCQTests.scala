@@ -8,13 +8,14 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
 
   val q0 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:A")
 
-  // including at most the tautology ln:A ⊑ ln:A (not shown)
+  // Including at most the tautology ln:A ⊑ ln:A (not shown).
   includes("0_1", noshapes, q0, noshapes)
   includes("0_2", Set("ln:A ⊑ ln:B"), q0, noshapes)
   includes("0_3", Set("ln:B ⊑ ln:A"), q0, noshapes)
 
   val q1 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:B")
 
+  includes("1_0", Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), q1, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), debugging = true)
   includes("1_0", Set("ln:A ⊑ ln:B"), q1, Set("ln:A ⊑ ln:B"))
   includes("1_1", Set("ln:B ⊑ ln:A"), q1, Set("ln:B ⊑ ln:A"))
   includes("1_2", noshapes, q1, noshapes)
@@ -73,13 +74,32 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
 
   val q11 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:D AND y:B")
 
+  // TODO: Fixed?
   // Compared to q9, we lose both shapes here, since we restrict x, not including all instances of A.
   // We do get C ⊑ A, but only because we know that Y is still a subset of X...
-  includes("", Set("ln:B ⊑ ln:A"), q11, Set("ln:C ⊑ ln:A"))
+  includes("11_0", Set("ln:B ⊑ ln:A"), q11, Set("ln:C ⊑ ln:A"))
   // ... if we remove this input shape, C ⊑ A no longer holds for the common reasons.
-  includes("11_0", noshapes, q11, noshapes)
+  includes("11_1", noshapes, q11, noshapes)
 
   val q12 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "x:A AND y:D AND y:B AND z:C", remove = "z:D")
 
   // Alas, if we modify example q10 such that we remove D from Z, the shape reappears.
-  includes("12_0", Set("ln:B ⊑ ln:A"), q12, Set("ln:B ⊑ ln:A", "ln:D ⊑ ln:A"), debugging = true)
+  includes("12_0", Set("ln:B ⊑ ln:A"), q12, Set("ln:B ⊑ ln:A", "ln:D ⊑ ln:A"))
+
+  val q13 = gcore("(x)", "(x)", where = "x:A")
+
+  // Here, we get the subsumption betcause of the input shapes...
+  includes("13_1", Set("ln:A ⊑ ln:B"), q13, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
+
+  // ... not because of the query itself.
+  includes("13_2", noshapes, q13, noshapes)
+
+  val q13a = gcore("(x)", "(x)", where = "x:A AND x:B")
+
+  // This example is similar. However, as the test shows, entailment does depend
+  // only on the WHERE clause, and not on the input shapes.
+  includes("13_3", Set("ln:A ⊑ ln:B"), q13a, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
+  includes("13_4", noshapes, q13a, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
+
+  val q14 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:B AND y:C")
+  includes("14_0", Set("ln:A ⊑ ln:D"), q14, Set("ln:A ⊑ ln:D"))

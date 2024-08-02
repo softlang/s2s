@@ -1,6 +1,7 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.dl._
+import de.pseifer.shar.core.Iri
 import org.softlang.s2s.core.Scope
 import org.softlang.s2s.core.Scopes
 import org.softlang.s2s.core.dropScope
@@ -16,20 +17,32 @@ class ClosedConceptAssumptionTemplate(
 )(implicit scopes: Scopes)
     extends ClosedConceptAssumption(a, true, false)(scopes):
 
+  private def gens(lc: Iri, l: NamedConcept): List[Concept] =
+    if Label.isNodeLabel(lc) then
+      input.nodeVariables.flatMap(v =>
+        v.asConceptComponent(input.filters, l).toSet)
+        .toList
+    else
+      input.edgeVariables.flatMap(v =>
+        v.asConceptComponent(input.filters, l).toSet)
+        .toList
+
   override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
     if input.isECCQ then
+      val osi = input.vocabularyIn.concepts.map(_.inScope(Scope.Out))
+      val asi = a.concepts.map(_.asInstanceOf[Concept])
+
+      val additional: Set[Axiom] = osi.diff(asi).flatMap { _ match
+        case l @ NamedConcept(c) =>
+          Set(Equality(l, Concept.unionOf(gens(c, l))))
+        case _ => Set()
+      }
+
       axioms.map(_ match
         case Equality(l @ NamedConcept(lc), r) =>
-          val gens = 
-            if Label.isNodeLabel(lc) then
-              input.nodeVariables.flatMap(v =>
-                v.asConceptComponent(input.filters, l).toSet)
-            else
-              input.edgeVariables.flatMap(v =>
-                v.asConceptComponent(input.filters, l).toSet)
-          Equality(l, Concept.unionOf(r :: gens.toList))
+          Equality(l, Concept.unionOf(r :: gens(lc, l)))
         case a => a
-      )
+      ).union(additional)
     else
       axioms
 
@@ -57,7 +70,7 @@ class ClosedConceptAssumptionPattern(
           ).union(
             if a.hasCyclicVCG then
               Set()
-            else 
+            else
               Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
           )
         case a => Set(a)

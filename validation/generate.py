@@ -18,25 +18,18 @@ class Config:
     # The vocabulary from which to generate the graph.
     voc: Vocabulary
 
-    # The total number of triples in the graph.
-    # List with choices, chooses one randomly.
-    number_of_triples: list[int]
+    # Target number of triples/statements in graphs.
+    # This scales the entire graph.
+    number_of_triples: int
 
-    # The number of nodes (< number_of_triples).
-    # List with choices, chooses one randomly.
-    number_of_nodes: list[int]
-
-    # Ratio of concepts to properties (RDF)
-    # or nodes to edges (property graph).
-    concept_property_ratio: list[float]
-
-    # In property_mode, the ratio of labels to
-    # key-value (properties).
-    property_label_ratio: list[float]
-
-    # Multiplicators for the number_of_triples and
-    # number_of_nodes settings. Sampled and applied to both.
-    multiplicator: list[float]
+    # Tuple, consisting of:
+    # - Ratio values between 0 and 1
+    # - randomization factor applied as follows:
+    #   x - x * rf to x + x * rf
+    # for x in the ratios listed below.
+    node_to_triple_ratio: (float, float)
+    concept_property_ratio: (float, float)
+    property_label_ratio: (float, float)
 
     # Enable property graph mode if True.
     property_mode: bool
@@ -46,6 +39,28 @@ class Config:
 
     # Prefix for generated edges.
     gen_edge_prefix = "https://github.com/softlang/s2s/gen/edge"
+
+    def rnd_number_of_nodes(self) -> int:
+        """Return a random number of nodes."""
+        return int(
+            self._rnd(self.node_to_triple_ratio) * self.number_of_triples)
+
+    def rnd_concept_property_ratio(self) -> float:
+        """Ratio of element elements of the generated graph.
+
+        - Ratio of concepts to properties (RDF) or
+        - Ratio of nodes to edges (property graph).
+        """
+        return self._rnd(self.concept_property_ratio)
+
+    def rnd_property_label_ratio(self) -> float:
+        """For property graphs, ratio of labels to key-value pairs."""
+        return self._rnd(self.property_label_ratio)
+
+    def _rnd(self, xf: (float, float)) -> float:
+        """Randomize x with randomization facor f."""
+        x, f = xf
+        return random.uniform(x - x * f, x + x * f)
 
 
 # Function: 'generate' graphs and helper functions.
@@ -74,11 +89,11 @@ def _gen_property_edge(config, i):
     return edge
 
 
-def _initial_graph(config, mult, cpr):
+def _initial_graph(config, cpr):
     """Initialize a graph, before generating its triples."""
     # In property mapping mode, generate the basic structure here.
     g = Graph()
-    non = int(mult * random.choice(config.number_of_nodes))
+    non = config.rnd_number_of_nodes()
     if config.property_mode:
         nodes = _gen_property_nodes(config, cpr, non)
         edges = []
@@ -132,7 +147,7 @@ def _random_prop_triple(config, nodes, edges, cpr, plr):
         if config.voc.edge_properties and rnd_do_prop:
             key = random.choice(config.voc.edge_properties)
             value = random.choice(config.voc.values)
-            return (node, key, value)
+            return (edge, key, value)
         elif config.voc.edge_labels:
             label = random.choice(config.voc.edge_labels)
             return (edge, config.voc.rdf_type, label)
@@ -160,13 +175,12 @@ def _random_rdf_triple(config, nodes, cpr):
 
 def generate(config):
     """Generate a new graph with the given settings."""
-    cpr = random.choice(config.concept_property_ratio)
-    lpr = random.choice(config.property_label_ratio)
-    mult = random.choice(config.multiplicator)
-    g, nodes, edges = _initial_graph(config, mult, cpr)
+    cpr = config.rnd_concept_property_ratio()
+    lpr = config.rnd_property_label_ratio()
+    g, nodes, edges = _initial_graph(config, cpr)
 
     # Generate the required number of triples.
-    for i in range(0, int(mult * random.choice(config.number_of_triples))):
+    for i in range(0, config.number_of_triples):
         if config.property_mode:
             draw = _random_prop_triple(config, nodes, edges, cpr, lpr)
         else:

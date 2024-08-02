@@ -191,8 +191,21 @@ class ValidationS2S(
     assert(actualSOut.isRight, "internal failure")
 
     // If enabled, generate data for external method validation tooling.
+
     if !suppressValidation && generateValidation then
-      generateValidationData(actualSOutS.toOption.get._2, actualSOut.toOption.get, name)
+      generateValidationData(
+        // AlgorithmInput
+        actualSOutS.toOption.get._2,
+        // Output shapes (expected and actual).
+        // For succeeding cases: exactly/atleast are subset of actual.
+        // For failing cases: Includes their union; requires investigation.
+        exactlyOut.toOption.get
+          .union(atleastOut.toOption.get)
+          .union(actualSOut.toOption.get),
+        // Name for the test.
+        name,
+        // The Log.
+        log)
 
     val success = for
       e <- exactlyOut
@@ -226,8 +239,8 @@ class ValidationS2S(
         assert(t, msg)
         t
 
-    // Print debugging info if success or failure but verbose is not set.
-    if !verbose || success.getOrElse(false) && debugging then log.print(true, true, true)
+    // Print debugging info if success or failure but verbose is not set; use shardikMode if explicitly debugging.
+    if !verbose || success.getOrElse(false) && debugging then log.print(true, true, true, shardikMode=debugging)
 
   /** Run an entailment test case. */
   def entails(
@@ -243,30 +256,29 @@ class ValidationS2S(
     // // Obtain the test result and log.
     val (axiomsS, log) = constructAxiomsAndInput(q, sin)
 
-    // // Remove internal scope.
-    val axioms = axiomsS.map(sa => descope(sa._1))
+    // Assert that no internal failure occurred.
+    assert(axiomsS.isRight, "internal failure")
+    val axioms = axiomsS.toOption.get._1
 
     // Parse the test case (and move T to Scope.Template).
-    val entailsOut = parseSHACLShapes(entails)
-    val notOut = parseSHACLShapes(not)
+    val entailsOut =
+      parseSHACLShapes(entails).map(s => s.map(_.inScope(Scope.Out)(axioms.scopes)))
+    val notOut =
+      parseSHACLShapes(not).map(s => s.map(_.inScope(Scope.Out)(axioms.scopes)))
 
     // Parsing and input error assertions.
     // (Only for detecting errors in tests early.)
     assert(entailsOut.isRight, "error in test case: exactlyOut")
     assert(notOut.isRight, "error in test case: notOut")
 
-    // Assert that no internal failure occurred.
-    assert(axiomsS.isRight, "internal failure")
-
     val success = for
       e <- entailsOut
       n <- notOut
-      a <- axioms
     yield
       // Take the 'entailsOut' shapes from the test case as candidates,
       // and apply the algorithm filtering step, using the inferred axioms.
       implicit val scopes = Scopes.default("-")
-      val out = Algorithm.filter(e.union(n), a, Log())(scopes, shar)
+      val out = Algorithm.filter(e.union(n), axioms, Log())(scopes, shar)
       assert(out.isRight, "internal failure (filter)")
 
       // Assert that exactly all virtual candidates were entailed.
@@ -279,18 +291,22 @@ class ValidationS2S(
 
       t1 && t2
 
+    // Print debugging info if success or failure but verbose is not set, shardik if explicitly debugging.
+    if !verbose || success.getOrElse(false) && debugging then log.print(true, true, true, shardikMode=debugging)
+
     // If enabled, generate data for external method validation tooling.
     // Note: Here, we use the 'expected' shapes, since we only infer axioms.
     // This validation case is thus only valid if this test case passes, and
     // we only produce the validation output in this case.
     if !suppressValidation && generateValidation && success.getOrElse(false) then
-      generateValidationData(axiomsS.toOption.get._2, entailsOut.toOption.get, name)
+      generateValidationData(axiomsS.toOption.get._2, entailsOut.toOption.get, name, log)
 
-  def generateValidationData(input: AlgorithmInput, output: Set[SHACLShape], name: String): Unit =
+  def generateValidationData(input: AlgorithmInput, output: Set[SHACLShape], name: String, log: Log): Unit =
       // Produce all validation data.
       val query = input.formatQuery(shar.state)
       val sin = input.formatShapes.toOption.get
       val sout = JsonLDParser.unparse(output.map(_.dropScope(input.getScopes))).toOption.get
+      val shardikKB = log.format(false, false, false, true)
 
       val cvoc = input.vocabularyIn.concepts
         .map(_.dropScope(input.getScopes)).mkString("\n").filterNot(c => c == '<' || c == '>')
@@ -299,21 +315,18 @@ class ValidationS2S(
       val ivoc = input.vocabularyIn.nominals
         .map(_.dropScope(input.getScopes)).mkString("\n").filterNot(c => c == '<' || c == '>')
 
-      val eccq = input.isECCQ
-      val subdir = if eccq then "eccq/" else "sccq/"
-      val qname = if eccq then "query.gcore" else "query.sparql"
+      val (subdir, qname) =
+        if input.isECCQ
+        then ("eccq/", "query.gcore")
+        else ("sccq/", "query.sparql")
 
       // The base path of the 'validation' directory.
-      val base = dataPath ++ subdir ++ ValidationS2S.TestId.next()
+      val base = dataPath ++ subdir ++ ValidationS2S.TestId.next(name)
 
       // Query.
       val qfile = Paths.get(base ++ "/" ++ qname)
       Files.createDirectories(qfile.getParent())
       Files.write(qfile, query.getBytes(StandardCharsets.UTF_8))
-
-      // Corresponding test case.
-      val namefile = Paths.get(base ++ "/name")
-      Files.write(namefile, name.getBytes(StandardCharsets.UTF_8))
 
       // Input shapes.
       val isfile = Paths.get(base ++ "/in.json")
@@ -333,9 +346,16 @@ class ValidationS2S(
       val ivfile = Paths.get(base ++ "/nominals.vocabulary")
       Files.write(ivfile, ivoc.getBytes(StandardCharsets.UTF_8))
 
+      // Executable shardik KB.
+      val kbfile = Paths.get(base ++ "/shardik.kb")
+      Files.write(kbfile, shardikKB.getBytes(StandardCharsets.UTF_8))
+
 object ValidationS2S:
   private object TestId:
-      private var count = 0
-      def next(): String =
-        count += 1
-        s"test${count}"
+      private var count: Map[String, Int] = Map()
+      /** Make a unique name from actual test name and running ID. */
+      def next(name: String): String =
+        val c = count.getOrElse(name, 0)
+        count = count + (name -> (c + 1))
+        if c == 0 then s"${name}"
+        else s"${name}_${c}"

@@ -31,6 +31,12 @@ class Vocabulary:
     elp_raw = "https://github.com/softlang/s2s/elabel"
     nlp_raw = "https://github.com/softlang/s2s/nlabel"
 
+    # Concepts and properties that are always defined.
+    a_ekey = "https://github.com/softlang/s2s/ekey/genkey-trolle"
+    a_nkey = URIRef("https://github.com/softlang/s2s/nkey/genkey-trolln")
+    a_elab = URIRef("https://github.com/softlang/s2s/elabel/genlab-trolle")
+    a_nlab = URIRef("https://github.com/softlang/s2s/nlabel/genlab-trolln")
+
     # Basic built-in uris.
     rdf_type_raw = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
     rdf_type = URIRef(rdf_type_raw)
@@ -54,15 +60,19 @@ class Vocabulary:
 
         self.edge_properties = [
             URIRef(p) for p in self.raw_properties if self.epp_raw in p]
+        self.edge_properties.append(URIRef(self.a_ekey))
 
         self.node_properties = [
             URIRef(p) for p in self.raw_properties if self.npp_raw in p]
+        self.node_properties.append(URIRef(self.a_nkey))
 
         self.edge_labels = [
             URIRef(c) for c in self.raw_concepts if self.elp_raw in c]
+        self.edge_labels.append(URIRef(self.a_elab))
 
         self.node_labels = [
             URIRef(c) for c in self.raw_concepts if self.nlp_raw in c]
+        self.node_labels.append(URIRef(self.a_nlab))
 
     def _load_dim(self, path):
         """Load one thing from a file; might be empty."""

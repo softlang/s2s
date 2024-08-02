@@ -161,36 +161,57 @@ class Log(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true,
       prettyScopes: Boolean = false,
-      prettySystemMappings: Boolean = true
+      shardikMode: Boolean = false
   ): Unit =
-    println(format(hidecolon, prettyVariableConcepts, prettyScopes, prettySystemMappings))
+    println(format(hidecolon, prettyVariableConcepts, prettyScopes, shardikMode))
 
   /** Format this log and return String. */
   def format(
       hidecolon: Boolean = false,
       prettyVariableConcepts: Boolean = true,
       prettyScopes: Boolean = true,
-      prettySystemMappings: Boolean = true
+      shardikMode: Boolean = false
   ): String =
     val t1 =
-      if prettyVariableConcepts then LOG.replaceAll("shar", "?")
+      if !shardikMode && prettyVariableConcepts then LOG.replaceAll("shar", "?")
       else LOG
 
     val t2 =
-      if hidecolon then t1.replaceAll(":", "")
+      if !shardikMode && hidecolon then t1.replaceAll(":", "")
       else t1
 
     val t3 =
-      if prettyScopes then scopes.prettyScopeTokens(t2)
+      if !shardikMode && prettyScopes then scopes.prettyScopeTokens(t2)
       else t2
 
-    // val t4 =
-    //   if prettySystemMappings then 
-    //     t3.replaceAll("nodeToEdge", "nte")
-    //       .replaceAll("edgeToNode", "etn")
-    //   else t3
+    // Note: This is an ungodly hack.
+    // 'shardikMode' is for debugging test cases.
+    // Do not use for anything else.
+    val t4 =
+      var isOut = false
+      if shardikMode then t3.linesIterator.map(liner =>
+        val line = scopes.prettyScopeTokens(liner, "_o")
 
-    t3
+        if line.contains("S_out") then
+          isOut = true
+
+        if line.startsWith("  ") && !line.startsWith("    ") then
+          val l1 = line.drop(2)
+            .replaceAll(",", "")
+            .replace("le:", ":")
+            .replace("ln:", ":")
+            .replace("shar", "")
+          val l2 = if isOut then "⊢ " ++ l1
+          else l1
+          l2
+        else if line.isEmpty() then
+          ""
+        else
+          "-- " ++ line
+      ).mkString("\n") ++ "result.\n"
+      else t3
+
+    t4
 
   /** Get log as a string. */
   override def toString: String = LOG

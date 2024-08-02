@@ -70,4 +70,4 @@ class PropertyECCQTests extends ValidationSuite("e_props_"):
     // TODO This is wrong.
     "∃-kn:name.⊤ ⊑ ∃kn:name.ln:A",
   )
-  includes("", noshapes, q5, noshapes, debugging = true)
+  includes("5_0", noshapes, q5, noshapes, debugging = true)

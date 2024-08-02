@@ -7,6 +7,7 @@ import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
 
 import org.softlang.s2s.core.Var
+import org.softlang.s2s.core.inScope
 
 case class Vocabulary(
     variables: Set[Var],
@@ -62,7 +63,16 @@ case class Vocabulary(
       n.contains(s)
     )
 
+  /** Apply scope to all things in this vocabulary. */
+  def inScope(scope: Scope)(implicit scopes: Scopes): Vocabulary =
+    Vocabulary(
+      variables,
+      concepts.map(_.inScope(scope).asInstanceOf[NamedConcept]),
+      properties.map(_.inScope(scope).asInstanceOf[NamedRole]),
+      nominals.map(_.inScope(scope)),
+    )
+
 object Vocabulary:
   /** An empty vocabulary. */
-  def empty: Vocabulary = 
+  def empty: Vocabulary =
     Vocabulary(Set(), Set(), Set(), Set())

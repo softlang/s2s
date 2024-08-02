@@ -103,6 +103,7 @@ class Algorithm(
     // DCA for query template.
     log.profileStart("build-dca-t")
 
+    // TODO: Consider *all* components / defs, not just the patterns.
     val dcaH = ClosedConceptAssumptionTemplate(template, input).axioms
     log.debug("CWA(q.H), step 2.", dcaH)
 
@@ -117,6 +118,7 @@ class Algorithm(
 
     log.profileEnd("build-cwa-t")
 
+    // TODO: Also change to Equality? Is this correct?
     val rule6: Set[Axiom] =
       if !input.isECCQ then Set()
       else
@@ -128,18 +130,21 @@ class Algorithm(
           nv <- input.nodeVariables
           c <- nvC
           lhs <- nv.asConceptComponent(input.filters, c)
-        yield Subsumption(lhs, Intersection(nv.asConcept, c))
+        //yield Subsumption(lhs, Intersection(nv.asConcept, c))
+        yield Equality(lhs, Intersection(nv.asConcept, c))
 
         val ecs: Set[Axiom] = for
           ev <- input.edgeVariables
           c <- evC
           lhs <- ev.asConceptComponent(input.filters, c)
-        yield Subsumption(lhs, Intersection(ev.asConcept, c))
+        //yield Subsumption(lhs, Intersection(ev.asConcept, c))
+        yield Equality(lhs, Intersection(ev.asConcept, c))
 
         ncs.union(ecs)
 
     log.debug("CWA(q.H), step 6.", rule6)
 
+    // TODO: Also change to Equality? Is this correct?
     val rule7: Set[Axiom] =
       if !input.isECCQ then Set()
       else
@@ -151,13 +156,15 @@ class Algorithm(
           nv <- input.nodeVariables
           p <- nvP
           (lhs, o) <- nv.asRoleObjectComponent(input.filters, p)
-        yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
+        //yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
+        yield Equality(lhs, Intersection(nv.asConcept, Existential(p, o)))
 
         val eps: Set[Axiom] = for
           ev <- input.edgeVariables
           p <- evP
           (lhs, o) <- ev.asRoleObjectComponent(input.filters, p)
-        yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
+        //yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
+        yield Equality(lhs, Intersection(ev.asConcept, Existential(p, o)))
 
         nps.union(eps)
 
@@ -186,6 +193,14 @@ class Algorithm(
       pattern = p,
       log)
 
+  /** Get the vocabulary for candidate generation. */
+  def candidateVocabulary: Vocabulary =
+    // In ECCQ queries, must consider additional names.
+    if input.isECCQ then
+      input.vocabulary.inScope(Scope.Out)
+    // For SCCQ, the template vocabulary suffices.
+    else input.template.map(_.vocabulary).getOrElse(Vocabulary.empty)
+
   /** Run the algorithm, obtaining a full set of shapes. */
   def shapes: S2STry[Set[SHACLShape]] =
     log.profileStart("candidates")
@@ -196,10 +211,9 @@ class Algorithm(
       //extraClausesAxioms <- axiomsInternal()
       //extraClauses = extraClausesAxioms._1
       axioms <- axiomsInternal()
-      // Generate candidate shapes from template.
-      t <- input.template
       canGen = CandidateGenerator(
-        t.vocabulary,
+        // Generate candidate shapes from template.
+        candidateVocabulary,
         heuristic = config.shapeHeuristic,
         excludeTarget = Set(GCORE.nodeToEdgeIri, GCORE.edgeToNodeIri)
       )(scopes)
