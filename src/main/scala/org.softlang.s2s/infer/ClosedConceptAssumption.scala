@@ -29,10 +29,9 @@ class ClosedConceptAssumptionTemplate(
 
   override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
     if input.isECCQ then
-      val osi = input.vocabularyIn.concepts.map(_.inScope(Scope.Out))
       val asi = a.concepts.map(_.asInstanceOf[Concept])
 
-      val additional: Set[Axiom] = osi.diff(asi).flatMap { _ match
+      val additional: Set[Axiom] = input.outConcepts.diff(asi).flatMap { _ match
         case l @ NamedConcept(c) =>
           Set(Equality(l, Concept.unionOf(gens(c, l))))
         case _ => Set()

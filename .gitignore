@@ -3,6 +3,7 @@
 *.zip
 *.pdf
 validation/data
+validation/out
 validation/venv
 validation/__*
 validation/*.csv

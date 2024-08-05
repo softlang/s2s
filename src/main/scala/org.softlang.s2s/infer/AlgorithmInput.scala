@@ -1,8 +1,11 @@
 package org.softlang.s2s.infer
 
 import de.pseifer.shar.core.BackendState
+import de.pseifer.shar.dl.Concept
 
 import org.softlang.s2s.core._
+import org.softlang.s2s.core.{inScope => cinScope}
+
 import org.softlang.s2s.query.AtomicPatterns
 import org.softlang.s2s.query.AtomicPattern
 import org.softlang.s2s.query.vocabulary
@@ -140,6 +143,15 @@ enum AlgorithmInput:
         q.toSCCQ
         .map(_.eccq.get.filter)
         .getOrElse(Set())
+
+  /** Concepts in out-scope that exist in G-CORE result. */
+  val outConcepts: Set[Concept] =
+    this match
+      case GCOREAxioms(q, _) =>
+        val ic = vocabularyIn.concepts.map(_.cinScope(Scope.Out))
+        val fc = FilterPattern.removalVocabulary(filters).concepts.map(_.cinScope(Scope.Out))
+        ic.diff(fc)
+      case _ => Set()
 
   /** Format the query for storing to a file. */
   def formatQuery(implicit state: BackendState): String = this match
