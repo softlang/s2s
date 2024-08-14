@@ -189,28 +189,33 @@ class Log(
     // Do not use for anything else.
     val t4 =
       var isOut = false
-      if shardikMode then t3.linesIterator.map(liner =>
-        val line = scopes.prettyScopeTokens(liner, "_o")
+      if shardikMode then
+        //val trr = t3.linesIterator.map(line =>
+        //  if line.contains("=") && !line.endsWith("=") && !line.endsWith("∅")
+        //  then line.replace("=", "=\n")
+        //  else line).mkString("\n")
+        t3.linesIterator.map(liner =>
+          val line = scopes.prettyScopeTokens(liner, "_o")
 
-        if line.contains("S_out") then
-          isOut = true
+          if line.contains("S_out") then
+            isOut = true
 
-        if line.startsWith("  ") && !line.startsWith("    ") then
-          val l1 = line.drop(2)
-            .replaceAll(",", "")
-            .replace("le:", ":")
-            .replace("ln:", ":")
-            .replace("shar", "")
-          val l2 = if isOut then "⊢ " ++ l1
-          else l1
-          l2
-        else if line.isEmpty() then
-          ""
-        else
-          "-- " ++ line
-      ).mkString("\n") ++ "result.\n"
+          if line.startsWith("  ") && !line.startsWith("    ") then
+            val l1 = line.drop(2)
+              .replaceAll(",", "")
+              .replace("le:", ":")
+              .replace("ke:", ":")
+              .replace("ln:", ":")
+              .replace("kn:", ":")
+              .replace("shar", "")
+            if isOut then "⊢ " ++ l1
+            else l1
+          else if line.isEmpty() then
+            ""
+          else
+            "-- " ++ line
+        ).mkString("\n") ++ "result.\n\n"
       else t3
-
     t4
 
   /** Get log as a string. */

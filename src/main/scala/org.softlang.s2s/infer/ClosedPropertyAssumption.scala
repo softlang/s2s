@@ -22,7 +22,8 @@ class ClosedPropertyAssumption(
 
   val rightScope = targetScope
 
-  val template: Boolean = targetScope == Scope.Out
+  // TODO Fix? Correct?
+  val template: Boolean = true // targetScope == Scope.Out
 
   private def axiomize(
       all: Set[Concept],
@@ -43,7 +44,7 @@ class ClosedPropertyAssumption(
 
         // If this is a extended query, construct additional Vx/Ox concepts.
         if template && input.isECCQ then
-          val vx = 
+          val vx =
             // If inverse, use gen objects instead of variable concepts.
             if inverse then
               if Key.isNodeKey(role.r) then
@@ -55,6 +56,7 @@ class ClosedPropertyAssumption(
                   v.asRoleComponent(input.filters, role).toSet
                 )
               else Set()
+            // If not inverse, use variable concepts.
             else
               if Key.isNodeKey(role.r) then
                 input.nodeVariables.map(_.asConcept)
@@ -68,7 +70,7 @@ class ClosedPropertyAssumption(
             Subsumption(Concept.unionOf(rhs), ex)
           )
 
-        // Otherwise, just construct the equality of ex and rhs.
+        // Otherwise (not ECCQ), just construct the equality of ex and rhs.
         else
           // ∃𝑝.C ≡ D1 ⊔ ... ⊔ Dn
           List(Equality(ex, Concept.unionOf(rhs)))
@@ -151,11 +153,11 @@ class ClosedPropertyAssumption(
       }
       if rhs.isEmpty then Set()
       else if template && input.isECCQ then
-        val vxp = 
+        val vxp =
           if Key.isNodeKey(p.r) then
-            input.nodeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet) 
+            input.nodeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet)
           else if Key.isEdgeKey(p.r) then
-            input.edgeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet) 
+            input.edgeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet)
           else Set()
 
         Set(
@@ -206,15 +208,15 @@ class ClosedPropertyAssumption(
       }
       if rhs.isEmpty then Set()
       else if template && input.isECCQ then
-        val make = (x: Var) => 
-          for 
+        val make = (x: Var) =>
+          for
             (pc, oc) <- x.asRoleObjectComponent(input.filters, p)
           yield Intersection(oc, Existential(Inverse(p), pc))
-        val vxp = 
+        val vxp =
           if Key.isNodeKey(p.r) then
             input.nodeVariables.flatMap(make)
           else if Key.isEdgeKey(p.r) then
-            input.edgeVariables.flatMap(make) 
+            input.edgeVariables.flatMap(make)
           else Set()
         Set(
           Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs ++ vxp))

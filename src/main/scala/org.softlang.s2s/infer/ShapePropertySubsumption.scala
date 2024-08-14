@@ -13,41 +13,51 @@ import org.softlang.s2s.query._
 
 class ShapePropertySubsumption(
     // The input pattern.
-    pattern: AtomicPatterns
+    pattern: AtomicPatterns,
     // Input shapes.
     // shapes: Set[SimpleSHACLShape]
+    isECCQ: Boolean
 )(implicit scopes: Scopes)
     extends PropertySubsumptionCommon(pattern):
 
   import AtomicPattern._
 
-  // TODO: Shapes targeting roles can widen unconstrained-ness.
-
-  // Example: ∃:p.T ⊑ :A and the pattern "?x :p ?y . ?x a :A"
-
-  // TODO: What about constraints that effectively do not change the result?
+  // Extension: Shapes targeting roles can widen unconstrained-ness.
+  //    e.g., ∃:p.T ⊑ :A and the pattern "?x :p ?y . ?x a :A"
+  // Extension: What about constraints that effectively do not change the result?
 
   def axioms: Set[Axiom] =
-    patternConstraints.toSet.flatMap { x =>
-      x match
-        case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.In)))
-        case (n, Some(c)) =>
-          // Check that (all pairs) of variables are unconstrained.
-          if c.forall(ci =>
-              pattern
-                .filter(_.variables.contains(ci._1))
-                .size == 1 && pattern
-                .filter(_.variables.contains(ci._2))
-                .size == 1
-              // Since loop is always tighter than the expressed shape:
-                && ci._1 != ci._2
-            )
-            // then the role is unconstrained.
-          then
-            Set(
-              RoleSubsumption(n, n.inScope(Scope.In)),
-              RoleSubsumption(n.inScope(Scope.In), n)
-            )
-          // otherwise, the role is constrained.
-          else Set(RoleSubsumption(n, n.inScope(Scope.In)))
-    }
+    // TODO: Is this correct?!
+    // Notion: Roles (properties) are never 'constrained'.
+    if isECCQ then
+      patternConstraints.toSet.flatMap { x =>
+          x match
+            case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.In)))
+            case (n, Some(c)) =>
+              Set(RoleSubsumption(n, n.inScope(Scope.In)),
+                  RoleSubsumption(n.inScope(Scope.In), n))
+      }
+    else
+      patternConstraints.toSet.flatMap { x =>
+        x match
+          case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.In)))
+          case (n, Some(c)) =>
+            // Check that (all pairs) of variables are unconstrained.
+            if c.forall(ci =>
+                pattern
+                  .filter(_.variables.contains(ci._1))
+                  .size == 1 && pattern
+                  .filter(_.variables.contains(ci._2))
+                  .size == 1
+                // Since loop is always tighter than the expressed shape:
+                  && ci._1 != ci._2
+              )
+              // then the role is unconstrained.
+            then
+              Set(
+                RoleSubsumption(n, n.inScope(Scope.In)),
+                RoleSubsumption(n.inScope(Scope.In), n)
+              )
+            // otherwise, the role is constrained.
+            else Set(RoleSubsumption(n, n.inScope(Scope.In)))
+      }

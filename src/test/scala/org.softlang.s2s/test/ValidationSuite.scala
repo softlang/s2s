@@ -126,15 +126,17 @@ abstract class ValidationSuite(
   /** A GCORE query from just the pattern and template. */
   def gcore(
       construct: String,
-      matc: String,
+      matc: String = "",
       set: String = "",
       remove: String = "",
       where: String = ""): String =
+    val rmatc =
+      if matc == "" then construct else matc
     List(
       s"CONSTRUCT $construct",
       if set != "" then s"SET $set" else "",
       if remove != "" then s"REMOVE $remove" else "",
-      s"MATCH $matc",
+      s"MATCH $rmatc",
       if where != "" then s"WHERE $where" else ""
     ).mkString(" ")
 
@@ -188,7 +190,9 @@ class ValidationS2S(
     assert(notOut.isRight, "error in test case: notOut")
 
     // Assert that no internal failure occurred.
-    assert(actualSOut.isRight, "internal failure")
+    assert(
+      actualSOut.isRight,
+      "internal failure: " ++ actualSOut.left.getOrElse("").toString)
 
     // If enabled, generate data for external method validation tooling.
 
@@ -219,7 +223,7 @@ class ValidationS2S(
       val mi = e.union(a).diff(aout)
       val msg = List(
         (true, "\n"),
-        (true, log.format(hidecolon = true)),
+        (true, log.format(hidecolon = false, shardikMode=debugging)),
         (ob.nonEmpty, s"Obtained unexpectedly:\n${RED}${formatResults(ob)}${RESET}"),
         (fo.nonEmpty, s"Obtained, even though forbidden:\n${RED}${formatResults(fo)}${RESET}"),
         (mi.nonEmpty, s"Missing results:\n${RED}${formatResults(mi)}${RESET}"),
@@ -257,7 +261,9 @@ class ValidationS2S(
     val (axiomsS, log) = constructAxiomsAndInput(q, sin)
 
     // Assert that no internal failure occurred.
-    assert(axiomsS.isRight, "internal failure")
+    assert(
+      axiomsS.isRight,
+      "internal failure: " ++ axiomsS.left.getOrElse("").toString)
     val axioms = axiomsS.toOption.get._1
 
     // Parse the test case (and move T to Scope.Template).
@@ -278,16 +284,25 @@ class ValidationS2S(
       // Take the 'entailsOut' shapes from the test case as candidates,
       // and apply the algorithm filtering step, using the inferred axioms.
       implicit val scopes = Scopes.default("-")
-      val out = Algorithm.filter(e.union(n), axioms, Log())(scopes, shar)
+      val testing = e.union(n)
+      val out = Algorithm.filter(testing, axioms, Log())(scopes, shar)
       assert(out.isRight, "internal failure (filter)")
-
-      // Assert that exactly all virtual candidates were entailed.
-      val t1 = out.toOption.get == e
-      assert(t1, "not all shapes were entailed")
 
       // Assert, that none of the notOut axioms were entailed.
       val t2 = out.toOption.get.intersect(n).isEmpty
-      assert(t2, "shapes were entailed, that should not have been")
+      val wrong = testing.intersect(out.toOption.getOrElse(Set()))
+      val msg2 =
+        log.format(hidecolon = false, shardikMode=debugging)
+        ++ s"Wrongly entailed:\n${RED}${formatResults(wrong)}${RESET}\n"
+      assert(t2, msg2)
+
+      // Assert that exactly all virtual candidates were entailed.
+      val t1 = out.toOption.get == e
+      val missing = e.diff(out.toOption.getOrElse(Set()))
+      val msg =
+        log.format(hidecolon = false, shardikMode=debugging)
+        ++ s"Not entailed:\n${RED}${formatResults(missing)}${RESET}\n"
+      assert(t1, msg)
 
       t1 && t2
 

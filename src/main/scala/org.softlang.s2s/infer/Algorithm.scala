@@ -67,9 +67,6 @@ class Algorithm(
 
     log.profileStart("build-cwa-p")
 
-    // TODO Should this step be extended in the same way as Step 5?
-    // Why should it not be? Only because it is quite irrelevant?
-    // I think the produced axioms are false!!! TODO
     val cwaP = ClosedPropertyAssumption(pattern, Scope.Med, input).axioms
     log.debug("CWA(q.P), step 4.", cwaP)
 
@@ -79,7 +76,7 @@ class Algorithm(
 
     log.profileStart("build-properties")
 
-    val shapeProps = ShapePropertySubsumption(pattern).axioms
+    val shapeProps = ShapePropertySubsumption(pattern, input.isECCQ).axioms
     log.debug("RS(q, S_in)", shapeProps)
 
     log.profileEnd("build-properties")
@@ -103,7 +100,6 @@ class Algorithm(
     // DCA for query template.
     log.profileStart("build-dca-t")
 
-    // TODO: Consider *all* components / defs, not just the patterns.
     val dcaH = ClosedConceptAssumptionTemplate(template, input).axioms
     log.debug("CWA(q.H), step 2.", dcaH)
 
@@ -113,12 +109,12 @@ class Algorithm(
 
     log.profileStart("build-cwa-t")
 
+    // TODO: Must consider all names in vocabulary, not just vocabulary of H.
     val cwaH = ClosedPropertyAssumption(template, Scope.Out, input).axioms
     log.debug("CWA(q.H), step 5.", cwaH)
 
     log.profileEnd("build-cwa-t")
 
-    // TODO: Also change to Equality? Is this correct?
     val rule6: Set[Axiom] =
       if !input.isECCQ then Set()
       else
@@ -144,11 +140,15 @@ class Algorithm(
 
     log.debug("CWA(q.H), step 6.", rule6)
 
-    // TODO: Also change to Equality? Is this correct?
     val rule7: Set[Axiom] =
       if !input.isECCQ then Set()
       else
-        val vP = input.vocabulary.properties.map(_.cinScope(Scope.In)).map(_.asInstanceOf[NamedRole])
+        val vP = input
+          .vocabulary
+          .properties
+          .map(_.cinScope(Scope.In))
+          .map(_.asInstanceOf[NamedRole])
+
         val nvP = vP.filter(r => Key.isNodeKey(r.r))
         val evP = vP.filter(r => Key.isEdgeKey(r.r))
 
@@ -166,7 +166,19 @@ class Algorithm(
         //yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
         yield Equality(lhs, Intersection(ev.asConcept, Existential(p, o)))
 
-        nps.union(eps)
+        // Explicit subsumption for shape properties.
+        // or the form ∃:age_o_o.⊤ ≡ :x_age (where 'age' occurrs in shapes only).
+        // TODO: Review
+        val subsp: Set[Axiom] = for
+          nv <- input.nodeVariables
+          p <- shapeProperties.getOrElse(Set())
+          (rhs, o) <- nv.asRoleObjectComponent(input.filters, p)
+        yield
+            Subsumption(
+              Existential(p.cinScope(Scope.Out), Top),
+              rhs)
+
+        nps.union(eps).union(subsp)
 
 
     log.debug("CWA(q.H), step 7.", rule7)
@@ -268,12 +280,15 @@ class Algorithm(
       templateAxioms <- processTemplate(log)
       // Generate axioms for properties.
       props <- extendProperties(mappingSubs, log)
+      // Bonus properties for ECCQ queries (properties).
+      bonusP <- bonusProperties(log)
       // Finally, join all axioms inferred here.
       axioms = patternAxioms
         .join(shapeAxioms)
         .join(mappingSubs)
         .join(templateAxioms)
         .join(props)
+        .join(bonusP)
     yield axioms
 
     log.profileEnd("build")
@@ -309,6 +324,54 @@ class Algorithm(
         props
       }
     yield Axioms(props, scopes)
+
+  /** Get all properties only mentioned in shapes.  */
+  def shapeProperties: S2STry[Set[NamedRole]] =
+      for
+        p <- input.pattern
+        t <- input.template
+      yield
+        // Exclude names that do occur in pattern or template (handled elsewhere).
+        val except = p.vocabulary.properties.map(_.cinScope(Scope.In)).union(
+          t.vocabulary.properties.map(_.cinScope(Scope.In))
+        )
+        input
+          .vocabulary
+          .properties
+          .map(_.cinScope(Scope.In))
+          .diff(except)
+          // Lost by scoping.
+          .map(_.asInstanceOf[NamedRole])
+          .toSet
+
+  /** Generate additional axioms from property subsumptions for ECCQ queries. */
+  def bonusProperties(log: Log): S2STry[Axioms] =
+    if input.isECCQ then
+      for
+        these <- shapeProperties
+      yield
+        val newps: Set[Axiom] = these.flatMap { p =>
+          // TODO review
+          Set(
+            RoleSubsumption(p.cinScope(Scope.Out), p),
+            RoleSubsumption(p, p.cinScope(Scope.Out)))
+        }
+        log.debug("bProp(q)", newps)
+        Axioms(newps, scopes)
+    else
+      Right(Axioms.empty(scopes))
+
+    // for
+    //   p <- input.pattern
+    //   t <- input.template
+    //   props = {
+    //     log.profileStart("build-properties")
+    //     val props = PropertySubsumption(p, mappingSubs.toSet, t).axioms
+    //     log.debug("RS(q)", props)
+    //     log.profileEnd("build-properties")
+    //     props
+    //   }
+    // yield Axioms(props, scopes)
 
   /** Extend construct (set clauses), if GCORE query. */
   //def extendConstruct(axioms: Axioms, log: Log): S2STry[Set[GCORE.SetClause]] = input match

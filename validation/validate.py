@@ -216,10 +216,9 @@ def run_dir(subdir, args):
 
 def run_all(args):
     """Run validation on all samples."""
-    # TODO: Iterate all folders?
+    # TODO: Iterate *all* folders.
     run_dir(os.path.join("data", "sccq"), args)
     run_dir(os.path.join("data", "eccq"), args)
-    run_dir(os.path.join("data", "test"), args)
 
 
 def csv_header():

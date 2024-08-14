@@ -92,7 +92,8 @@ class GCORE(
               AtomicPattern.VPL(vx, k.toIri(node = nodeVariables.contains(vx)), v.toIri)
             }).concat(
             keys.map { k =>
-              AtomicPattern.VPV(vx, k.toIri(node = nodeVariables.contains(vx)), Variable(x.name ++ "_" ++ k.keyname).toVar)
+              AtomicPattern.VPV(vx, k.toIri(node = nodeVariables.contains(vx)),
+                                Variable(k.keyname ++ "_" ++ x.name).toVar)
             }).concat(
               // TODO: NEW TEST ME
               if realnode then List(AtomicPattern.VAC(vx, GCORE.node))

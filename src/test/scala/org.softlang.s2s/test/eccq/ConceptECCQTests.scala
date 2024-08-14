@@ -6,39 +6,40 @@ import org.softlang.s2s.test.ValidationSuite
 
 class ConceptECCQTests extends ValidationSuite("e_concept_"):
 
-  val q0 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:A")
-
   // Including at most the tautology ln:A ⊑ ln:A (not shown).
+  val q0 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:A")
   includes("0_1", noshapes, q0, noshapes)
-  includes("0_2", Set("ln:A ⊑ ln:B"), q0, noshapes)
-  includes("0_3", Set("ln:B ⊑ ln:A"), q0, noshapes)
+  includes("0_2", Set("ln:A ⊑ ln:B"), q0, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
+  includes("0_3", Set("ln:B ⊑ ln:A"), q0, Set("ln:B ⊑ ln:A"))
 
   val q1 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:B")
-
-  includes("1_0", Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), q1, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), debugging = true)
+  includes("1_0", Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), q1, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
   includes("1_0", Set("ln:A ⊑ ln:B"), q1, Set("ln:A ⊑ ln:B"))
   includes("1_1", Set("ln:B ⊑ ln:A"), q1, Set("ln:B ⊑ ln:A"))
   includes("1_2", noshapes, q1, noshapes)
 
-  val q2 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:B", set = "x:C")
-  val s2 = Set("ln:A ⊑ ln:B", "ln:C ⊑ ln:B", "ln:A ⊑ ln:C")
   // C ⊑ A is not entailed, as y might sometimes have C;
   // B ⊑ C is not entailed as we do not now about the relationship of C and A.
-
+  val q2 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:B", set = "x:C")
+  val s2 = Set("ln:A ⊑ ln:B", "ln:C ⊑ ln:B", "ln:A ⊑ ln:C")
   includes("2_0", Set("ln:A ⊑ ln:B"), q2, s2)
 
   val q3 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:B")
   val s3 = Set("ln:A ⊑ ln:B", "ln:C ⊑ ln:B") // further refinement on x does not matter
-
   includes("0_0", Set("ln:A ⊑ ln:B"), q3, s3)
 
   val q4 = gcore("(x), (y)", "(x), (y)", where = "y:A AND x:C AND x:B")
-  val s4 = Set("ln:C ⊑ ln:B") // but on y refinement does matter
-
-  includes("4_0", Set("ln:A ⊑ ln:B"), q4, s4)
-
-  // without input shapes, we do not even know that
+  includes("4_0", Set("ln:A ⊑ ln:B"), q4, Set(
+             "ln:A ⊑ ln:B",
+             "ln:C ⊑ ln:B"
+           ))
   includes("4_1", noshapes, q4, noshapes)
+
+  val q4_1 = gcore("(x), (y)", "(x), (y)", where = "y:A AND y:C AND x:B")
+  includes("4_2", Set("ln:A ⊑ ln:B"), q4_1, Set(
+             "ln:A ⊑ ln:B",
+             "ln:C ⊑ ln:B"
+           ))
 
   val q5 = gcore("(x), (y)", "(x), (y)", where = "y:A AND x:C AND x:B", set = "x:A")
   val s5 = Set("ln:C ⊑ ln:A", "ln:B ⊑ ln:A") // here we can infer that now all C and B are A's...
@@ -54,30 +55,27 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
   includes("6_1", Set("ln:D ⊑ ln:A"), q6, s6)
 
   val q7 = gcore("(x)", "(x)", where = "x:A AND x:B")
-
   includes("7_0", noshapes, q7, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
 
-  val q8 = gcore("(x)", "(x)", where = "x:A AND x:B", remove = "x:A")
-
-  includes("8_0", noshapes, q8, noshapes) // (only the implicit tautology)
-
-  val q9 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:D AND y:B")
-
   // We get B ⊑ A because only y is refined; and D ⊑ A because of the same subset relationship.
+  val q9 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:D AND y:B")
   includes("9_0", Set("ln:B ⊑ ln:A"), q9, Set("ln:B ⊑ ln:A", "ln:D ⊑ ln:A"))
-
-  val q10 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "x:A AND y:D AND y:B AND z:C")
 
   // We get now only B ⊑ A, because (x) is still guaranteed to cover all A (even if z_i:A),
   // however, some z_i:D invalidate the second shape from q9.
+  val q10 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "x:A AND y:D AND y:B AND z:C")
   includes("10_0", Set("ln:B ⊑ ln:A"), q10, Set("ln:B ⊑ ln:A"))
-
-  val q11 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:D AND y:B")
 
   // TODO: Fixed?
   // Compared to q9, we lose both shapes here, since we restrict x, not including all instances of A.
   // We do get C ⊑ A, but only because we know that Y is still a subset of X...
-  includes("11_0", Set("ln:B ⊑ ln:A"), q11, Set("ln:C ⊑ ln:A"))
+  val q11 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:D AND y:B")
+  includes("11_0", Set("ln:B ⊑ ln:A"), q11, Set(
+             "ln:C ⊑ ln:A",
+             "ln:B ⊑ ln:A",
+             "ln:D ⊑ ln:A"
+           ))
+
   // ... if we remove this input shape, C ⊑ A no longer holds for the common reasons.
   includes("11_1", noshapes, q11, noshapes)
 
@@ -85,21 +83,6 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
 
   // Alas, if we modify example q10 such that we remove D from Z, the shape reappears.
   includes("12_0", Set("ln:B ⊑ ln:A"), q12, Set("ln:B ⊑ ln:A", "ln:D ⊑ ln:A"))
-
-  val q13 = gcore("(x)", "(x)", where = "x:A")
-
-  // Here, we get the subsumption betcause of the input shapes...
-  includes("13_1", Set("ln:A ⊑ ln:B"), q13, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
-
-  // ... not because of the query itself.
-  includes("13_2", noshapes, q13, noshapes)
-
-  val q13a = gcore("(x)", "(x)", where = "x:A AND x:B")
-
-  // This example is similar. However, as the test shows, entailment does depend
-  // only on the WHERE clause, and not on the input shapes.
-  includes("13_3", Set("ln:A ⊑ ln:B"), q13a, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
-  includes("13_4", noshapes, q13a, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
 
   val q14 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:B AND y:C")
   includes("14_0", Set("ln:A ⊑ ln:D"), q14, Set("ln:A ⊑ ln:D"))

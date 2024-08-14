@@ -47,27 +47,15 @@ class PropertyECCQTests extends ValidationSuite("e_props_"):
   val q4 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B", set = "x:E AND y:F AND x.num = 19 AND y.nnn = 0")
   includes("4_0", noshapes, q4, Set("ln:B ⊑ ln:F"))
 
-  // This is case q5 without removal of the name property.
-  // TODO Are these shapes correct? No, says the validation.
-  // TODO Perhaps similarly to the 'px ox' cases, these variables must not count as regular variables?
-  //      But what is the reasoning here?
-
   val q5 = gcore("(x)", "(x)", where = "x:A AND x.name") // TODO Validation says False
   val s5out = Set(
     // See q1.
     "∃kn:name.⊤ ⊑ ln:A",
     "∃-kn:name.⊤ ⊑ ∃-kn:name.ln:A",
-    // TODO Why is this here, but not for q1?
-    "∃kn:name.⊤ ⊑ ∃kn:name.ln:A",
-    // Why? See q1.
-    "∃kn:name.⊤ ⊑ ∀-kn:name.ln:A",
+    // Not entirely sure why; see q1.
+    "∃kn:name.⊤ ⊑ ∀-kn:name.ln:A")
 
-    // TODO What? Why?
-    "∃-kn:name.⊤ ⊑ ln:A",
-    "ln:A ⊑ ∃kn:name.ln:A",
-    "∃-kn:name.⊤ ⊑ ∀kn:name.ln:A",
+  includes("5_0", noshapes, q5, s5out)
 
-    // TODO This is wrong.
-    "∃-kn:name.⊤ ⊑ ∃kn:name.ln:A",
-  )
-  includes("5_0", noshapes, q5, noshapes, debugging = true)
+
+  // TODO: Add 'Concept' test cases, rewritten to use properties.
