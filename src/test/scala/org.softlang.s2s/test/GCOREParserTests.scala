@@ -278,3 +278,12 @@ class GCOREParserTests extends munit.FunSuite:
     parses("CONSTRUCT (x) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person", 
       Construct(Set(nodeBGP), Set(setKeyValue, setLabel), Set(removeKey, removeLabel)))
   }
+
+  // Test: Splicing
+  
+  val nodeBGPs = BasicGraphPattern.NodePattern(Variable("x", spliced = true))
+  test("Parsing of Construct with splice") {
+    implicit val pp = p.pConstruct
+    parses("CONSTRUCT ({x}) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person", 
+      Construct(Set(nodeBGPs), Set(setKeyValue, setLabel), Set(removeKey, removeLabel)))
+  }

@@ -62,6 +62,8 @@ lazy val root = project
       "org.antlr" % "antlr4" % "4.7.2",
       "org.antlr" % "antlr4-runtime" % "4.7.2"
     ),
+    // HTTP Server / JSON
+    libraryDependencies += "com.lihaoyi" %% "cask" % "0.9.4",
     // Testing dependencies.
     libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
   )

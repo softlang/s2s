@@ -6,6 +6,7 @@ import org.softlang.s2s.parser.JsonLDParser
 
 import scala.util.Failure
 import scala.util.Try
+import scala.io.Source
 
 /** Shapes2Shapes application entry point. */
 object S2S:
@@ -22,13 +23,13 @@ object S2S:
     val conf = CLIConfiguration(Configuration.default, args)
 
     // Create buffered sources and check for errors.
-    val qft = Try(io.Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
+    val qft = Try(Source.fromFile(conf.queryFile()).getLines.mkString("\n"))
     val sft = Try(
       if conf.shapesFile().isEmpty then Set()
       else if conf.shapesFile().contains(".json") then
         JsonLDParser.fromFile(conf.shapesFile())
       else
-        io.Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
+        Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
     )
 
     // Handle input errors (for query and shapes files).

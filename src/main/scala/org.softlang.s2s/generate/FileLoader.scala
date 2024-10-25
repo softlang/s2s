@@ -7,6 +7,7 @@ import org.softlang.s2s.query.SCCQ
 
 import scala.util.Failure
 import scala.util.Try
+import scala.io.Source
 
 /** Load queries from file (for Profiling). */
 class FileLoader:
@@ -24,7 +25,7 @@ class FileLoader:
   def load(file: String): Unit =
     // Create buffered source from query file, where lines are queries.
     // May fail, ignored here.
-    val qft = io.Source.fromFile(file).getLines
+    val qft = Source.fromFile(file).getLines
     val iti = qft.map(sccqp.parse(_)).map(_.flatMap(q => SCCQ.validate(q, "*")))
 
     // for

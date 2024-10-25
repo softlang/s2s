@@ -18,11 +18,16 @@ import org.softlang.s2s.query.AtomicPattern
 import org.softlang.s2s.core.SHACLShape
 import org.softlang.s2s.core.Vocabulary
 
+import java.net.URLEncoder
+import java.net.URLDecoder
+
+
 /** Representation of a G-CORE (query) as match and construct clause.
   */
 class GCORE(
     val template: GCORE.Construct,
-    val pattern: GCORE.Match
+    val pattern: GCORE.Match,
+    val ret: Option[GCORE.Return] = None
 ) extends Showable:
 
   import GCORE._
@@ -195,7 +200,7 @@ class GCORE(
 
 object GCORE:
 
-  case class Variable(name: String) extends Showable:
+  case class Variable(name: String, spliced: Boolean = false) extends Showable:
     def show(implicit state: BackendState): String = name
 
     /** Convert GCORE variable to SCCQ variable. */
@@ -235,7 +240,7 @@ object GCORE:
       val base = Iri.fromString(s"<${if node then Key.nodeIri else Key.edgeIri}/>").toOption.get
       Key(i.retracted(base).get)
 
-  case class Label(labelname: String) extends Showable:
+  case class Label(labelname: String, spliced: Boolean = false) extends Showable:
     def show(implicit state: BackendState): String = ":" ++ labelname
 
     /** Encode this label as IRI. */
@@ -267,34 +272,55 @@ object GCORE:
     case IntValue(int: Int)
     case StringValue(string: String)
     case BooleanValue(bool: Boolean)
+    case Spliced(name: String)
+
+    def spliced: Boolean = this match
+      case Spliced(_) => true
+      case _ => false
 
     def show(implicit state: BackendState): String = this match
       case IntValue(i) => i.toString
       case StringValue(s) => s"\"$s\""
       case BooleanValue(b) => b.toString
+      case Spliced(s) => s"{$s}"
 
     /** Encode this value as IRI. */
     def toIri: Iri = this match
-      // TODO: Value encoding is broken, fails for, e.g., ' '. Must URL encode.
-      case IntValue(i) => Iri.fromString(s"<https://github.com/softlang/s2s/int-${i}>").toOption.get
-      case StringValue(s) => Iri.fromString(s"<https://github.com/softlang/s2s/string-${s}>").toOption.get
-      case BooleanValue(b) => Iri.fromString(s"<https://github.com/softlang/s2s/boolean-${b}>").toOption.get
+      case IntValue(i) => 
+        Value.urlenc(Value.IRI_INT, i.toString)
+      case StringValue(s) => 
+        Value.urlenc(Value.IRI_STRING, s)
+      case BooleanValue(b) => 
+        Value.urlenc(Value.IRI_BOOL, b.toString)
+      case Spliced(s) => 
+        Value.urlenc(Value.IRI_VARIABLE, s)
 
   object Value:
+
+    val IRI_INT = "https://github.com/softlang/s2s/int-"
+    val IRI_STRING = "https://github.com/softlang/s2s/string-"
+    val IRI_BOOL = "https://github.com/softlang/s2s/boolean-"
+    val IRI_VARIABLE = "https://github.com/softlang/s2s/variable-"
+
+    private def urlenc(prefix: String, unencoded: String): Iri =
+        val url = URLEncoder.encode(unencoded, java.nio.charset.StandardCharsets.UTF_8.toString())
+        Iri.fromString(s"<${prefix}${url}>").toOption.get
+
+    private def urldec(prefix: String, encoded: Iri): String =
+        val base = Iri.fromString(s"<${prefix}>").toOption.get
+        val enc = encoded.retracted(base).get
+        URLDecoder.decode(enc, java.nio.charset.StandardCharsets.UTF_8.toString())
+
     def fromIri(i: Iri): Value =
       val look = i.toString
-      if look.startsWith("<https://github.com/softlang/s2s/int-") then
-        val base = Iri.fromString("<https://github.com/softlang/s2s/int->").toOption.get
-        val enc = i.retracted(base).get
-        Value.IntValue(enc.toInt)
-      else if look.startsWith("<https://github.com/softlang/s2s/boolean-") then
-        val base = Iri.fromString("<https://github.com/softlang/s2s/boolean->").toOption.get
-        val enc = i.retracted(base).get
-        Value.BooleanValue(enc.toBoolean)
+      if look.startsWith(s"<${Value.IRI_INT}") then
+        Value.IntValue(urldec(Value.IRI_INT, i).toInt)
+      else if look.startsWith(s"<${Value.IRI_STRING}") then
+        Value.StringValue(urldec(Value.IRI_STRING, i))
+      else if look.startsWith(s"<${Value.IRI_BOOL}") then
+        Value.BooleanValue(urldec(Value.IRI_BOOL, i).toBoolean)
       else
-        val base = Iri.fromString("<https://github.com/softlang/s2s/string->").toOption.get
-        val enc = i.retracted(base).get
-        Value.StringValue(enc)
+        Value.StringValue(urldec(Value.IRI_VARIABLE, i))
 
   //type Query = BasicGraphQuery
 
@@ -311,6 +337,15 @@ object GCORE:
   //   case Minus
 
   type BasicGraphQuery = (Construct, Match)
+
+  // SELECT
+
+  case class Return(kinds: List[Kind])
+
+  enum Kind:
+    case Property(v: Variable, k: Key)
+    case Var(v: Variable)
+    case VarRaw(v: Variable)
 
   // CONSTRUCT (simplified)
 
