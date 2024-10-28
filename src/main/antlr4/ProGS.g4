@@ -19,12 +19,12 @@ formula3:
 	| negated_formula
 	| universal
 	| existential
-    | existential_right_edge
-    | existential_left_edge
-    | universal_right_edge
-    | universal_left_edge
-    | left_node
-    | right_node
+	| existential_right_edge
+	| existential_left_edge
+	| universal_right_edge
+	| universal_left_edge
+	| left_node
+	| right_node
 	| top
 	| bottom
 	| nominal

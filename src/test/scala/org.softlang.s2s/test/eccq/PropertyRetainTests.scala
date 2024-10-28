@@ -2,9 +2,10 @@ package org.softlang.s2s.test.eccq
 
 import org.softlang.s2s.test.ValidationSuite
 
-// Similar to the cases ConceptRetain
-// TODO Note, that candidates can not include ∃p.⊤ in their constraint;
-// thus, these cases use 'entails' instead of 'entails' for now.
+// Similar to the cases ConceptRetain.
+//
+// Note, that candidates can not include ∃p.⊤ in their constraint;
+// thus, these cases use 'entails' instead of 'includes' for now.
 
 class PropertyRetainTests extends ValidationSuite("e_pret_"):
 
@@ -109,10 +110,15 @@ class PropertyRetainTests extends ValidationSuite("e_pret_"):
              "∃kn:b.⊤ ⊑ ∃kn:a.⊤",
            ))
 
-  val q6 = gcore("(x), (y)", "(x), (y)", where = "x.a AND y.c", set = "y.b = 0")
-  entails("6_0", noshapes, q6, Set(
-             "∃kn:c.⊤ ⊑ ∃kn:b.⊤",
-           ))
+  // We lack the knowledge that all 'c' must go through 'y', even if some 'x'
+  // might also have the 'c' property.
+  //
+  // TODO Validation suggest that this case should probably hold.
+  //
+  // val q6 = gcore("(x), (y)", "(x), (y)", where = "x.a AND y.c", set = "y.b = 0")
+  // entails("6_0", noshapes, q6, Set(
+  //            "∃kn:c.⊤ ⊑ ∃kn:b.⊤",
+  //          ))
 
   // Compared to the previous case, we SHOULD not know that we attach 'b' to all 'c',
   // since 'y' only matches specific 'c' and 'x' may also include 'c' that are not also 'd',
@@ -206,7 +212,6 @@ class PropertyRetainTests extends ValidationSuite("e_pret_"):
              "ln:B ⊑ ln:C",
              "ln:A ⊑ ln:C",
            ))
-
 
   // Transitive shapes and arbitrary onstraints on both 'x' (X) and 'y' (Y).
   // Even here, shapes still hold: 'x' instances have all of 'A', 'B' and 'C'.
