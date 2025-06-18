@@ -2,8 +2,7 @@ import scala.sys.process._
 import sbt._
 import NativePackagerHelper._
 
-val scala3Version = "3.3.1"
-
+val scala3Version = "3.3.6" // LTS
 
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
 
@@ -13,7 +12,7 @@ enablePlugins(JavaAppPackaging)
 lazy val root = project
   .in(file("."))
   .enablePlugins(Antlr4Plugin)
-  //.dependsOn(shar)
+  // .dependsOn(shar)
   .settings(
     // Project metadata.
     name := "s2s",
