@@ -14,24 +14,26 @@ enum FilterPattern:
   /** Construct a vocabulary for the filter pattern (exclusind variables). */
   def removalVocabulary: Vocabulary =
     this match
-      case notC(_, c) => Vocabulary(
-        variables = Set(),
-        concepts = Set(NamedConcept(c)),
-        properties = Set(),
-        nominals = Set(),
-      )
-      case notP(_, p) => Vocabulary(
-        variables = Set(),
-        concepts = Set(),
-        properties = Set(NamedRole(p)),
-        nominals = Set(),
-      )
+      case notC(_, c) =>
+        Vocabulary(
+          variables = Set(),
+          concepts = Set(NamedConcept(c)),
+          properties = Set(),
+          nominals = Set()
+        )
+      case notP(_, p) =>
+        Vocabulary(
+          variables = Set(),
+          concepts = Set(),
+          properties = Set(NamedRole(p)),
+          nominals = Set()
+        )
 
 object FilterPattern:
-    /** Get the joint vocabulary over all FilterPattern. */
-    def removalVocabulary(fps: Set[FilterPattern]): Vocabulary =
-      def vunion(l: Vocabulary, r: Vocabulary): Vocabulary =
-        l.union(r)
-      if fps.nonEmpty
-      then fps.map(_.removalVocabulary).reduce(vunion)
-      else Vocabulary.empty
+  /** Get the joint vocabulary over all FilterPattern. */
+  def removalVocabulary(fps: Set[FilterPattern]): Vocabulary =
+    def vunion(l: Vocabulary, r: Vocabulary): Vocabulary =
+      l.union(r)
+    if fps.nonEmpty
+    then fps.map(_.removalVocabulary).reduce(vunion)
+    else Vocabulary.empty

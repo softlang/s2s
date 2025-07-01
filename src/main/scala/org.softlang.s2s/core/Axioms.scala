@@ -8,9 +8,8 @@ import de.pseifer.shar.core.Showable
 import de.pseifer.shar.reasoning.DLReasoner
 import de.pseifer.shar.reasoning.AxiomSet
 
-class Axioms(
-  private val axioms: Set[Axiom],
-  val scopes: Scopes) extends Showable:
+class Axioms(private val axioms: Set[Axiom], val scopes: Scopes)
+    extends Showable:
 
   /** Join with other axioms. */
   def join(others: Axioms): Axioms =
@@ -26,10 +25,12 @@ class Axioms(
   def toAxiomSet: AxiomSet = AxiomSet(axioms)
 
   /** Get all concepts. */
-  def concepts: Set[Concept] = axioms.flatMap(_.concepts).toSet.map(NamedConcept(_))
+  def concepts: Set[Concept] =
+    axioms.flatMap(_.concepts).toSet.map(NamedConcept(_))
 
   /** Get all properties. */
-  def properties: Set[Role] = axioms.flatMap(_.properties).toSet.map(NamedRole(_))
+  def properties: Set[Role] =
+    axioms.flatMap(_.properties).toSet.map(NamedRole(_))
 
   /** Get the vocabulary of the axioms. */
   def vocabulary: Vocabulary =
@@ -37,19 +38,19 @@ class Axioms(
 
   /** Drop the scope. */
   def dropScope: Axioms =
-    Axioms(axioms.map(s => s match
-        case Subsumption(c, d) => Subsumption(
-          c.dropScope(scopes),
-          d.dropScope(scopes))
-        case Equality(c, d) => Equality(
-          c.dropScope(scopes),
-          d.dropScope(scopes))
-        case RoleSubsumption(c, d) => RoleSubsumption(
-          c.dropScope(scopes),
-          d.dropScope(scopes))
-        case Satisfiability(c) => Satisfiability(
-          c.dropScope(scopes))
-    ), scopes)
+    Axioms(
+      axioms.map(s =>
+        s match
+          case Subsumption(c, d) =>
+            Subsumption(c.dropScope(scopes), d.dropScope(scopes))
+          case Equality(c, d) =>
+            Equality(c.dropScope(scopes), d.dropScope(scopes))
+          case RoleSubsumption(c, d) =>
+            RoleSubsumption(c.dropScope(scopes), d.dropScope(scopes))
+          case Satisfiability(c) => Satisfiability(c.dropScope(scopes))
+      ),
+      scopes
+    )
 
   // Reasoner instances for this set of shapes, that are instantiated
   // with configs when first required. Usually, only one instance
@@ -75,14 +76,16 @@ class Axioms(
   /** Map a function on all concepts. */
   def map(f: Concept => Concept): Axioms =
     import de.pseifer.shar.dl._
-    Axioms(axioms.map { m =>
-      m match
-        case Subsumption(c, d)            => Subsumption(f(c), f(d))
-        case Equality(c, d)               => Equality(f(c), f(d))
-        case Satisfiability(c)            => Satisfiability(f(c))
-        case rsub @ RoleSubsumption(_, _) => rsub
-    },
-    scopes)
+    Axioms(
+      axioms.map { m =>
+        m match
+          case Subsumption(c, d)            => Subsumption(f(c), f(d))
+          case Equality(c, d)               => Equality(f(c), f(d))
+          case Satisfiability(c)            => Satisfiability(f(c))
+          case rsub @ RoleSubsumption(_, _) => rsub
+      },
+      scopes
+    )
 
   def canEqual(a: Any) = a.isInstanceOf[Axioms]
 
@@ -95,7 +98,6 @@ class Axioms(
   override def hashCode: Int =
     this.axioms.hashCode
 
-
 object Axioms:
 
   /** Join two sets of axioms, right-biased scopes. */
@@ -103,7 +105,12 @@ object Axioms:
     if lhs.scopes == rhs.scopes then
       Axioms(rhs.axioms.union(lhs.axioms), rhs.scopes)
     else
-      Axioms(rhs.axioms.union(lhs.axioms.map(_.updateScopes(lhs.scopes, rhs.scopes))), rhs.scopes)
+      Axioms(
+        rhs.axioms.union(
+          lhs.axioms.map(_.updateScopes(lhs.scopes, rhs.scopes))
+        ),
+        rhs.scopes
+      )
 
   /** Construct an empty axioms. */
   def empty(scopes: Scopes): Axioms = Axioms(Set(), scopes)

@@ -63,13 +63,30 @@ case class Vocabulary(
       n.contains(s)
     )
 
+  /** Return this vocabulary without any variables. */
+  def withoutVariableConcepts: Vocabulary = Vocabulary(
+    Set(),
+    concepts.filter(!_.c.isVariable),
+    properties.filter(!_.r.isVariable),
+    nominals.filter(!_.isVariable)
+  )
+
   /** Apply scope to all things in this vocabulary. */
   def inScope(scope: Scope)(implicit scopes: Scopes): Vocabulary =
     Vocabulary(
       variables,
       concepts.map(_.inScope(scope).asInstanceOf[NamedConcept]),
       properties.map(_.inScope(scope).asInstanceOf[NamedRole]),
-      nominals.map(_.inScope(scope)),
+      nominals.map(_.inScope(scope))
+    )
+
+  /** Drop any scopes with the given token. */
+  def dropScope(scopes: Scopes): Vocabulary =
+    Vocabulary(
+      variables,
+      concepts.map(_.dropScope(scopes).asInstanceOf[NamedConcept]),
+      properties.map(_.dropScope(scopes).asInstanceOf[NamedRole]),
+      nominals.map(_.dropScope(scopes))
     )
 
 object Vocabulary:

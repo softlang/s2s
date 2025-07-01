@@ -13,7 +13,12 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
   includes("0_3", Set("ln:B ⊑ ln:A"), q0, Set("ln:B ⊑ ln:A"))
 
   val q1 = gcore("(x), (y)", "(x), (y)", where = "x:A AND y:B")
-  includes("1_0", Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"), q1, Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"))
+  includes(
+    "1_0",
+    Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A"),
+    q1,
+    Set("ln:A ⊑ ln:B", "ln:B ⊑ ln:A")
+  )
   includes("1_0", Set("ln:A ⊑ ln:B"), q1, Set("ln:A ⊑ ln:B"))
   includes("1_1", Set("ln:B ⊑ ln:A"), q1, Set("ln:B ⊑ ln:A"))
   includes("1_2", noshapes, q1, noshapes)
@@ -25,32 +30,56 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
   includes("2_0", Set("ln:A ⊑ ln:B"), q2, s2)
 
   val q3 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:B")
-  val s3 = Set("ln:A ⊑ ln:B", "ln:C ⊑ ln:B") // further refinement on x does not matter
+  val s3 =
+    Set("ln:A ⊑ ln:B", "ln:C ⊑ ln:B") // further refinement on x does not matter
   includes("0_0", Set("ln:A ⊑ ln:B"), q3, s3)
 
   val q4 = gcore("(x), (y)", "(x), (y)", where = "y:A AND x:C AND x:B")
-  includes("4_0", Set("ln:A ⊑ ln:B"), q4, Set(
-             "ln:A ⊑ ln:B",
-             "ln:C ⊑ ln:B"
-           ))
+  includes(
+    "4_0",
+    Set("ln:A ⊑ ln:B"),
+    q4,
+    Set(
+      "ln:A ⊑ ln:B",
+      "ln:C ⊑ ln:B"
+    )
+  )
   includes("4_1", noshapes, q4, noshapes)
 
   val q4_1 = gcore("(x), (y)", "(x), (y)", where = "y:A AND y:C AND x:B")
-  includes("4_2", Set("ln:A ⊑ ln:B"), q4_1, Set(
-             "ln:A ⊑ ln:B",
-             "ln:C ⊑ ln:B"
-           ))
+  includes(
+    "4_2",
+    Set("ln:A ⊑ ln:B"),
+    q4_1,
+    Set(
+      "ln:A ⊑ ln:B",
+      "ln:C ⊑ ln:B"
+    )
+  )
 
-  val q5 = gcore("(x), (y)", "(x), (y)", where = "y:A AND x:C AND x:B", set = "x:A")
-  val s5 = Set("ln:C ⊑ ln:A", "ln:B ⊑ ln:A") // here we can infer that now all C and B are A's...
+  val q5 =
+    gcore("(x), (y)", "(x), (y)", where = "y:A AND x:C AND x:B", set = "x:A")
+  val s5 = Set(
+    "ln:C ⊑ ln:A",
+    "ln:B ⊑ ln:A"
+  ) // here we can infer that now all C and B are A's...
 
   includes("5_0", noshapes, q5, s5)
 
-  val q6 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "y:A AND x:C AND x:B AND z:D", set = "x:A")
+  val q6 = gcore(
+    "(x), (y), (z)",
+    "(x), (y), (z)",
+    where = "y:A AND x:C AND x:B AND z:D",
+    set = "x:A"
+  )
   // ...but if we add another variable, this is lost again, since we do not know about z and A...
 
   includes("6_0", noshapes, q6, noshapes)
-  val s6 = Set("ln:C ⊑ ln:A", "ln:B ⊑ ln:A", "ln:D ⊑ ln:A") // ...until we add sufficient knowledge.
+  val s6 = Set(
+    "ln:C ⊑ ln:A",
+    "ln:B ⊑ ln:A",
+    "ln:D ⊑ ln:A"
+  ) // ...until we add sufficient knowledge.
 
   includes("6_1", Set("ln:D ⊑ ln:A"), q6, s6)
 
@@ -63,26 +92,49 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
 
   // We get now only B ⊑ A, because (x) is still guaranteed to cover all A (even if z_i:A),
   // however, some z_i:D invalidate the second shape from q9.
-  val q10 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "x:A AND y:D AND y:B AND z:C")
+  val q10 = gcore(
+    "(x), (y), (z)",
+    "(x), (y), (z)",
+    where = "x:A AND y:D AND y:B AND z:C"
+  )
   includes("10_0", Set("ln:B ⊑ ln:A"), q10, Set("ln:B ⊑ ln:A"))
 
-  // TODO: Fixed?
   // Compared to q9, we lose both shapes here, since we restrict x, not including all instances of A.
   // We do get C ⊑ A, but only because we know that Y is still a subset of X...
   val q11 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:C AND y:D AND y:B")
-  includes("11_0", Set("ln:B ⊑ ln:A"), q11, Set(
-             "ln:C ⊑ ln:A",
-             "ln:B ⊑ ln:A",
-             "ln:D ⊑ ln:A"
-           ))
+  includes(
+    "11_0",
+    Set("ln:B ⊑ ln:A"),
+    q11,
+    Set(
+      "ln:C ⊑ ln:A",
+      "ln:B ⊑ ln:A",
+      "ln:D ⊑ ln:A"
+    )
+  )
 
   // ... if we remove this input shape, C ⊑ A no longer holds for the common reasons.
   includes("11_1", noshapes, q11, noshapes)
 
-  val q12 = gcore("(x), (y), (z)", "(x), (y), (z)", where = "x:A AND y:D AND y:B AND z:C", remove = "z:D")
+  val q12 = gcore(
+    "(x), (y), (z)",
+    "(x), (y), (z)",
+    where = "x:A AND y:D AND y:B AND z:C",
+    remove = "z:D"
+  )
 
   // Alas, if we modify example q10 such that we remove D from Z, the shape reappears.
   includes("12_0", Set("ln:B ⊑ ln:A"), q12, Set("ln:B ⊑ ln:A", "ln:D ⊑ ln:A"))
 
   val q14 = gcore("(x), (y)", "(x), (y)", where = "x:A AND x:B AND y:C")
   includes("14_0", Set("ln:A ⊑ ln:D"), q14, Set("ln:A ⊑ ln:D"))
+
+  // Minimal test.
+  val q15 = gcore("(x)", "(x)", where = "x:A")
+  entails(
+    "15_0",
+    Set("ln:A ⊑ ln:B"),
+    q15,
+    Set("ln:A ⊑ ln:B"),
+    debugging = true
+  )

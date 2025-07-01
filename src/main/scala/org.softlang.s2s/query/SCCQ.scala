@@ -87,30 +87,38 @@ extension (aps: AtomicPatterns)
       s1.intersect(s2).nonEmpty
 
     def hasCycleOne(lst: List[Set[Var]]): Boolean =
-      lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(lst.head, lst.last)
+      lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(
+        lst.head,
+        lst.last
+      )
 
     def hasCycle(lst: List[Set[Var]]): Boolean =
-      (3 to lst.size).map { i =>
-        lst.take(i)
-      }.exists(hasCycleOne)
+      (3 to lst.size)
+        .map { i =>
+          lst.take(i)
+        }
+        .exists(hasCycleOne)
 
     // Finally, apply these functions.
-    aps.map(_.variables)
+    aps
+      .map(_.variables)
       .filter(_.size == 2)
       .permutations
       .exists(hasCycle)
 
-/**
-  * Extended query data.
+/** Extended query data.
   *
-  * @param filter Filter conditions.
-  * @param nodeVariables Variables that are node variables.
-  * @param edgeVariables Variables that are edge variables.
+  * @param filter
+  *   Filter conditions.
+  * @param nodeVariables
+  *   Variables that are node variables.
+  * @param edgeVariables
+  *   Variables that are edge variables.
   */
 class ECCQ(
-  val filter: Set[FilterPattern] = Set(),
-  val nodeVariables: Set[Var] = Set(),
-  val edgeVariables: Set[Var] = Set()
+    val filter: Set[FilterPattern] = Set(),
+    val nodeVariables: Set[Var] = Set(),
+    val edgeVariables: Set[Var] = Set()
 )
 
 /** Representation of a SCCQ (query) as template and pattern as List of
@@ -129,7 +137,8 @@ class SCCQ(
 
     // Take only node and edge variables into consideration, not any variables generated for
     // properties by the conversion from G-CORE to SPARQL.
-    val patternVariables = eccq.map(e => e.nodeVariables.union(e.edgeVariables)).getOrElse(Set())
+    val patternVariables =
+      eccq.map(e => e.nodeVariables.union(e.edgeVariables)).getOrElse(Set())
 
     // Generate two fresh variables, for each variable v.
     val pv = patternVariables.map(v => (v -> (Var.fresh(), Var.fresh()))).toMap
@@ -152,28 +161,30 @@ class SCCQ(
 
     val p = if isECCQ then po ++ pv.map(additionalTriples) else po
     val t = if isECCQ then to ++ tv.map(additionalTriples) else to
-    val f = if isECCQ then
+    val f =
+      if isECCQ then
         // Filters from GCORE filter expressions.
         eccq.map(e => e.filter.map(makeFilter(_, pv))).getOrElse(Nil)
-          // Filters for meta edges and nodes.
+        // Filters for meta edges and nodes.
           ++ pvn.map(metaFilterNode)
           ++ pve.map(metaFilterEdge)
-    else Nil
+      else Nil
 
     t.mkString("CONSTRUCT {\n    ", " .\n    ", "\n}")
-    ++ (p ++ f).mkString(" WHERE {\n    ", " .\n    ", "\n}")
+      ++ (p ++ f).mkString(" WHERE {\n    ", " .\n    ", "\n}")
 
   // Generate a triple pattern from a variable v, and a (fresh) property and object variable.
   private def additionalTriples(v: Var, po: (Var, Var)): String =
     s"${v.showNB} ${po._1.showNB} ${po._2.showNB}"
 
-  private def makeFilter(f: FilterPattern, mv: Map[Var, (Var, Var)]): String = f match
-    case FilterPattern.notC(v, c) =>
-      val vc = mv(v)
-      s"FILTER ( ${vc._2.showNB} !=  ${c.encode} )"
-    case FilterPattern.notP(v, p) =>
-      val vc = mv(v)
-      s"FILTER ( ${vc._1.showNB} != ${p.encode} )"
+  private def makeFilter(f: FilterPattern, mv: Map[Var, (Var, Var)]): String =
+    f match
+      case FilterPattern.notC(v, c) =>
+        val vc = mv(v)
+        s"FILTER ( ${vc._2.showNB} !=  ${c.encode} )"
+      case FilterPattern.notP(v, p) =>
+        val vc = mv(v)
+        s"FILTER ( ${vc._1.showNB} != ${p.encode} )"
 
   /** Make filter patterns for the generic nodes. */
   private def metaFilterNode(v: Var, po: (Var, Var)): String =
@@ -197,8 +208,7 @@ class SCCQ(
 
   /** Get the vocabulary (variables, concepts, properties, nominals). */
   def vocabulary: Vocabulary =
-    template
-      .vocabulary
+    template.vocabulary
       .union(pattern.vocabulary)
       .diff(GCORE.removeVoc)
 

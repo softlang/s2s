@@ -59,7 +59,7 @@ class Algorithm(
         case _                 => false
     )
 
-    log.debug("CWA(q.P), step 1", dcaP1)
+    // log.debug("CWA(q.P), step 1", dcaP1)
     log.debug("CWA(q.P), step 3.", dcaP3)
     log.profileEnd("build-dca-p")
 
@@ -67,8 +67,8 @@ class Algorithm(
 
     log.profileStart("build-cwa-p")
 
-    val cwaP = ClosedPropertyAssumption(pattern, Scope.Med, input).axioms
-    log.debug("CWA(q.P), step 4.", cwaP)
+    // val cwaP = ClosedPropertyAssumption(pattern, Scope.Med, input).axioms
+    // log.debug("CWA(q.P), step 4.", cwaP)
 
     log.profileEnd("build-cwa-p")
 
@@ -84,22 +84,30 @@ class Algorithm(
     // Return union of components.
     Axioms(
       shapeProps
-        .union(dcaP)
-        .union(cwaP),
-      scopes)
+        .union(dcaP3),
+      // .union(cwaP),
+      scopes
+    )
 
   /** Process the query pattern. */
   def processPattern(log: Log): S2STry[Axioms] =
-    for
-      p <- input.pattern
+    for p <- input.pattern
     yield buildAxiomsPattern(p, log)
 
-  /** Build axioms for the query pattern. */
-  def buildAxiomsTemplate(template: AtomicPatterns, pattern: AtomicPatterns, log: Log): Axioms =
+  /** Build axioms for the query template. */
+  def buildAxiomsTemplate(
+      template: AtomicPatterns,
+      pattern: AtomicPatterns,
+      log: Log
+  ): Axioms =
+
+    // TODO ??? If this is a return query, nothing to add (EARLY RETURN).
+    // if input.isRETURN then return Axioms(Set(), scopes)
 
     // DCA for query template.
     log.profileStart("build-dca-t")
 
+    // TODO: "Old" variables concepts are not filtered correctly on left hand side.
     val dcaH = ClosedConceptAssumptionTemplate(template, input).axioms
     log.debug("CWA(q.H), step 2.", dcaH)
 
@@ -118,7 +126,9 @@ class Algorithm(
     val rule6: Set[Axiom] =
       if !input.isECCQ then Set()
       else
-        val vC = input.vocabulary.concepts.map(_.cinScope(Scope.In)).map(_.asInstanceOf[NamedConcept])
+        val vC = input.vocabulary.concepts
+          .map(_.cinScope(Scope.In))
+          .map(_.asInstanceOf[NamedConcept])
         val nvC = vC.filter(c => Label.isNodeLabel(c.c))
         val evC = vC.filter(c => Label.isEdgeLabel(c.c))
 
@@ -126,14 +136,14 @@ class Algorithm(
           nv <- input.nodeVariables
           c <- nvC
           lhs <- nv.asConceptComponent(input.filters, c)
-        //yield Subsumption(lhs, Intersection(nv.asConcept, c))
+        // yield Subsumption(lhs, Intersection(nv.asConcept, c))
         yield Equality(lhs, Intersection(nv.asConcept, c))
 
         val ecs: Set[Axiom] = for
           ev <- input.edgeVariables
           c <- evC
           lhs <- ev.asConceptComponent(input.filters, c)
-        //yield Subsumption(lhs, Intersection(ev.asConcept, c))
+        // yield Subsumption(lhs, Intersection(ev.asConcept, c))
         yield Equality(lhs, Intersection(ev.asConcept, c))
 
         ncs.union(ecs)
@@ -143,9 +153,7 @@ class Algorithm(
     val rule7: Set[Axiom] =
       if !input.isECCQ then Set()
       else
-        val vP = input
-          .vocabulary
-          .properties
+        val vP = input.vocabulary.properties
           .map(_.cinScope(Scope.In))
           .map(_.asInstanceOf[NamedRole])
 
@@ -156,14 +164,14 @@ class Algorithm(
           nv <- input.nodeVariables
           p <- nvP
           (lhs, o) <- nv.asRoleObjectComponent(input.filters, p)
-        //yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
+        // yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
         yield Equality(lhs, Intersection(nv.asConcept, Existential(p, o)))
 
         val eps: Set[Axiom] = for
           ev <- input.edgeVariables
           p <- evP
           (lhs, o) <- ev.asRoleObjectComponent(input.filters, p)
-        //yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
+        // yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
         yield Equality(lhs, Intersection(ev.asConcept, Existential(p, o)))
 
         // Explicit subsumption for shape properties.
@@ -173,13 +181,9 @@ class Algorithm(
           nv <- input.nodeVariables
           p <- shapeProperties.getOrElse(Set())
           (rhs, o) <- nv.asRoleObjectComponent(input.filters, p)
-        yield
-            Subsumption(
-              Existential(p.cinScope(Scope.Out), Top),
-              rhs)
+        yield Subsumption(Existential(p.cinScope(Scope.Out), Top), rhs)
 
         nps.union(eps).union(subsp)
-
 
     log.debug("CWA(q.H), step 7.", rule7)
 
@@ -196,20 +200,18 @@ class Algorithm(
     Axioms(dcaH.union(cwaH).union(rule6).union(rule7).union(una), scopes)
 
   /** Process the query template. */
-  def processTemplate(/*extraClauses: Set[GCORE.SetClause],*/ log: Log): S2STry[Axioms] =
+  def processTemplate(
+      /*extraClauses: Set[GCORE.SetClause],*/ log: Log
+  ): S2STry[Axioms] =
     for
       t <- input.template
       p <- input.pattern
-    yield buildAxiomsTemplate(
-      template = t,
-      pattern = p,
-      log)
+    yield buildAxiomsTemplate(template = t, pattern = p, log)
 
   /** Get the vocabulary for candidate generation. */
   def candidateVocabulary: Vocabulary =
     // In ECCQ queries, must consider additional names.
-    if input.isECCQ then
-      input.vocabulary.inScope(Scope.Out)
+    if input.isECCQ then input.vocabulary.inScope(Scope.Out)
     // For SCCQ, the template vocabulary suffices.
     else input.template.map(_.vocabulary).getOrElse(Vocabulary.empty)
 
@@ -220,8 +222,8 @@ class Algorithm(
 
     val shapes = for
       // First, construct all axioms.
-      //extraClausesAxioms <- axiomsInternal()
-      //extraClauses = extraClausesAxioms._1
+      // extraClausesAxioms <- axiomsInternal()
+      // extraClauses = extraClausesAxioms._1
       axioms <- axiomsInternal()
       canGen = CandidateGenerator(
         // Generate candidate shapes from template.
@@ -275,7 +277,7 @@ class Algorithm(
       // Generate axioms from mapping components, using previous axioms.
       mappingSubs <- extendMapping(shapeAxioms.join(patternAxioms), log)
       // Generate additional clauses for GCORE queries, persisting labels and properties.
-      //extraClauses <- extendConstruct(patternAxioms.join(shapeAxioms).join(mappingSubs), log)
+      // extraClauses <- extendConstruct(patternAxioms.join(shapeAxioms).join(mappingSubs), log)
       // Generate axioms from template.
       templateAxioms <- processTemplate(log)
       // Generate axioms for properties.
@@ -296,23 +298,29 @@ class Algorithm(
 
   /** Generate additional axioms using the component mapping approach. */
   def extendMapping(patternShapeAxioms: Axioms, log: Log): S2STry[Axioms] =
-    for
-      // Get shapes from input, or construt using pre-existing axioms.
-      shapes <- input.extensionShapes(() => convert(patternShapeAxioms))
-      p <- input.pattern
-      mappingSubs = {
-        log.profileStart("build-mapping")
-        val mappingSubs = SubsumptionsFromMappings(
-          p, shapes.map(_.toSimple).filter(_.nonEmpty).map(_.get)
-        ).axioms
-        log.debug("MA(S_in, q.P)", mappingSubs)
-        log.profileEnd("build-mapping")
-        mappingSubs
-      }
-    yield Axioms(mappingSubs, scopes)
+    // Disable mapping for extended ECCQ.
+    if input.isECCQ then return Right(Axioms(Set(), scopes))
+    else
+      for
+        // Get shapes from input, or construt using pre-existing axioms.
+        shapes <- input.extensionShapes(() => convert(patternShapeAxioms))
+        p <- input.pattern
+        mappingSubs = {
+          log.profileStart("build-mapping")
+          val mappingSubs = SubsumptionsFromMappings(
+            p,
+            shapes.map(_.toSimple).filter(_.nonEmpty).map(_.get)
+          ).axioms
+          log.debug("MA(S_in, q.P)", mappingSubs)
+          log.profileEnd("build-mapping")
+          mappingSubs
+        }
+      yield Axioms(mappingSubs, scopes)
 
   /** Generate additional axioms from property subsumptions. */
-  def extendProperties(mappingSubs: Axioms, /*extraClauses: Set[GCORE.SetClause],*/ log: Log): S2STry[Axioms] =
+  def extendProperties(
+      mappingSubs: Axioms, /*extraClauses: Set[GCORE.SetClause],*/ log: Log
+  ): S2STry[Axioms] =
     for
       p <- input.pattern
       t <- input.template
@@ -325,41 +333,40 @@ class Algorithm(
       }
     yield Axioms(props, scopes)
 
-  /** Get all properties only mentioned in shapes.  */
+  /** Get all properties only mentioned in shapes. */
   def shapeProperties: S2STry[Set[NamedRole]] =
-      for
-        p <- input.pattern
-        t <- input.template
-      yield
-        // Exclude names that do occur in pattern or template (handled elsewhere).
-        val except = p.vocabulary.properties.map(_.cinScope(Scope.In)).union(
+    for
+      p <- input.pattern
+      t <- input.template
+    yield
+      // Exclude names that do occur in pattern or template (handled elsewhere).
+      val except = p.vocabulary.properties
+        .map(_.cinScope(Scope.In))
+        .union(
           t.vocabulary.properties.map(_.cinScope(Scope.In))
         )
-        input
-          .vocabulary
-          .properties
-          .map(_.cinScope(Scope.In))
-          .diff(except)
-          // Lost by scoping.
-          .map(_.asInstanceOf[NamedRole])
-          .toSet
+      input.vocabulary.properties
+        .map(_.cinScope(Scope.In))
+        .diff(except)
+        // Lost by scoping.
+        .map(_.asInstanceOf[NamedRole])
+        .toSet
 
   /** Generate additional axioms from property subsumptions for ECCQ queries. */
   def bonusProperties(log: Log): S2STry[Axioms] =
     if input.isECCQ then
-      for
-        these <- shapeProperties
+      for these <- shapeProperties
       yield
         val newps: Set[Axiom] = these.flatMap { p =>
           // TODO review
           Set(
             RoleSubsumption(p.cinScope(Scope.Out), p),
-            RoleSubsumption(p, p.cinScope(Scope.Out)))
+            RoleSubsumption(p, p.cinScope(Scope.Out))
+          )
         }
         log.debug("bProp(q)", newps)
         Axioms(newps, scopes)
-    else
-      Right(Axioms.empty(scopes))
+    else Right(Axioms.empty(scopes))
 
     // for
     //   p <- input.pattern
@@ -374,7 +381,7 @@ class Algorithm(
     // yield Axioms(props, scopes)
 
   /** Extend construct (set clauses), if GCORE query. */
-  //def extendConstruct(axioms: Axioms, log: Log): S2STry[Set[GCORE.SetClause]] = input match
+  // def extendConstruct(axioms: Axioms, log: Log): S2STry[Set[GCORE.SetClause]] = input match
   //  case AlgorithmInput.SCCQAxioms(_, _) => Right(Set())
   //  case AlgorithmInput.SCCQSimpleSHACL(_, _, _) => Right(Set())
   //  case AlgorithmInput.GCOREAxioms(q, _) =>
@@ -387,7 +394,7 @@ class Algorithm(
   //    yield r
 
   /** Generate set-clause validating shapes. */
-  //private def generateExtensionCandidates(pvoc: Vocabulary, svoc: Vocabulary): Set[SHACLShape] =
+  // private def generateExtensionCandidates(pvoc: Vocabulary, svoc: Vocabulary): Set[SHACLShape] =
   //  val thevoc = svoc.diff(pvoc)
   //  val theconcepts = thevoc.concepts
   //  val thevars = pvoc.variables
@@ -397,20 +404,21 @@ class Algorithm(
   //  yield SHACLShape(Subsumption(v.asConcept, c))
 
   /** Add input query and shapes to log. */
-  //private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
+  // private def logInput(q: SCCQ, s: Set[SHACLShape], log: Log): Unit =
   //  log.info("q", q.show)
   //  log.debug("Σ(q)", q.vocabulary.show)
   //  log.info("S_in", s.map(_.show).toList)
 
-  private def convert(axioms: Axioms)(implicit scopes: Scopes): S2STry[Set[SHACLShape]] =
+  private def convert(axioms: Axioms)(implicit
+      scopes: Scopes
+  ): S2STry[Set[SHACLShape]] =
     // Make shapes from candidates over (input scope) vocabulary of query.
     for
       t <- input.pattern
       canGen = CandidateGenerator(
         t.vocabulary,
-        heuristic = ShapeHeuristic.SimpleShapes(
-          opt = false,
-          proxyFamily = true),
+        heuristic =
+          ShapeHeuristic.SimpleShapes(opt = false, proxyFamily = true),
         excludeTarget = Set(GCORE.nodeToEdgeIri, GCORE.edgeToNodeIri)
       )(scopes)
       result = {
@@ -432,8 +440,9 @@ class Algorithm(
       }
     yield result
 
-/** Companion object of Algorithm class, that implements
- *  some of the re-useable steps of the algorithm. */
+/** Companion object of Algorithm class, that implements some of the re-useable
+  * steps of the algorithm.
+  */
 object Algorithm:
 
   /** Perform the filtering step of the algorithm. */
@@ -442,7 +451,7 @@ object Algorithm:
       axioms: Axioms,
       log: Log,
       config: Configuration = Configuration.default,
-      currentTry: Int = 1,
+      currentTry: Int = 1
   )(implicit scopes: Scopes, shar: Shar): S2STry[Set[SHACLShape]] =
 
     // A fresh log.
@@ -469,7 +478,7 @@ object Algorithm:
       config: Configuration,
       candidates: Set[SHACLShape],
       axioms: Axioms,
-      log: Log,
+      log: Log
   )(implicit scopes: Scopes, shar: Shar): Option[(Log, Set[SHACLShape])] =
 
     var result: Option[Set[SHACLShape]] = None
@@ -483,7 +492,8 @@ object Algorithm:
 
     t.start()
     t.join(config.timeout.millis.toMillis)
-    //t.stop()
+    // t.stop()
 
-    if result.isDefined then log.info("S_out", result.get.map(_.show(shar.state)))
+    if result.isDefined then
+      log.info("S_out", result.get.map(_.show(shar.state)))
     result.map((log, _))

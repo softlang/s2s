@@ -19,31 +19,37 @@ class ClosedConceptAssumptionTemplate(
 
   private def gens(lc: Iri, l: NamedConcept): List[Concept] =
     if Label.isNodeLabel(lc) then
-      input.nodeVariables.flatMap(v =>
-        v.asConceptComponent(input.filters, l).toSet)
+      input.nodeVariables
+        .flatMap(v => v.asConceptComponent(input.filters, l).toSet)
         .toList
     else
-      input.edgeVariables.flatMap(v =>
-        v.asConceptComponent(input.filters, l).toSet)
+      input.edgeVariables
+        .flatMap(v => v.asConceptComponent(input.filters, l).toSet)
         .toList
 
   override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
     if input.isECCQ then
       val asi = a.concepts.map(_.asInstanceOf[Concept])
 
-      val additional: Set[Axiom] = input.outConcepts.diff(asi).flatMap { _ match
-        case l @ NamedConcept(c) =>
-          Set(Equality(l, Concept.unionOf(gens(c, l))))
-        case _ => Set()
+      // TOOD: What was debugged here?
+      // println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+      // input.outConcepts.foreach(println)
+
+      val additional: Set[Axiom] = input.outConcepts.diff(asi).flatMap { c =>
+        c match
+          case l @ NamedConcept(c) =>
+            Set(Equality(l, Concept.unionOf(gens(c, l))))
+          case _ => Set()
       }
 
-      axioms.map(_ match
-        case Equality(l @ NamedConcept(lc), r) =>
-          Equality(l, Concept.unionOf(r :: gens(lc, l)))
-        case a => a
-      ).union(additional)
-    else
       axioms
+        .map(_ match
+          case Equality(l @ NamedConcept(lc), r) =>
+            Equality(l, Concept.unionOf(r :: gens(lc, l)))
+          case a => a
+        )
+        .union(additional)
+    else axioms
 
   val leftScope = Scope.Out
   val rightScope = Scope.Out
@@ -65,12 +71,10 @@ class ClosedConceptAssumptionPattern(
       a1.flatMap(_ match
         case Equality(NamedConcept(v), r) if v.isVariable =>
           Set(
-            Subsumption(NamedConcept(v), r.inScope(Scope.In)),
+            Subsumption(NamedConcept(v), r.inScope(Scope.In))
           ).union(
-            if a.hasCyclicVCG then
-              Set()
-            else
-              Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
+            if a.hasCyclicVCG then Set()
+            else Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
           )
         case a => Set(a)
       )

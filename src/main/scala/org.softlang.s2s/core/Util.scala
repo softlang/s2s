@@ -7,33 +7,42 @@ extension (axiom: Axiom)
   /** Obtain the vocabulary of this axiom. */
   def vocabulary: Vocabulary =
     def findNominals() = axiom match
-      case Subsumption(c, d)  =>
+      case Subsumption(c, d) =>
         var nominals: Set[Iri] = Set()
-        Concept.foreach(ci => ci match
-          case NominalConcept(i) => nominals += i
-          case _ => ()
-        , c)
+        Concept.foreach(
+          ci =>
+            ci match
+              case NominalConcept(i) => nominals += i
+              case _                 => ()
+          ,
+          c
+        )
         nominals
       case _ => Set()
     Vocabulary(
       variables = Set(),
       concepts = axiom.concepts.map(NamedConcept(_)),
       properties = axiom.properties.map(NamedRole(_)),
-      nominals = findNominals())
+      nominals = findNominals()
+    )
 
   /** Set scope for expressions in this axiom. */
   def inScope(scope: Scope)(implicit scopes: Scopes): Axiom = axiom match
     case Subsumption(c, d) => Subsumption(c.inScope(scope), d.inScope(scope))
-    case Equality(c, d) => Equality(c.inScope(scope), d.inScope(scope))
+    case Equality(c, d)    => Equality(c.inScope(scope), d.inScope(scope))
     case Satisfiability(c) => Satisfiability(c.inScope(scope))
-    case RoleSubsumption(r, p) => RoleSubsumption(r.inScope(scope), p.inScope(scope))
+    case RoleSubsumption(r, p) =>
+      RoleSubsumption(r.inScope(scope), p.inScope(scope))
 
   /** Update Scopes from oldS to newS. */
   def updateScopes(oldS: Scopes, newS: Scopes): Axiom = axiom match
-    case Subsumption(c, d) => Subsumption(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
-    case Equality(c, d) => Equality(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
+    case Subsumption(c, d) =>
+      Subsumption(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
+    case Equality(c, d) =>
+      Equality(c.updateScopes(oldS, newS), d.updateScopes(oldS, newS))
     case Satisfiability(c) => Satisfiability(c.updateScopes(oldS, newS))
-    case RoleSubsumption(r, p) => RoleSubsumption(r.updateScopes(oldS, newS), p.updateScopes(oldS, newS))
+    case RoleSubsumption(r, p) =>
+      RoleSubsumption(r.updateScopes(oldS, newS), p.updateScopes(oldS, newS))
 
 extension (i: Iri)
 
@@ -48,6 +57,7 @@ extension (i: Iri)
   private def getBase(scopes: Scopes): Iri =
     Iri.makeFromRawIri(scopes.removeScopeTokens(i.getRaw)).toOption.get
 
+  /** Return the IRI without any token. */
   def isVariable: Boolean =
     // Only variables use the internal shar prefix.
     i.retracted(Iri.shar).isDefined
@@ -66,7 +76,7 @@ extension (i: Iri)
     if i.isVariable then
       if scope == Scope.Variable then
         i.getBase(scopes)
-         .append(scopes.getToken(Scope.Variable))
+          .append(scopes.getToken(Scope.Variable))
       else i
     // For anything else, apply whatever scope is given.
     else
@@ -88,7 +98,7 @@ extension (i: Iri)
           i.getBase(scopes)
             .append(scopes.getToken(Scope.Variable))
 
-  /** Drop all scoping for this IRI. */
+  /** Drop scopes for this IRI. */
   def dropScope(implicit scopes: Scopes): Iri =
     if i.isVariable then i else i.getBase(scopes)
 
@@ -186,10 +196,11 @@ object Util:
     flipEither(eithers).left.map(_.head)
 
   /** Sequence a list of option to option of list. */
-  def sequence[A](l: List[Option[A]]): Option[List[A]] = l.foldLeft(Option(List.empty[A])) {
-    case(Some(r), Some(v)) => Some(v :: r);
-    case(_, _) => None
-  }
+  def sequence[A](l: List[Option[A]]): Option[List[A]] =
+    l.foldLeft(Option(List.empty[A])) {
+      case (Some(r), Some(v)) => Some(v :: r);
+      case (_, _)             => None
+    }
 
   /** Construct IRI for testing purposes. */
   def forceIriUnsafe(s: String): Iri =

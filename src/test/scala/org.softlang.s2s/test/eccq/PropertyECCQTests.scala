@@ -38,24 +38,31 @@ class PropertyECCQTests extends ValidationSuite("e_props_"):
   // If we remove A and age from y explicitly, we get the shapes as in q2.
   // Now, we can make assumptions about age and A.
 
-  val q3 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B", remove = "y.age AND y:A")
+  val q3 = gcore(
+    "(x), (y)",
+    "(x), (y)",
+    where = "x.age = 42 AND x:A AND y:B",
+    remove = "y.age AND y:A"
+  )
   includes("3_0", noshapes, q3, s1out)
 
   // Does not help to add random labels or properties. Only for B and F we can infer subsumption,
   // as B is unconstrained in the WHERE clause.
 
-  val q4 = gcore("(x), (y)", "(x), (y)", where = "x.age = 42 AND x:A AND y:B", set = "x:E AND y:F AND x.num = 19 AND y.nnn = 0")
+  val q4 = gcore(
+    "(x), (y)",
+    "(x), (y)",
+    where = "x.age = 42 AND x:A AND y:B",
+    set = "x:E AND y:F AND x.num = 19 AND y.nnn = 0"
+  )
   includes("4_0", noshapes, q4, Set("ln:B ⊑ ln:F"))
 
-  val q5 = gcore("(x)", "(x)", where = "x:A AND x.name") // TODO Validation says False
+  val q5 = gcore("(x)", "(x)", where = "x:A AND x.name")
   val s5out = Set(
     // See q1.
     "∃kn:name.⊤ ⊑ ln:A",
     "∃-kn:name.⊤ ⊑ ∃-kn:name.ln:A",
     // Not entirely sure why; see q1.
-    "∃kn:name.⊤ ⊑ ∀-kn:name.ln:A")
-
+    "∃kn:name.⊤ ⊑ ∀-kn:name.ln:A"
+  )
   includes("5_0", noshapes, q5, s5out)
-
-
-  // TODO: Add 'Concept' test cases, rewritten to use properties.

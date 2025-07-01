@@ -74,8 +74,7 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       shar.state.prefixes.add(pm, m)
     }
 
-    for
-      q <- gcoreParser(query)
+    for q <- gcoreParser(query)
     yield q
 
   /** The shape parser. */
@@ -86,11 +85,16 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       shapes: Set[String]
   ): S2STry[Set[SHACLShape]] =
     for s <- Util
-      .flipEitherHead(shapes.map(s =>
-          shapeParser.parseGeneral(s)
-            .orElse(JsonLDParser.parse(s))
-            .orElse(shapeParser.parseProGS(s)))
-            .toList)
+        .flipEitherHead(
+          shapes
+            .map(s =>
+              shapeParser
+                .parseGeneral(s)
+                .orElse(JsonLDParser.parse(s))
+                .orElse(shapeParser.parseProGS(s))
+            )
+            .toList
+        )
         .map(_.toSet)
     yield s.toList.toSet
 
@@ -119,44 +123,51 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
 
   /** Run validation and return shapes and the Log. */
   def constructShapes(
-    query: String,
-    shapes: Set[String]
+      query: String,
+      shapes: Set[String]
   ): (S2STry[Set[SHACLShape]], Log) =
     val (result, log) = constructWith(query, shapes, algorithmInternalShapes)
     (result.map(_._1), log)
 
   /** Run evaluation and return shapes, log, as well as the input used. */
   def constructShapesAndInput(
-    query: String,
-    shapes: Set[String]
+      query: String,
+      shapes: Set[String]
   ): (S2STry[(Set[SHACLShape], AlgorithmInput)], Log) =
     constructWith(query, shapes, algorithmInternalShapes)
 
+  // /** TODO Run evaluation and return shapes, log, as well as the input used. */
+  // def constructShapesAndInput(
+  //   query: String,
+  //   shapes: Axioms
+  // ): (S2STry[(Set[SHACLShape], AlgorithmInput)], Log) =
+  //   constructWith(query, shapes, algorithmInternalShapes)
+
   /** Run axiom construction and return them and the Log. */
   def constructShapes(
-    input: AlgorithmInput
+      input: AlgorithmInput
   ): (S2STry[Set[SHACLShape]], Log) =
     val log = Log(debugging = config.debug)(defaultScopes)
     (algorithmInternalShapes(input, log), log)
 
   /** Run axiom construction and return them and the Log. */
   def constructAxioms(
-    query: String,
-    shapes: Set[String]
+      query: String,
+      shapes: Set[String]
   ): (S2STry[Axioms], Log) =
     val (result, log) = constructWith(query, shapes, algorithmInternalAxioms)
     (result.map(_._1), log)
 
   /** Run axiom construction and return them and the Log. */
   def constructAxiomsAndInput(
-    query: String,
-    shapes: Set[String]
+      query: String,
+      shapes: Set[String]
   ): (S2STry[(Axioms, AlgorithmInput)], Log) =
     constructWith(query, shapes, algorithmInternalAxioms)
 
   /** Run axiom construction and return them and the Log. */
   def constructAxioms(
-    input: AlgorithmInput
+      input: AlgorithmInput
   ): (S2STry[Axioms], Log) =
     val log = Log(debugging = config.debug)(defaultScopes)
     (algorithmInternalAxioms(input, log), log)
@@ -175,13 +186,20 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
 
     val sOut = for
       // Parse and validate query.
-      q <- parseSCCQQuery(query).map(q => sa => AlgorithmInput.SCCQAxioms(q, sa)).orElse {
-        parseGCOREQuery(query).map(q => sa => AlgorithmInput.GCOREAxioms(q, sa))
-      }
+      q <- parseSCCQQuery(query)
+        .map(q => sa => AlgorithmInput.SCCQAxioms(q, sa))
+        .orElse {
+          parseGCOREQuery(query).map(q =>
+            sa => AlgorithmInput.GCOREAxioms(q, sa)
+          )
+        }
       // Parse and validate input shapes. Note: Depends on order! GCORE prefixes
       // are only set on GCORE parse (i.e., if SCCQ parse fails).
       s <- parseSHACLShapes(shapes)
-      sa = Axioms(s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]), defaultScopes)
+      sa = Axioms(
+        s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]),
+        defaultScopes
+      )
       // TODO: Use simple shape input, if enabled / valid.
       // Run the algorithm.
       input = q(sa)
@@ -215,13 +233,17 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       s: Set[SimpleSHACLShape],
       log: Log
   ): S2STry[Set[SHACLShape]] =
-    Algorithm(config, shar,
+    Algorithm(
+      config,
+      shar,
       // Call with SCCQ and SimpleSHACLShapes.
       AlgorithmInput.SCCQSimpleSHACL(
         q,
         s.map(_.inScopeS(Scope.In)(defaultScopes)),
-        defaultScopes),
-      log).shapes
+        defaultScopes
+      ),
+      log
+    ).shapes
 
   /** Apply the algorithm, only. */
   protected def algorithm(
@@ -229,12 +251,19 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       s: Set[SHACLShape],
       log: Log
   ): S2STry[Set[SHACLShape]] =
-    Algorithm(config, shar,
+    Algorithm(
+      config,
+      shar,
       // Call with SCCQ and Axioms.
       AlgorithmInput.SCCQAxioms(
         q,
-        Axioms(s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]), defaultScopes)
-      ), log).shapes
+        Axioms(
+          s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]),
+          defaultScopes
+        )
+      ),
+      log
+    ).shapes
 
   /** Apply the algorithm, only. */
   protected def algorithm(
@@ -243,12 +272,22 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       log: Log
   ): S2STry[Set[SHACLShape]] =
     // Call algorithm with GCORE query and axioms.
-    Algorithm(config, shar,
+    Algorithm(
+      config,
+      shar,
       AlgorithmInput.GCOREAxioms(
         q,
-        Axioms(s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]), defaultScopes))
-      , log).shapes
+        Axioms(
+          s.map(_.inScope(Scope.In)(defaultScopes).axiom.asInstanceOf[Axiom]),
+          defaultScopes
+        )
+      ),
+      log
+    ).shapes
 
   /** Set the config. */
   protected def setConfig(config: Configuration): Unit =
     this.config = config
+
+  /** Get the (current) configuration. */
+  def getConfig: Configuration = config

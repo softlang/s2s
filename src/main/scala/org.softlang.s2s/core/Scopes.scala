@@ -5,22 +5,24 @@ case class Scopes(token: String, in: Int, med: Int, out: Int, variable: Int):
 
   /** Rule for naming/appending for the different scopes. */
   private def makeScopeToken(scope: Scope): String = scope match
-    case Scope.None    => ""
-    case Scope.In    => token ++ in.toString
-    case Scope.Med  => token ++ med.toString
-    case Scope.Out => token ++ out.toString
-    case Scope.Variable    => token ++ variable.toString
+    case Scope.None     => ""
+    case Scope.In       => token ++ in.toString
+    case Scope.Med      => token ++ med.toString
+    case Scope.Out      => token ++ out.toString
+    case Scope.Variable => token ++ variable.toString
 
-  /** Remove all scope tokens. */
+  /** Remove scope tokens. */
   def removeScopeTokens(in: String): String =
-    in.replaceAll(getToken(Scope.None), "")
-      .replaceAll(getToken(Scope.In), "")
-      .replaceAll(getToken(Scope.Med), "")
-      .replaceAll(getToken(Scope.Out), "")
-      .replaceAll(getToken(Scope.Variable), "")
+    val i = in.indexOf(token)
+    if i != -1 then in.substring(0, i) else in
+    // in.replaceAll(getToken(Scope.None), "")
+    //  .replaceAll(getToken(Scope.In), "")
+    //  .replaceAll(getToken(Scope.Med), "")
+    //  .replaceAll(getToken(Scope.Out), "")
+    //  .replaceAll(getToken(Scope.Variable), "")
 
   /** Update all scope tokens for a new scope. */
-  def updateScopeTokens(in: String, newScopes: Scopes): String = 
+  def updateScopeTokens(in: String, newScopes: Scopes): String =
     in.replaceAll(getToken(Scope.None), newScopes.getToken(Scope.None))
       .replaceAll(getToken(Scope.In), newScopes.getToken(Scope.In))
       .replaceAll(getToken(Scope.Med), newScopes.getToken(Scope.Med))
@@ -28,7 +30,8 @@ case class Scopes(token: String, in: Int, med: Int, out: Int, variable: Int):
       .replaceAll(getToken(Scope.Variable), newScopes.getToken(Scope.Variable))
 
   /** Replace internal scope token+ID with none, one, and two 'replaceWith'
-   *  strings for in, med and out scope, respectively. */
+    * strings for in, med and out scope, respectively.
+    */
   def prettyScopeTokens(in: String, replaceWith: String = token): String =
     in.replaceAll(getToken(Scope.In), "")
       .replaceAll(getToken(Scope.Variable), "")
@@ -40,23 +43,13 @@ case class Scopes(token: String, in: Int, med: Int, out: Int, variable: Int):
     makeScopeToken(scope)
 
   /** Make a new, fresh set of scopes, which is 'next' to this one. */
-  def nextScopes: Scopes = 
+  def nextScopes: Scopes =
     val m = List(in, med, out).max
-    Scopes(token,
-      m + 1,
-      m + 2,
-      m + 3,
-      variable - 1 
-    )
+    Scopes(token, m + 1, m + 2, m + 3, variable - 1)
 
   /** Make a set of scopes for compositions, i.e., with overlap out == in. */
   def composeScopes: Scopes =
-    Scopes(token,
-      out,
-      out + 1,
-      out + 2,
-      variable - 1 
-    )
+    Scopes(token, out, out + 1, out + 2, variable - 1)
 
 object Scopes:
   /** Get default scopes. */
@@ -68,3 +61,7 @@ object Scopes:
     variable = -1
   )
 
+  /** Remove any and all scope tokens starting with 'token'. */
+  def removeAnyScopeTokens(in: String, thistoken: String): String =
+    val i = in.indexOf(thistoken)
+    if i != -1 then in.substring(0, i) else in

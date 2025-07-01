@@ -19,20 +19,21 @@ import org.softlang.s2s.core.dropScope
 import org.softlang.s2s.core.Log
 import org.softlang.s2s.core.Scopes
 
-
 /** Trait for the high-level validation suite API around FunSuite. */
 abstract class ValidationSuite(
-  title: String = "",
-  disabled: Boolean = false,
-  verbose: Boolean = true,
-  generateValidation: Boolean = true
+    title: String = "",
+    disabled: Boolean = false,
+    verbose: Boolean = true,
+    generateValidation: Boolean = true
 ) extends munit.FunSuite:
 
-  private val validation = ValidationS2S(verbose, generateValidation, ShapeHeuristic.SimpleShapes())
+  private val validation =
+    ValidationS2S(verbose, generateValidation, ShapeHeuristic.SimpleShapes())
   private val validationExt = ValidationS2S(
     verbose,
     generateValidation,
-    ShapeHeuristic.MediumProGS(depth = 1, breadth = 2))
+    ShapeHeuristic.MediumProGS(depth = 1, breadth = 2)
+  )
 
   /** Defines a test case checking for inclusion in output shapes. */
   def includes(
@@ -66,8 +67,7 @@ abstract class ValidationSuite(
       if extended then
         validationExt.includes(sin, q, exactly, atleast, not, debugging, name)
       // Otherwise, use Simple SHACL shapes.
-      else
-        validation.includes(sin, q, exactly, atleast, not, debugging, name)
+      else validation.includes(sin, q, exactly, atleast, not, debugging, name)
     }
 
   /** Defines a test case checking for entailment in output KB. */
@@ -92,6 +92,30 @@ abstract class ValidationSuite(
 
     test(name) {
       validation.entails(sin, q, entails, not, debugging, name)
+    }
+
+  /** Defines a test case checking for entailment for composition of queries. */
+  def compositionEntails(
+      // Name of the test case.
+      description: String,
+      // Input shapes.
+      sin: Set[String],
+      // Input queries (SPARQL or G-CORE).
+      q: List[String],
+      // Output must entail these shapes.
+      entails: Set[String] = Set(),
+      // Output may not entail these shapes.
+      not: Set[String] = Set(),
+      // Enable debugging: Print report even if no issues.
+      debugging: Boolean = false
+  )(implicit loc: munit.Location): Unit =
+
+    // Do not run test, if the suite is disabled.
+    if disabled then return
+    val name = title ++ description
+
+    test(name) {
+      validation.compositionEntails(sin, q, entails, not, debugging, name)
     }
 
   /** Empty set of shapes. */
@@ -129,7 +153,8 @@ abstract class ValidationSuite(
       matc: String = "",
       set: String = "",
       remove: String = "",
-      where: String = ""): String =
+      where: String = ""
+  ): String =
     val rmatc =
       if matc == "" then construct else matc
     List(
@@ -147,7 +172,7 @@ class ValidationS2S(
     // Generate external validation output.
     generateValidation: Boolean,
     // Heuristic to use.
-    heuristic: ShapeHeuristic,
+    heuristic: ShapeHeuristic
 ) extends Shapes2Shapes(
       Configuration.default.copy(
         reasoner = ActiveReasoner.Hermit,
@@ -192,7 +217,8 @@ class ValidationS2S(
     // Assert that no internal failure occurred.
     assert(
       actualSOut.isRight,
-      "internal failure: " ++ actualSOut.left.getOrElse("").toString)
+      "internal failure: " ++ actualSOut.left.getOrElse("").toString
+    )
 
     // If enabled, generate data for external method validation tooling.
 
@@ -209,7 +235,8 @@ class ValidationS2S(
         // Name for the test.
         name,
         // The Log.
-        log)
+        log
+      )
 
     val success = for
       e <- exactlyOut
@@ -223,9 +250,15 @@ class ValidationS2S(
       val mi = e.union(a).diff(aout)
       val msg = List(
         (true, "\n"),
-        (true, log.format(hidecolon = false, shardikMode=debugging)),
-        (ob.nonEmpty, s"Obtained unexpectedly:\n${RED}${formatResults(ob)}${RESET}"),
-        (fo.nonEmpty, s"Obtained, even though forbidden:\n${RED}${formatResults(fo)}${RESET}"),
+        (true, log.format(hidecolon = false, shardikMode = debugging)),
+        (
+          ob.nonEmpty,
+          s"Obtained unexpectedly:\n${RED}${formatResults(ob)}${RESET}"
+        ),
+        (
+          fo.nonEmpty,
+          s"Obtained, even though forbidden:\n${RED}${formatResults(fo)}${RESET}"
+        ),
         (mi.nonEmpty, s"Missing results:\n${RED}${formatResults(mi)}${RESET}"),
         (true, "\n")
       ).filter(_._1).map(_._2).mkString("")
@@ -244,7 +277,8 @@ class ValidationS2S(
         t
 
     // Print debugging info if success or failure but verbose is not set; use shardikMode if explicitly debugging.
-    if !verbose || success.getOrElse(false) && debugging then log.print(true, true, true, shardikMode=debugging)
+    if !verbose || success.getOrElse(false) && debugging then
+      log.print(true, true, true, shardikMode = debugging)
 
   /** Run an entailment test case. */
   def entails(
@@ -263,12 +297,15 @@ class ValidationS2S(
     // Assert that no internal failure occurred.
     assert(
       axiomsS.isRight,
-      "internal failure: " ++ axiomsS.left.getOrElse("").toString)
+      "internal failure: " ++ axiomsS.left.getOrElse("").toString
+    )
     val axioms = axiomsS.toOption.get._1
 
     // Parse the test case (and move T to Scope.Template).
     val entailsOut =
-      parseSHACLShapes(entails).map(s => s.map(_.inScope(Scope.Out)(axioms.scopes)))
+      parseSHACLShapes(entails).map(s =>
+        s.map(_.inScope(Scope.Out)(axioms.scopes))
+      )
     val notOut =
       parseSHACLShapes(not).map(s => s.map(_.inScope(Scope.Out)(axioms.scopes)))
 
@@ -292,85 +329,174 @@ class ValidationS2S(
       val t2 = out.toOption.get.intersect(n).isEmpty
       val wrong = testing.intersect(out.toOption.getOrElse(Set()))
       val msg2 =
-        log.format(hidecolon = false, shardikMode=debugging)
-        ++ s"Wrongly entailed:\n${RED}${formatResults(wrong)}${RESET}\n"
+        log.format(hidecolon = false, shardikMode = debugging)
+          ++ s"Wrongly entailed:\n${RED}${formatResults(wrong)}${RESET}\n"
       assert(t2, msg2)
 
       // Assert that exactly all virtual candidates were entailed.
       val t1 = out.toOption.get == e
       val missing = e.diff(out.toOption.getOrElse(Set()))
       val msg =
-        log.format(hidecolon = false, shardikMode=debugging)
-        ++ s"Not entailed:\n${RED}${formatResults(missing)}${RESET}\n"
+        log.format(hidecolon = false, shardikMode = debugging)
+          ++ s"Not entailed:\n${RED}${formatResults(missing)}${RESET}\n"
       assert(t1, msg)
 
       t1 && t2
 
     // Print debugging info if success or failure but verbose is not set, shardik if explicitly debugging.
-    if !verbose || success.getOrElse(false) && debugging then log.print(true, true, true, shardikMode=debugging)
+    if !verbose || success.getOrElse(false) && debugging then
+      log.print(true, true, true, shardikMode = debugging)
 
     // If enabled, generate data for external method validation tooling.
     // Note: Here, we use the 'expected' shapes, since we only infer axioms.
     // This validation case is thus only valid if this test case passes, and
     // we only produce the validation output in this case.
-    if !suppressValidation && generateValidation && success.getOrElse(false) then
-      generateValidationData(axiomsS.toOption.get._2, entailsOut.toOption.get, name, log)
+    if !suppressValidation && generateValidation && success.getOrElse(false)
+    then
+      generateValidationData(
+        axiomsS.toOption.get._2,
+        entailsOut.toOption.get,
+        name,
+        log
+      )
 
-  def generateValidationData(input: AlgorithmInput, output: Set[SHACLShape], name: String, log: Log): Unit =
-      // Produce all validation data.
-      val query = input.formatQuery(shar.state)
-      val sin = input.formatShapes.toOption.get
-      val sout = JsonLDParser.unparse(output.map(_.dropScope(input.getScopes))).toOption.get
-      val shardikKB = log.format(false, false, false, true)
+  def generateValidationData(
+      input: AlgorithmInput,
+      output: Set[SHACLShape],
+      name: String,
+      log: Log
+  ): Unit =
+    // Produce all validation data.
+    val query = input.formatQuery(shar.state)
+    val sin = input.formatShapes.toOption.get
+    val sout = JsonLDParser
+      .unparse(output.map(_.dropScope(input.getScopes)))
+      .toOption
+      .get
+    val shardikKB = log.format(false, false, false, true)
 
-      val cvoc = input.vocabularyIn.concepts
-        .map(_.dropScope(input.getScopes)).mkString("\n").filterNot(c => c == '<' || c == '>')
-      val pvoc = input.vocabularyIn.properties
-        .map(_.dropScope(input.getScopes)).mkString("\n").filterNot(c => c == '<' || c == '>')
-      val ivoc = input.vocabularyIn.nominals
-        .map(_.dropScope(input.getScopes)).mkString("\n").filterNot(c => c == '<' || c == '>')
+    val cvoc = input.vocabularyIn.concepts
+      .map(_.dropScope(input.getScopes))
+      .mkString("\n")
+      .filterNot(c => c == '<' || c == '>')
+    val pvoc = input.vocabularyIn.properties
+      .map(_.dropScope(input.getScopes))
+      .mkString("\n")
+      .filterNot(c => c == '<' || c == '>')
+    val ivoc = input.vocabularyIn.nominals
+      .map(_.dropScope(input.getScopes))
+      .mkString("\n")
+      .filterNot(c => c == '<' || c == '>')
 
-      val (subdir, qname) =
-        if input.isECCQ
-        then ("eccq/", "query.gcore")
-        else ("sccq/", "query.sparql")
+    val (subdir, qname) =
+      if input.isECCQ
+      then ("eccq/", "query.gcore")
+      else ("sccq/", "query.sparql")
 
-      // The base path of the 'validation' directory.
-      val base = dataPath ++ subdir ++ ValidationS2S.TestId.next(name)
+    // The base path of the 'validation' directory.
+    val base = dataPath ++ subdir ++ ValidationS2S.TestId.next(name)
 
-      // Query.
-      val qfile = Paths.get(base ++ "/" ++ qname)
-      Files.createDirectories(qfile.getParent())
-      Files.write(qfile, query.getBytes(StandardCharsets.UTF_8))
+    // Query.
+    val qfile = Paths.get(base ++ "/" ++ qname)
+    Files.createDirectories(qfile.getParent())
+    Files.write(qfile, query.getBytes(StandardCharsets.UTF_8))
 
-      // Input shapes.
-      val isfile = Paths.get(base ++ "/in.json")
-      Files.write(isfile, sin.getBytes(StandardCharsets.UTF_8))
+    // Input shapes.
+    val isfile = Paths.get(base ++ "/in.json")
+    Files.write(isfile, sin.getBytes(StandardCharsets.UTF_8))
 
-      // Output shapes.
-      val osfile = Paths.get(base ++ "/out.json")
-      Files.write(osfile, sout.getBytes(StandardCharsets.UTF_8))
+    // Output shapes.
+    val osfile = Paths.get(base ++ "/out.json")
+    Files.write(osfile, sout.getBytes(StandardCharsets.UTF_8))
 
-      // Vocabularies.
-      val cvfile = Paths.get(base ++ "/concepts.vocabulary")
-      Files.write(cvfile, cvoc.getBytes(StandardCharsets.UTF_8))
+    // Vocabularies.
+    val cvfile = Paths.get(base ++ "/concepts.vocabulary")
+    Files.write(cvfile, cvoc.getBytes(StandardCharsets.UTF_8))
 
-      val pvfile = Paths.get(base ++ "/properties.vocabulary")
-      Files.write(pvfile, pvoc.getBytes(StandardCharsets.UTF_8))
+    val pvfile = Paths.get(base ++ "/properties.vocabulary")
+    Files.write(pvfile, pvoc.getBytes(StandardCharsets.UTF_8))
 
-      val ivfile = Paths.get(base ++ "/nominals.vocabulary")
-      Files.write(ivfile, ivoc.getBytes(StandardCharsets.UTF_8))
+    val ivfile = Paths.get(base ++ "/nominals.vocabulary")
+    Files.write(ivfile, ivoc.getBytes(StandardCharsets.UTF_8))
 
-      // Executable shardik KB.
-      val kbfile = Paths.get(base ++ "/shardik.kb")
-      Files.write(kbfile, shardikKB.getBytes(StandardCharsets.UTF_8))
+    // Executable shardik KB.
+    val kbfile = Paths.get(base ++ "/shardik.kb")
+    Files.write(kbfile, shardikKB.getBytes(StandardCharsets.UTF_8))
+
+  /** Run an entailment test case. */
+  def compositionEntails(
+      sin: Set[String],
+      q: List[String],
+      entails: Set[String] = Set(),
+      not: Set[String] = Set(),
+      debugging: Boolean,
+      name: String
+  )(implicit loc: munit.Location): Unit =
+
+    // // Obtain the test result and log.
+    val (axiomsS, log) =
+      constructAxiomsAndInput(q(0), sin) // TODO: Iterate composition
+
+    // Assert that no internal failure occurred.
+    assert(
+      axiomsS.isRight,
+      "internal failure: " ++ axiomsS.left.getOrElse("").toString
+    )
+    val axioms = axiomsS.toOption.get._1
+
+    // Parse the test case (and move T to Scope.Template).
+    val entailsOut =
+      parseSHACLShapes(entails).map(s =>
+        s.map(_.inScope(Scope.Out)(axioms.scopes))
+      )
+    val notOut =
+      parseSHACLShapes(not).map(s => s.map(_.inScope(Scope.Out)(axioms.scopes)))
+
+    // Parsing and input error assertions.
+    // (Only for detecting errors in tests early.)
+    assert(entailsOut.isRight, "error in test case: exactlyOut")
+    assert(notOut.isRight, "error in test case: notOut")
+
+    val success = for
+      e <- entailsOut
+      n <- notOut
+    yield
+      // Take the 'entailsOut' shapes from the test case as candidates,
+      // and apply the algorithm filtering step, using the inferred axioms.
+      implicit val scopes = Scopes.default("-")
+      val testing = e.union(n)
+      val out = Algorithm.filter(testing, axioms, Log())(scopes, shar)
+      assert(out.isRight, "internal failure (filter)")
+
+      // Assert, that none of the notOut axioms were entailed.
+      val t2 = out.toOption.get.intersect(n).isEmpty
+      val wrong = testing.intersect(out.toOption.getOrElse(Set()))
+      val msg2 =
+        log.format(hidecolon = false, shardikMode = debugging)
+          ++ s"Wrongly entailed:\n${RED}${formatResults(wrong)}${RESET}\n"
+      assert(t2, msg2)
+
+      // Assert that exactly all virtual candidates were entailed.
+      val t1 = out.toOption.get == e
+      val missing = e.diff(out.toOption.getOrElse(Set()))
+      val msg =
+        log.format(hidecolon = false, shardikMode = debugging)
+          ++ s"Not entailed:\n${RED}${formatResults(missing)}${RESET}\n"
+      assert(t1, msg)
+
+      t1 && t2
+
+    // Print debugging info if success or failure but verbose is not set, shardik if explicitly debugging.
+    if !verbose || success.getOrElse(false) && debugging then
+      log.print(true, true, true, shardikMode = debugging)
 
 object ValidationS2S:
   private object TestId:
-      private var count: Map[String, Int] = Map()
-      /** Make a unique name from actual test name and running ID. */
-      def next(name: String): String =
-        val c = count.getOrElse(name, 0)
-        count = count + (name -> (c + 1))
-        if c == 0 then s"${name}"
-        else s"${name}_${c}"
+    private var count: Map[String, Int] = Map()
+
+    /** Make a unique name from actual test name and running ID. */
+    def next(name: String): String =
+      val c = count.getOrElse(name, 0)
+      count = count + (name -> (c + 1))
+      if c == 0 then s"${name}"
+      else s"${name}_${c}"
