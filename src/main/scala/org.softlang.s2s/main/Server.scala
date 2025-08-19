@@ -17,6 +17,7 @@ import org.softlang.s2s.core.Scope
 import de.pseifer.shar.core.Iri
 import cask.endpoints.get
 import uk.ac.manchester.cs.jfact.kernel.todolist.TODOListSaveState
+import scala.annotation.threadUnsafe
 
 enum ArgumentTypeInfo:
   case Unknown
@@ -48,6 +49,7 @@ case class ServerRoutes(impl: Implementation)(implicit
           "error" -> ""
         )
       else
+        println(result)
         ujson.Obj(
           "valid" -> false,
           "error" -> result.getOrElse("")
@@ -98,7 +100,7 @@ case class ServerRoutes(impl: Implementation)(implicit
           "result" -> "",
           "error" -> error
         )
-      case Right(k, p, l) =>
+      case Right(k, l, p) =>
         ujson.Obj(
           "result" -> Seq(
             ujson.Obj(
@@ -123,11 +125,10 @@ case class ServerRoutes(impl: Implementation)(implicit
   initialize()
 }
 
-object Server extends cask.Main {
+object Server extends cask.Main:
   val allRoutes = Seq(
     ServerRoutes(Implementation())
   ) // TODO: Add Config to Server for Implementation
-}
 
 type TypeAnnotation = (String, String, String)
 
@@ -229,7 +230,10 @@ class Implementation(
         //   a) the input shapes, and
         //   b) all queries involved in the composition
         // Drop scopes -- they are re-applied (correctly) later.
-        qs.map(q => q.toSCCQ.get.vocabulary) // TODO why can this get fail?
+        qs.map(q =>
+          q.toSCCQ.map(_.vocabulary).getOrElse(Vocabulary.empty)
+        ) // Note: On conversion failure, returns an empty vocabulary.
+          // This is fine, since conversion failure is detected in other places, anyways.
           .foldLeft(initialAxioms.vocabulary.dropScope(initialAxioms.scopes))(
             (v1, v2) => v1.union(v2).dropScope(initialAxioms.scopes)
           )
@@ -345,5 +349,3 @@ class Implementation(
         labels.union(properties)
 
       case GCORE.Kind.VarRaw(v) => Set()
-
-end Implementation
