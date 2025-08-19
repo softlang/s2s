@@ -19,6 +19,44 @@ import cask.endpoints.get
 import uk.ac.manchester.cs.jfact.kernel.todolist.TODOListSaveState
 import scala.annotation.threadUnsafe
 
+// Here be dragons.
+//
+// This is a prototype backend for providing type-level support,
+// e.g., in programming languages. It uses a JSON API offering
+// support for parsing of queries (`/parse`)  and typing of
+// queries (`/type`).
+//
+// '/parse': Takes a {'query': <String-encoded Query>} and returns
+//
+// {
+//  'valid': <A boolean value, signaling syntactic validity.>
+//  'error': <Optional parse error message, or "" if valid.>
+// }
+//
+// '/type': The typing endpoint takes a
+//
+//   {
+//    'query': <String-encoded Query>,
+//    'iri': <IRI identifying target graph>,
+//    'args': <optional arguments for the query as a
+//      [{
+//        'type': <A string label, any of "int", "str" or "none" (unknown)>,
+//        'literal': <A value of type String, Int, or null (no known literal)>
+//      }]
+//  }
+//
+//  The endpoint returns:
+//
+// {
+//  'result': <Either "" if error, or a result as
+//  [{
+//    'kind':  <The kind of this query, one of 'node', 'edge', 'value'>,
+//    'props': <Semicolon separted list of type names in "int", "str", or "none">,
+//    'labels': <Semicolon separated list of labels>,
+//  }]>,
+//  'error': <An optional type or processing error message, or "" if valid.>
+// }
+
 enum ArgumentTypeInfo:
   case Unknown
   case AnyString
@@ -67,7 +105,7 @@ case class ServerRoutes(impl: Implementation)(implicit
 
     // Parse arguments into simple string-based Map structure.
     // Originally a mapping from argument names to dicts of shape:
-    //    {"type": "int"/"str"/"none", "literal": str | int | None
+    //    {"type": "int"/"str"/"none", "literal": str | int | None}
     val preparedArgs = args._1
       .map(x =>
         val tpe = x._2.obj._1("type").strOpt
