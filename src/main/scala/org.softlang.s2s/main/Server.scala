@@ -19,8 +19,10 @@ import cask.endpoints.get
 import uk.ac.manchester.cs.jfact.kernel.todolist.TODOListSaveState
 import scala.annotation.threadUnsafe
 
-// Here be dragons.
-//
+// ----------------------------------------------------------------------------
+//                                                             Here be dragons.
+// ----------------------------------------------------------------------------
+
 // This is a prototype backend for providing type-level support,
 // e.g., in programming languages. It uses a JSON API offering
 // support for parsing of queries (`/parse`)  and typing of
@@ -278,7 +280,7 @@ class Implementation(
       }
 
     var labels: List[GCORE.Label] = Nil
-    var keys: List[(GCORE.Key, String)] = Nil
+    var keys: List[(GCORE.Key, String)] = Nil // TODO
 
     resultingAxioms.map { ax =>
       returns.map { f =>
@@ -286,7 +288,8 @@ class Implementation(
           f.kinds.foreach { k =>
             makeTests(k, v.inScope(Scope.Out)(ax.scopes), ax.scopes)
               .foreach { testAxiom =>
-                // Note: It would be easier if makeTests would not return Axioms, but tuples / something else where we can get
+                // Note: It would be easier if makeTests would not return Axioms,
+                // but tuples / something else where we can get
                 // information about whether this is a node/edge etc.
                 val result = ax.entails(s2s.getConfig)(testAxiom)
 
@@ -294,19 +297,22 @@ class Implementation(
                   testAxiom.d.dropScope(ax.scopes) match
                     case NamedConcept(iri) =>
                       val l = GCORE.Label.fromIri(iri, node = true)
-                      println(l)
+                      println("===== DEV:DEBUG " + l)
                       labels = l :: labels
                     case Existential(role, rhs) =>
                       // TODO: Get Key from role.
+                      println("===== DEV:DEBUG ----- Why not?")
                       rhs match
                         case NominalConcept(iri) =>
                           iri.value.contains(GCORE.Value.IRI_STRING)
-                          println("--------> " + role + " " + "string")
+                          println("==== DEV:DEBUG " + role + " " + "string")
                         case Top =>
                           // TODO: Only include T (exists) if there is no more concrete type.
                           // only insert Top when no more specific, overwrite more specifics
-                          println("--------> " + role + " " + "T")
-                        case _ => ()
+                          println("==== DEV:DEBUG " + role + " " + "T")
+                        case _ =>
+                          println("==== DEV:DEBUG " + role + " " + "...other")
+                          ()
                     // TODO
                     // rhs can be T (then 'exists')
                     // or some nominal (then should contain 'int' or 'str')
@@ -323,7 +329,7 @@ class Implementation(
     // Return either an error or result.
     resultingAxioms match
       case Left(err) => Left(err.toString())
-      case Right(ax) => Right(encodeType("node", labels))
+      case Right(ax) => Right(encodeType("node", labels)) // TODO pass keys
 
     // TODO Get all variables from RETURN
     // TODO Check constraints on these variables over the axioms resultingAxiomsk
@@ -345,7 +351,11 @@ class Implementation(
       kind: String,
       labels: List[GCORE.Label]
   ): TypeAnnotation =
-    (kind, labels.map(_.labelname).mkString(";"), "age:int;name:str")
+    (
+      kind,
+      labels.map(_.labelname).mkString(";"),
+      "age:int;name:str"
+    ) // TODO take keys and encode
     // 'int', 'str', or 'exists'
 
   /** Construct subsumption axioms for testing properties of RESULT clauses. */
@@ -355,7 +365,8 @@ class Implementation(
       scopes: Scopes
   ): Set[Subsumption] =
     // For each 'Kind' construct candidates to check:
-    // for node variables, its n <:< concept name (for all concept names in vocabulary) and property (for all role names)
+    // for node variables, its n <:< concept name (for all concept names in vocabulary)
+    //   and property (for all role names)
     // for node ids, check whether n == specific ID (for all nominals in vocabulary)
     // for property, check whether n <:< \exists this property . T (and also what T is, if restricted?)
     //

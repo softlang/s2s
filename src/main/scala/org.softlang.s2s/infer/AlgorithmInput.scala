@@ -15,6 +15,15 @@ import org.softlang.s2s.query.inScope
 import org.softlang.s2s.query.FilterPattern
 import org.softlang.s2s.parser.JsonLDParser
 
+object AlgorithmInput:
+
+  def fromSetOfShapes(
+      q: SCCQ,
+      shapes: Set[SHACLShape],
+      inputScopes: Scopes
+  ): AlgorithmInput =
+    AlgorithmInput.SCCQAxioms(q, Axioms(shapes.map(_.axiom), inputScopes))
+
 /** Specifies the possible inputs for the Algorithm. */
 enum AlgorithmInput:
 

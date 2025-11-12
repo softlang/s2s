@@ -1,6 +1,7 @@
 package org.softlang.s2s
 
 import org.softlang.s2s.main.Compare
+import org.softlang.s2s.main.Generator
 import org.softlang.s2s.main.Dev
 import org.softlang.s2s.main.Profile
 import org.softlang.s2s.main.S2S
@@ -15,3 +16,5 @@ import org.softlang.s2s.main.Server
 @main def dev(): Unit = Dev.run()
 
 @main def serve(): Unit = Server.main(Array())
+
+@main def gen(): Unit = Generator.run(iterations = 1)

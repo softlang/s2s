@@ -34,8 +34,7 @@ object Profile:
   // Experiment generator configurations (from the paper).
 
   // See ProblemGeneratorConfig Class for documentation (!)
-  val small = ProblemGeneratorConfig(
-    inputFile = None,
+  val small = SCCQProblemGeneratorConfig(
     minPatternSize = 1,
     maxPatternSize = 2,
     minTemplateSize = 1,
@@ -51,11 +50,13 @@ object Profile:
     propertyConceptRatio = 0.3f,
     variableToNominalRatio = 0.9f,
     cyclicRedrawCount = 10,
-    minNumberOfShapes = 1,
-    maxNumberOfShapes = 2,
-    propertyConceptTargetRatio = -1.0f,
-    propertyConceptConstraintRatio = -1.0f,
-    includeForallConstraints = true,
+    shapeConfig = ShapeGeneratorConfig(
+      minNumberOfShapes = 1,
+      maxNumberOfShapes = 2,
+      propertyConceptTargetRatio = -1.0f,
+      propertyConceptConstraintRatio = -1.0f,
+      includeForallConstraints = true
+    ),
     seed = seed
   )
 
@@ -64,8 +65,10 @@ object Profile:
     maxPatternSize = 7,
     minTemplateSize = 5,
     maxTemplateSize = 7,
-    minNumberOfShapes = 5,
-    maxNumberOfShapes = 7
+    shapeConfig = small.shapeConfig.copy(
+      minNumberOfShapes = 5,
+      maxNumberOfShapes = 7
+    )
   )
 
   val large = small.copy(
@@ -73,23 +76,25 @@ object Profile:
     maxPatternSize = 13,
     minTemplateSize = 11,
     maxTemplateSize = 13,
-    minNumberOfShapes = 11,
-    maxNumberOfShapes = 13
+    shapeConfig = small.shapeConfig.copy(
+      minNumberOfShapes = 11,
+      maxNumberOfShapes = 13
+    )
   )
 
   // See ./wikidata/Readme.md
 
-  val wikidata_small = small.copy(
-    inputFile = Some("docs/evaluation/wikidata/queries_clean")
-  )
+  // val wikidata_small = small.copy(
+  //   inputFile = Some("docs/evaluation/wikidata/queries_clean")
+  // )
 
-  val wikidata_medium = medium.copy(
-    inputFile = Some("docs/evaluation/wikidata/queries_clean")
-  )
+  // val wikidata_medium = medium.copy(
+  //   inputFile = Some("docs/evaluation/wikidata/queries_clean")
+  // )
 
-  val wikidata_large = large.copy(
-    inputFile = Some("docs/evaluation/wikidata/queries_clean")
-  )
+  // val wikidata_large = large.copy(
+  //   inputFile = Some("docs/evaluation/wikidata/queries_clean")
+  // )
 
   def run(): Unit =
     // Main Experiment
@@ -98,12 +103,12 @@ object Profile:
     runConfig(large)
 
     // Wikidata Experiment
-    runConfig(wikidata_small, trials = 250, repeat = 4)
-    runConfig(wikidata_medium, trials = 250, repeat = 4)
-    runConfig(wikidata_large, trials = 250, repeat = 4)
+    // runConfig(wikidata_small, trials = 250, repeat = 4)
+    // runConfig(wikidata_medium, trials = 250, repeat = 4)
+    // runConfig(wikidata_large, trials = 250, repeat = 4)
 
   private def runConfig(
-      pgc: ProblemGeneratorConfig,
+      pgc: SCCQProblemGeneratorConfig,
       trials: Int = trials,
       drop: Int = 0,
       repeat: Int = 1

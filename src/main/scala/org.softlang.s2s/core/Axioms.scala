@@ -7,6 +7,7 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.reasoning.DLReasoner
 import de.pseifer.shar.reasoning.AxiomSet
+import org.eclipse.rdf4j.model.vocabulary.SHACL
 
 class Axioms(private val axioms: Set[Axiom], val scopes: Scopes)
     extends Showable:
@@ -23,6 +24,23 @@ class Axioms(private val axioms: Set[Axiom], val scopes: Scopes)
 
   /** Make a shar AxiomSet. */
   def toAxiomSet: AxiomSet = AxiomSet(axioms)
+
+  /** Convert to a set of SHACLShapes. */
+  def toSHACLShapes: S2STry[Set[SHACLShape]] =
+    Util
+      .flipEitherHead(toSet.toList.map { ax =>
+        ax match
+          case s @ Subsumption(_, _) => Right(Set(SHACLShape(s)))
+          case Equality(c, d) =>
+            Right(
+              Set(
+                SHACLShape(Subsumption(c, d)),
+                SHACLShape(Subsumption(d, c))
+              )
+            )
+          case _ => Left(UnconvertableShapeError(ax))
+      })
+      .map(_.flatten.toSet)
 
   /** Get all concepts. */
   def concepts: Set[Concept] =

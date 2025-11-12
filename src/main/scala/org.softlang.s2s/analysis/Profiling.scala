@@ -114,7 +114,7 @@ class Profiling(
   /** Run `trials` trials with given configuration. */
   def run(
       // Generator configuration.
-      genConfig: ProblemGeneratorConfig,
+      genConfig: SCCQProblemGeneratorConfig,
       // Number of trials.
       setTrials: Int,
       // Write CSV to file.
@@ -128,7 +128,7 @@ class Profiling(
   ): Unit =
 
     object Sampler:
-      val gen = ProblemGenerator(genConfig)(scopes)
+      val gen = ProblemGeneratorRDF(genConfig)(scopes)
       var cachedSample = gen.sample()
       var counter = 0
       def sample(repeat: Int): (SCCQ, Set[SHACLShape]) =
@@ -183,7 +183,7 @@ class Profiling(
         s"Reasoner: ${config.reasoner}",
         s"Max Retries: ${config.retry}",
         s"Timeout: ${config.timeout}",
-        s"--Configuration--\n${genConfig.formatLong}",
+        s"--Configuration--\n${genConfig.toString}",
         s"--Report--\n$report"
       ).mkString("\n")
 

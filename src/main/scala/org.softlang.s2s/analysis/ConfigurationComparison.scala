@@ -31,16 +31,16 @@ class ConfigurationComparison(
       s: Set[SHACLShape],
       log1: Log,
       log2: Log
-  ): Boolean = 
+  ): Boolean =
     setConfig(c1)
     val v1 = algorithm(q, s, log1)
     setConfig(c2)
     val v2 = algorithm(q, s, log2)
-    v1 == v2 
+    v1 == v2
 
   /** Test with generator setup for trials many runs. */
   private def search(
-      qg: ProblemGenerator,
+      qg: ProblemGeneratorRDF,
       verbose: Boolean = true
   ): List[(SCCQ, Set[SHACLShape])] =
     def doSearch(trial: Int): List[(SCCQ, Set[SHACLShape])] =
@@ -79,9 +79,9 @@ class ConfigurationComparison(
     doSearch(trials)
 
   /** One step, with a generator config an number of trials. */
-  private def step(config: ProblemGeneratorConfig): Unit =
+  private def step(config: SCCQProblemGeneratorConfig): Unit =
     print(config)
-    search(ProblemGenerator(config)(scopes))
+    search(ProblemGeneratorRDF(config)(scopes))
     println("done.")
 
   /** Compare for specific input (String encoded). */
@@ -136,8 +136,7 @@ class ConfigurationComparison(
     //  )
     // )
 
-    val rc = ProblemGeneratorConfig(
-      inputFile = None,
+    val rc = SCCQProblemGeneratorConfig(
       minPatternSize = 2,
       maxPatternSize = 6,
       minTemplateSize = 2,
@@ -153,11 +152,13 @@ class ConfigurationComparison(
       propertyConceptRatio = (0.0f, 1.0f),
       variableToNominalRatio = 0.8f,
       cyclicRedrawCount = 10,
-      minNumberOfShapes = 0,
-      maxNumberOfShapes = 2,
-      propertyConceptTargetRatio = -1.0f,
-      propertyConceptConstraintRatio = -1.0f,
-      includeForallConstraints = true
+      shapeConfig = ShapeGeneratorConfig(
+        minNumberOfShapes = 0,
+        maxNumberOfShapes = 2,
+        propertyConceptTargetRatio = -1.0f,
+        propertyConceptConstraintRatio = -1.0f,
+        includeForallConstraints = true
+      )
     )
 
     step(rc)
