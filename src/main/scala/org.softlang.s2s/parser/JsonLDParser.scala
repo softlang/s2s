@@ -302,7 +302,7 @@ object JsonLDParser:
           Right(
             s""" "${sh._property}": { "${sh._path}": { "${sh._inversePath}": { "@id": ${formatIri(
                 r.toString
-              )} } , "${sh._minCount}": 1 } """
+              )} } , "${sh._minCount}": 1 } }"""
           )
         case _ =>
           Right(s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(
@@ -344,7 +344,8 @@ object JsonLDParser:
           yield s""" "${sh._property}": { "${sh._path}": { "@id": ${formatIri(
               r.toString
             )} }, ${cs} } """
-    case _ => Left(UnprintableShapeError("invalid or unsupported constraint"))
+    case s =>
+      Left(UnprintableShapeError(s"invalid or unsupported constraint ${s}"))
 
   private def unparseShape[T <: SHACLShape](shape: T): S2STry[String] =
     shape match

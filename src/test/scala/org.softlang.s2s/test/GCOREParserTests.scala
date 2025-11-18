@@ -10,7 +10,7 @@ class GCOREParserTests extends munit.FunSuite:
   val p = GCOREParser()
 
   // Test framework.
-  
+
   def parses[T](s: String, v: T)(implicit pp: p.Parser[T]) =
     val res = p.parseAll(pp, s)
     if !res.successful then println(res.toString)
@@ -26,8 +26,8 @@ class GCOREParserTests extends munit.FunSuite:
     val res = p.parseAll(pp, s)
     assert(!(res.successful))
 
-  //def produces(gcore: String, sparql: String) =
-  //  val sparqlout = 
+  // def produces(gcore: String, sparql: String) =
+  //  val sparqlout =
   //    GCoreToSparql(":").convert(p(gcore))
   //  assertEquals(sparqlout, sparql)
 
@@ -62,7 +62,7 @@ class GCOREParserTests extends munit.FunSuite:
     parsesNot(":1b")
     parsesNot(":_b")
   }
-  
+
   test("Parsing of Key") {
     implicit val pp = p.pKey
 
@@ -85,7 +85,7 @@ class GCOREParserTests extends munit.FunSuite:
     parses("0", Value.IntValue(0))
     parses("-1", Value.IntValue(-1))
   }
-    
+
   test("Parsing of String Value") {
     implicit val pp = p.pValue
 
@@ -120,7 +120,8 @@ class GCOREParserTests extends munit.FunSuite:
   }
 
   val nodeBGP = BasicGraphPattern.NodePattern(Variable("x"))
-  val edgeBGP = BasicGraphPattern.EdgePattern(Variable("x"), Variable("z"), Variable("y"))
+  val edgeBGP =
+    BasicGraphPattern.EdgePattern(Variable("x"), Variable("z"), Variable("y"))
 
   test("Parsing of BasicGraphPattern") {
     implicit val pp = p.pBasicGraphPattern
@@ -131,7 +132,8 @@ class GCOREParserTests extends munit.FunSuite:
 
   val whenLabel = WhenClause.HasLabel(Variable("x"), Label("Person"))
   val whenKey = WhenClause.HasKey(Variable("x"), Key("age"))
-  val whenKeyValue = WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+  val whenKeyValue =
+    WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
 
   test("Parsing of WhenClause") {
     implicit val pp = p.pWhenClause
@@ -144,10 +146,18 @@ class GCOREParserTests extends munit.FunSuite:
     parses("person.x", WhenClause.HasKey(Variable("person"), Key("x")))
 
     parses("x.age = 42", whenKeyValue)
-    parses("x.b=0", WhenClause.HasKeyValue(
-      Variable("x"), Key("b"), Value.IntValue(0)))
-    parses("person.x = \"test\"", WhenClause.HasKeyValue(
-      Variable("person"), Key("x"), Value.StringValue("test")))
+    parses(
+      "x.b=0",
+      WhenClause.HasKeyValue(Variable("x"), Key("b"), Value.IntValue(0))
+    )
+    parses(
+      "person.x = \"test\"",
+      WhenClause.HasKeyValue(
+        Variable("person"),
+        Key("x"),
+        Value.StringValue("test")
+      )
+    )
 
     parsesNot("person.")
     parsesNot("person:")
@@ -163,7 +173,10 @@ class GCOREParserTests extends munit.FunSuite:
     parses("x:Person AND x.age", Set(whenLabel, whenKey))
     parses("x.age AND x:Person", Set(whenKey, whenLabel))
     parses(" x.age   AND      x:Person ", Set(whenKey, whenLabel))
-    parses("x:Person AND x.age AND x.age = 42", Set(whenLabel, whenKey, whenKeyValue))
+    parses(
+      "x:Person AND x.age AND x.age = 42",
+      Set(whenLabel, whenKey, whenKeyValue)
+    )
 
     // Must be at least one clause (not empty).
     parsesNot("")
@@ -188,15 +201,33 @@ class GCOREParserTests extends munit.FunSuite:
     parses("MATCH (x) WHERE x.age", Match(Set(nodeBGP), Set(whenKey)))
     parses("MATCH (x) WHERE x.age = 42", Match(Set(nodeBGP), Set(whenKeyValue)))
 
-    parses("MATCH  (x)    WHERE    x:Person", Match(Set(nodeBGP), Set(whenLabel)))
-    parses("""MATCH (x)
-              WHERE x:Person""", Match(Set(nodeBGP), Set(whenLabel)))
+    parses(
+      "MATCH  (x)    WHERE    x:Person",
+      Match(Set(nodeBGP), Set(whenLabel))
+    )
+    parses(
+      """MATCH (x)
+              WHERE x:Person""",
+      Match(Set(nodeBGP), Set(whenLabel))
+    )
 
-    parses("MATCH (x), (x)-[z]->(y) WHERE x:Person", Match(longMatch, Set(whenLabel)))
-    parses("MATCH (x)-[z]->(y), (x) WHERE x.age = 42", Match(longMatch, Set(whenKeyValue)))
+    parses(
+      "MATCH (x), (x)-[z]->(y) WHERE x:Person",
+      Match(longMatch, Set(whenLabel))
+    )
+    parses(
+      "MATCH (x)-[z]->(y), (x) WHERE x.age = 42",
+      Match(longMatch, Set(whenKeyValue))
+    )
 
-    parses("MATCH (x), (x)-[z]->(y) WHERE x:Person AND x.age = 42", Match(longMatch, Set(whenLabel, whenKeyValue)))
-    parses("MATCH (x)-[z]->(y), (x) WHERE x.age = 42 AND x:Person", Match(longMatch, Set(whenKeyValue, whenLabel)))
+    parses(
+      "MATCH (x), (x)-[z]->(y) WHERE x:Person AND x.age = 42",
+      Match(longMatch, Set(whenLabel, whenKeyValue))
+    )
+    parses(
+      "MATCH (x)-[z]->(y), (x) WHERE x.age = 42 AND x:Person",
+      Match(longMatch, Set(whenKeyValue, whenLabel))
+    )
   }
 
   val longConstruct = Set(nodeBGP, edgeBGP)
@@ -207,12 +238,19 @@ class GCOREParserTests extends munit.FunSuite:
     parses("CONSTRUCT (x)", Construct(Set(nodeBGP), Set(), Set()))
     parses("CONSTRUCT (x)-[z]->(y)", Construct(Set(edgeBGP), Set(), Set()))
 
-    parses("CONSTRUCT (x), (x)-[z]->(y)", Construct(longConstruct, Set(), Set()))
-    parses("CONSTRUCT (x)-[z]->(y), (x)", Construct(longConstruct, Set(), Set()))
+    parses(
+      "CONSTRUCT (x), (x)-[z]->(y)",
+      Construct(longConstruct, Set(), Set())
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y), (x)",
+      Construct(longConstruct, Set(), Set())
+    )
   }
 
   val setLabel = SetClause.SetLabel(Variable("x"), Label("Person"))
-  val setKeyValue = SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+  val setKeyValue =
+    SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
 
   test("Parsing of SetClauses") {
     implicit val pp = p.pSetClauses
@@ -252,38 +290,115 @@ class GCOREParserTests extends munit.FunSuite:
   test("Parsing of Construct with SetClause") {
     implicit val pp = p.pConstruct
 
-    parses("CONSTRUCT (x) SET x:Person", Construct(Set(nodeBGP), Set(setLabel), Set()))
-    parses("CONSTRUCT (x) SET x.age = 42", Construct(Set(nodeBGP), Set(setKeyValue), Set()))
-    parses("CONSTRUCT (x) SET x.age = 42 AND x:Person", Construct(Set(nodeBGP), Set(setKeyValue, setLabel), Set()))
-    parses("CONSTRUCT (x)-[z]->(y) SET x:Person", Construct(Set(edgeBGP), Set(setLabel), Set()))
-    parses("CONSTRUCT (x)-[z]->(y) SET x.age = 42", Construct(Set(edgeBGP), Set(setKeyValue), Set()))
-    parses("CONSTRUCT (x)-[z]->(y) SET x.age = 42 AND x:Person", Construct(Set(edgeBGP), Set(setKeyValue, setLabel), Set()))
-    parses("CONSTRUCT (x), (x)-[z]->(y) SET x:Person", Construct(longConstruct, Set(setLabel), Set()))
+    parses(
+      "CONSTRUCT (x) SET x:Person",
+      Construct(Set(nodeBGP), Set(setLabel), Set())
+    )
+    parses(
+      "CONSTRUCT (x) SET x.age = 42",
+      Construct(Set(nodeBGP), Set(setKeyValue), Set())
+    )
+    parses(
+      "CONSTRUCT (x) SET x.age = 42 AND x:Person",
+      Construct(Set(nodeBGP), Set(setKeyValue, setLabel), Set())
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) SET x:Person",
+      Construct(Set(edgeBGP), Set(setLabel), Set())
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) SET x.age = 42",
+      Construct(Set(edgeBGP), Set(setKeyValue), Set())
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) SET x.age = 42 AND x:Person",
+      Construct(Set(edgeBGP), Set(setKeyValue, setLabel), Set())
+    )
+    parses(
+      "CONSTRUCT (x), (x)-[z]->(y) SET x:Person",
+      Construct(longConstruct, Set(setLabel), Set())
+    )
   }
 
   test("Parsing of Construct with RemoveClause") {
     implicit val pp = p.pConstruct
 
-    parses("CONSTRUCT (x) REMOVE x:Person", Construct(Set(nodeBGP), Set(), Set(removeLabel)))
-    parses("CONSTRUCT (x) REMOVE x.age", Construct(Set(nodeBGP), Set(), Set(removeKey)))
-    parses("CONSTRUCT (x) REMOVE x.age AND x:Person", Construct(Set(nodeBGP), Set(), Set(removeKey, removeLabel)))
-    parses("CONSTRUCT (x)-[z]->(y) REMOVE x:Person", Construct(Set(edgeBGP), Set(), Set(removeLabel)))
-    parses("CONSTRUCT (x)-[z]->(y) REMOVE x.age ", Construct(Set(edgeBGP), Set(), Set(removeKey)))
-    parses("CONSTRUCT (x)-[z]->(y) REMOVE x.age AND x:Person", Construct(Set(edgeBGP), Set(), Set(removeKey, removeLabel)))
-    parses("CONSTRUCT (x), (x)-[z]->(y) REMOVE x:Person", Construct(longConstruct, Set(), Set(removeLabel)))
+    parses(
+      "CONSTRUCT (x) REMOVE x:Person",
+      Construct(Set(nodeBGP), Set(), Set(removeLabel))
+    )
+    parses(
+      "CONSTRUCT (x) REMOVE x.age",
+      Construct(Set(nodeBGP), Set(), Set(removeKey))
+    )
+    parses(
+      "CONSTRUCT (x) REMOVE x.age AND x:Person",
+      Construct(Set(nodeBGP), Set(), Set(removeKey, removeLabel))
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) REMOVE x:Person",
+      Construct(Set(edgeBGP), Set(), Set(removeLabel))
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) REMOVE x.age ",
+      Construct(Set(edgeBGP), Set(), Set(removeKey))
+    )
+    parses(
+      "CONSTRUCT (x)-[z]->(y) REMOVE x.age AND x:Person",
+      Construct(Set(edgeBGP), Set(), Set(removeKey, removeLabel))
+    )
+    parses(
+      "CONSTRUCT (x), (x)-[z]->(y) REMOVE x:Person",
+      Construct(longConstruct, Set(), Set(removeLabel))
+    )
   }
 
   test("Parsing of Construct with SetClause and RemoveClause") {
     implicit val pp = p.pConstruct
-    parses("CONSTRUCT (x) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person", 
-      Construct(Set(nodeBGP), Set(setKeyValue, setLabel), Set(removeKey, removeLabel)))
+    parses(
+      "CONSTRUCT (x) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person",
+      Construct(
+        Set(nodeBGP),
+        Set(setKeyValue, setLabel),
+        Set(removeKey, removeLabel)
+      )
+    )
+  }
+
+  test("Parsing of Set with fresh Variable") {
+    implicit val pp = p.pConstruct
+    parses(
+      "CONSTRUCT (x), (y) SET y:A",
+      Construct(
+        Set(
+          BasicGraphPattern.NodePattern(Variable("x")),
+          BasicGraphPattern.NodePattern(Variable("y"))
+        ),
+        Set(SetClause.SetLabel(Variable("y"), Label("A"))),
+        Set()
+      )
+    )
   }
 
   // Test: Splicing
-  
+
   val nodeBGPs = BasicGraphPattern.NodePattern(Variable("x", spliced = true))
   test("Parsing of Construct with splice") {
     implicit val pp = p.pConstruct
-    parses("CONSTRUCT ({x}) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person", 
-      Construct(Set(nodeBGPs), Set(setKeyValue, setLabel), Set(removeKey, removeLabel)))
+    parses(
+      "CONSTRUCT ({x}) SET x.age = 42 AND x:Person REMOVE x.age AND x:Person",
+      Construct(
+        Set(nodeBGPs),
+        Set(setKeyValue, setLabel),
+        Set(removeKey, removeLabel)
+      )
+    )
+  }
+
+  test("Parsing of wrong edge-node variable pairs") {
+    implicit val pp = p.pConstruct
+
+    parsesNot(
+      "CONSTRUCT (a)-[f]->(b), (c)-[e]->(d) SET (a)-[e]->(b), (c)-[f]->(d)"
+    )
   }

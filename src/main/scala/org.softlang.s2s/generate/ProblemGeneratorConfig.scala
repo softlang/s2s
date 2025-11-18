@@ -154,16 +154,18 @@ case class SCCQProblemGeneratorConfig(
 
 /** A generator configuration for GCORE queries. */
 case class GCOREProblemGeneratorConfig(
+    // Fresh and Counts
+
     /** Probability of generating a fresh value (0.0 to 1.0). */
     freshValue: FloatParameter,
 
     /** Maximum number of values. */
     valuesCount: IntParameter,
 
-    /** Probability of generating a fresh variable (0.0 to 1.0). */
+    /** Probability of generating a fresh node variable (0.0 to 1.0). */
     freshVariable: FloatParameter,
 
-    /** Maximum number of variables. */
+    /** Maximum number of node variables. */
     variablesCount: IntParameter,
 
     /** Probability of generating a fresh key (0.0 to 1.0). */
@@ -178,47 +180,52 @@ case class GCOREProblemGeneratorConfig(
     /** Maximum number of labels. */
     labelsCount: IntParameter,
 
+    // Basic Shape (Patterns)
+
     /** Target ratio of edge to node patterns. */
     edgeNodeRatio: FloatParameter,
+
+    /** Target minimal number of patterns. */
+    minPatterns: IntParameter,
+
+    /** Target maximal number of patterns. */
+    maxPatterns: IntParameter,
+
+    /** Probability of node variables in the template to be fresh, unless
+      * maximum would be exceeded.
+      */
+    freshEntities: FloatParameter,
+
+    // Advanced Shape (When, Set, Remove)
+
+    // ...
+
+    /** When producing a loop, redraw edge with this probability. */
+    loopRedraw: FloatParameter,
+
+    /** Probability to retain one BGP from the pattern, if there is space. */
+    patternRetention: FloatParameter,
+
+    /** Labels attached to each entity. */
+    labelsPerEntity: IntParameter,
+
+    /** Properties attached to each entity. */
+    propsPerEntity: IntParameter,
+
+    /** Set clauses. */
+    targetSetClauses: IntParameter,
+
+    /** Remove clauses. */
+    targetRemoveClauses: IntParameter,
+
+    /** Existence vs value constraints. */
+    existToValueConstraints: FloatParameter,
+
+    // General Config
 
     /** Shape generation configuration. */
     override val shapeConfig: ShapeGeneratorConfig,
 
     /** Seed. */
     override val seed: String = ""
-) extends ProblemGeneratorConfig:
-
-  private def fieldNames: List[String] =
-    List(
-      "FreshVariable",
-      "VariablesCount",
-      "FreshKey",
-      "KeysCount",
-      "FreshLabel",
-      "LabelsCount",
-      "FreshValue",
-      "ValuesCount",
-      "EdgeNodeRatio",
-      //
-      "ShapeConfig",
-      "Seed"
-    )
-
-  private def fields: List[String] =
-    List(
-      freshVariable,
-      variablesCount,
-      freshKey,
-      keysCount,
-      freshLabel,
-      labelsCount,
-      freshValue,
-      valuesCount,
-      edgeNodeRatio,
-      //
-      shapeConfig,
-      seed
-    ).map(_.toString)
-
-  override def toString: String =
-    fieldNames.zip(fields).map((n, f) => s"$n: $f").mkString("\n")
+) extends ProblemGeneratorConfig

@@ -74,8 +74,15 @@ class Shapes2Shapes(private var config: Configuration = Configuration.default):
       shar.state.prefixes.add(pm, m)
     }
 
-    for q <- gcoreParser(query)
-    yield q
+    gcoreParser(query).flatMap(q =>
+      if q.validate() then Right(q)
+      else
+        Left(
+          InvalidQueryError(
+            "The query did not pass the past-parsing syntax validation check."
+          )
+        )
+    )
 
   /** The shape parser. */
   private val shapeParser = ShapeParser(shar)

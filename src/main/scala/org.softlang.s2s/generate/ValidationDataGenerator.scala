@@ -32,7 +32,9 @@ class ValidationDataGenerator(state: BackendState):
 
     // Produce all validation data.
     val query = input.formatQuery(state)
-    val sin = input.formatShapes.toOption.get
+    val ssin = input.formatShapes
+    if ssin.isLeft then throw RuntimeException(ssin.toString) // TODO:EXCEPTION
+    val sin = ssin.toOption.getOrElse("")
     val sout = JsonLDParser
       .unparse(output.map(_.dropScope(input.getScopes)))
       .toOption

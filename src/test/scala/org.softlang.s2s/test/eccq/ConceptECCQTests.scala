@@ -135,6 +135,6 @@ class ConceptECCQTests extends ValidationSuite("e_concept_"):
     "15_0",
     Set("ln:A ⊑ ln:B"),
     q15,
-    Set("ln:A ⊑ ln:B"),
-    debugging = true
+    Set("ln:A ⊑ ln:B")
+    // debugging = true
   )

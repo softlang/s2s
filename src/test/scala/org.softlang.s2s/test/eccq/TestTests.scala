@@ -41,8 +41,8 @@ class TestTests extends ValidationSuite("test_", generateValidation = false):
     "paper",
     paper_shapes_in,
     paper_query,
-    paper_shapes_out,
-    debugging = true
+    paper_shapes_out
+    // debugging = true
   )
 
   // Prove that these are entailed.
@@ -50,8 +50,8 @@ class TestTests extends ValidationSuite("test_", generateValidation = false):
     "paper_alt",
     paper_shapes_in_alternate,
     paper_query,
-    paper_shapes_out,
-    debugging = true
+    paper_shapes_out
+    // debugging = true
   )
 
   // An extended set of shapes (complete set with the default candidate generator).

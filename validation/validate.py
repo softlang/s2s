@@ -8,12 +8,11 @@ import shutil
 import sys
 import time
 
-from rdflib import Graph
+from generate import Config, count_targets, generate, prune
 from pyshacl import validate
-
-from vocabulary import Vocabulary
-from generate import Config, generate, prune, count_targets
+from rdflib import Graph
 from render import render
+from vocabulary import Vocabulary
 
 
 def make_result(error, ingraph=None, outgraph=None, broken=None):
@@ -190,10 +189,12 @@ def run_one(path, args):
 
 def run_dir(subdir, args):
     """Run validation on all samples in a test directory."""
+    index = 0
     for test in os.listdir(subdir):
+        index += 1
         # The (relative) path of the test sample.
         path = os.path.join(subdir, test)
-        print("Running: ", path, file=sys.stderr)
+        print(time.time(), "Running", index, path, file=sys.stderr)
         run_one(path, args)
 
 
@@ -202,6 +203,7 @@ def run_all(args):
     # TODO: Iterate *all* folders.
     run_dir(os.path.join("data", "sccq"), args)
     run_dir(os.path.join("data", "eccq"), args)
+    # TODO: Add generated/
 
 
 def csv_header():

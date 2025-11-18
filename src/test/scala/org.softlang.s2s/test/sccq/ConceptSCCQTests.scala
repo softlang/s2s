@@ -90,7 +90,7 @@ class ConceptSCCQTests extends ValidationSuite:
 
   // Example test including entails checking.
   entails("concept_9_7", Set(":C ⊑ :A"), q9, Set(":F ⊑ :D"))
-  */
+   */
 
   val q9 = query(
     "?x a :D . ?y a :E . ?z a :F",
@@ -98,4 +98,11 @@ class ConceptSCCQTests extends ValidationSuite:
   )
 
   // Example test including extended heuristic.
-  includes("concept_9_8", Set(":C ⊑ :A"), q9, atleast = Set(":F ⊑ :D"), extended = true, debugging = true)
+  includes(
+    "concept_9_8",
+    Set(":C ⊑ :A"),
+    q9,
+    atleast = Set(":F ⊑ :D"),
+    extended = true
+    // debugging = true
+  )

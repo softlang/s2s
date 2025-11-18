@@ -159,8 +159,14 @@ class SCCQ(
     // Filter for variables that occur in the template.
     val tv = pv.view.filterKeys(v => template.variables.contains(v))
 
-    val p = if isECCQ then po ++ pv.map(additionalTriples) else po
-    val t = if isECCQ then to ++ tv.map(additionalTriples) else to
+    val p =
+      if isECCQ then
+        po ++ pv.view.filterKeys(v => !v.isBlank).map(additionalTriples)
+      else po
+    val t =
+      if isECCQ then
+        to ++ tv.view.filterKeys(v => !v.isBlank).map(additionalTriples)
+      else to
     val f =
       if isECCQ then
         // Filters from GCORE filter expressions.

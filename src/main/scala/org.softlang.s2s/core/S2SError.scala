@@ -37,6 +37,9 @@ class NotAtomicError(msg: Showable)
 class UnparsableQueryError(msg: String)
     extends BasicS2SError("Unparsable query", msg)
 
+class InvalidQueryError(msg: String)
+    extends BasicS2SError("Invalid query ", msg)
+
 class UnsupportedQueryError(msg: Showable, details: String = "")
     extends ShowableS2SError("Unsupported query", msg, details)
 
@@ -57,6 +60,6 @@ class NotSimpleError(msg: Showable)
 
 object S2SError:
   def sequence[A](s: Set[S2STry[A]]): S2STry[Set[A]] =
-    s.foldRight(Right(Set()): S2STry[Set[A]]) {
-      (e, acc) => for (xs <- acc; x <- e) yield xs.incl(x)
+    s.foldRight(Right(Set()): S2STry[Set[A]]) { (e, acc) =>
+      for (xs <- acc; x <- e) yield xs.incl(x)
     }

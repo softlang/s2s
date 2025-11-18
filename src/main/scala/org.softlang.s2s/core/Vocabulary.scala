@@ -5,9 +5,11 @@ import de.pseifer.shar.core.Iri
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl.NamedConcept
 import de.pseifer.shar.dl.NamedRole
+import de.pseifer.shar.dl.Concept
 
 import org.softlang.s2s.core.Var
 import org.softlang.s2s.core.inScope
+import org.softlang.s2s.query.GCORE
 
 case class Vocabulary(
     variables: Set[Var],
@@ -88,6 +90,26 @@ case class Vocabulary(
       properties.map(_.dropScope(scopes).asInstanceOf[NamedRole]),
       nominals.map(_.dropScope(scopes))
     )
+
+  /** Get all properties that are node keys. */
+  def nodeKeys: Set[NamedRole] =
+    this.properties.filter(_.toString.contains(GCORE.Key.nodeIri))
+
+  /** Get all properties that are edge keys. */
+  def edgeKeys: Set[NamedRole] =
+    this.properties.filter(_.toString.contains(GCORE.Key.edgeIri))
+
+  /** Get all concepts that are node labels. */
+  def nodeLabels: Set[Concept] =
+    this.concepts
+      .filter(_.toString.contains(GCORE.Label.nodeIri))
+      .map(_.asInstanceOf[Concept])
+
+  /** Get all concepts that are edge labels. */
+  def edgeLabels: Set[Concept] =
+    this.concepts
+      .filter(_.toString.contains(GCORE.Label.edgeIri))
+      .map(_.asInstanceOf[Concept])
 
 object Vocabulary:
   /** An empty vocabulary. */

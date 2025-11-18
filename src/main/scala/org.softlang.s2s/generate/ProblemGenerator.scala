@@ -9,6 +9,18 @@ import org.softlang.s2s.core.{vocabulary => _, _}
 import org.softlang.s2s.query._
 
 import scala.util.Random
+import scala.annotation.threadUnsafe
+import org.antlr.v4.parse.ANTLRParser.throwsSpec_return
+
+// TODO
+//
+// - [ ] Shape Generation
+//   - [ ] Remove 'meta_etn' 'meta_nte' 'meta_node' and 'meta_edge'
+//           from general shape generation; needs propert ProGS generator
+//           Otherwise, input shapes are too random and do not lead to valid instances in the validator
+//             Is this implemented by the ProGS heuristic? It should be!
+// - [ ] Query Generation
+//   - [ ] TBD
 
 /** Common Generator superclass. */
 abstract class ProblemGenerator[Q, S](
@@ -81,11 +93,19 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
     rnd
   )
 
-  /** Generator for variables. */
-  private val variableGenerator = ThingGenerator[Variable](
+  /** Generator for node variables. */
+  private val nodeVariableGenerator = ThingGenerator[Variable](
     config.freshVariable.sample(rnd),
     config.variablesCount.sample(rnd),
     id => Variable("n" ++ id.toString),
+    rnd
+  )
+
+  /** Generator for edge variables. */
+  private val edgeVariableGenerator = ThingGenerator[Variable](
+    1.0f,
+    0,
+    id => Variable("e" ++ id.toString),
     rnd
   )
 
@@ -113,76 +133,171 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
     rnd
   )
 
-  private def deduceEdgeVariable(v: Variable): Variable =
-    Variable("e" + v.name)
+  private def deducedEdge(v1: Variable, v2: Variable): Variable =
+    Variable("e" + v1.name + v2.name)
 
-  // /** Generator for concept atomic patterns. */
-  // private def generateCP: AtomicPattern =
-  //   if flip(config.variableToNominalRatio.sample(rnd)) then
-  //     VAC(variableGenerator.sample(), conceptGenerator.sample().c)
-  //   else LAC(nominalGenerator.sample(), conceptGenerator.sample().c)
-
-  // /** Generator for property atomic patterns. */
-  // private def generatePP: AtomicPattern =
-  //   if flip(config.variableToNominalRatio.sample(rnd)) then
-  //     // sample the first variable.
-  //     val v1 = variableGenerator.sample()
-  //     // (Re)sample the second if needed.
-  //     var v2 = variableGenerator.sample()
-  //     var counter = 0
-  //     var max = config.cyclicRedrawCount.sample(rnd)
-  //     while (counter < max && v1 == v2) {
-  //       v2 = variableGenerator.sample()
-  //       counter += 1
-  //     }
-
-  //     VPV(v1, roleGenerator.sample().r, v2)
-  //   else {
-  //     if flip(0.333) then
-  //       VPL(
-  //         variableGenerator.sample(),
-  //         roleGenerator.sample().r,
-  //         nominalGenerator.sample()
-  //       )
-  //     else if flip() then
-  //       LPL(
-  //         nominalGenerator.sample(),
-  //         roleGenerator.sample().r,
-  //         nominalGenerator.sample()
-  //       )
-  //     else
-  //       LPV(
-  //         nominalGenerator.sample(),
-  //         roleGenerator.sample().r,
-  //         variableGenerator.sample()
-  //       )
-  //   }
-  //
-
-  // private def generateEdgePattern: BasicGraphPattern =
-  //   if flip(config.variableToNominalRatio.sample(rnd)) then
-  //     VAC(variableGenerator.sample(), conceptGenerator.sample().c)
-  //   else LAC(nominalGenerator.sample(), conceptGenerator.sample().c)
+  private def sampleNodeVar(template: Boolean): Variable =
+    if template then
+      if flip(config.freshEntities.sample(rnd))
+      then nodeVariableGenerator.fresh()
+      else nodeVariableGenerator.select()
+    else nodeVariableGenerator.sample()
 
   /** Generate a node pattern. */
-  private def generateNodePattern: BasicGraphPattern =
-    val v = variableGenerator.sample()
+  private def generateNodePattern(template: Boolean): BasicGraphPattern =
+    val v = sampleNodeVar(template)
     BasicGraphPattern.NodePattern(v)
 
   /** Generate an edge pattern. */
-  private def generateEdgePattern: BasicGraphPattern =
-    val v1 = variableGenerator.sample()
-    val e = deduceEdgeVariable(v1)
-    val v2 = variableGenerator.sample()
-    BasicGraphPattern.EdgePattern(v1, e, v2)
+  private def generateEdgePattern(template: Boolean): BasicGraphPattern =
+    val v1 = sampleNodeVar(template)
+    val v2 = sampleNodeVar(template)
+
+    if (v1 == v2 && flip(config.loopRedraw.sample(rnd)))
+      generateEdgePattern(template)
+    else
+      val e =
+        if template then
+          if flip(config.freshEntities.sample(rnd))
+          then edgeVariableGenerator.fresh()
+          else deducedEdge(v1, v2)
+        else deducedEdge(v1, v2)
+      BasicGraphPattern.EdgePattern(v1, e, v2)
 
   /** Generate basic graph pattern. */
-  private def generateBGP: BasicGraphPattern =
-    if flip(config.edgeNodeRatio.sample(rnd)) then generateEdgePattern
-    else generateNodePattern
+  private def generateBGP(template: Boolean): BasicGraphPattern =
+    if flip(config.edgeNodeRatio.sample(rnd)) then generateEdgePattern(template)
+    else generateNodePattern(template)
 
-  // private def generateFGP: FullGraphPattern =
-  //   // with count, generate N generateBGP
+  /** Generate a random full graph pattern. */
+  private def generateFGP(template: Boolean): FullGraphPattern =
+    Set
+      .fill(config.maxPatterns.max)(generateBGP(template))
+      .take(
+        randRange(
+          config.minPatterns.sample(rnd),
+          config.maxPatterns.sample(rnd)
+        )
+      )
+
+  def generateWhen(pVars: Set[Variable]): Set[WhenClause] =
+
+    val nl = nodeVariables(pVars).flatMap: v =>
+      val r = config.labelsPerEntity.sample(rnd)
+      Set.fill(r)(WhenClause.HasLabel(v, nodeLabelGenerator.sample()))
+
+    val nk = nodeVariables(pVars).flatMap: v =>
+      val r = config.propsPerEntity.sample(rnd)
+      Set.fill(r)(
+        if flip(config.existToValueConstraints.sample(rnd)) then
+          WhenClause.HasKey(v, keyGenerator.sample())
+        else
+          WhenClause
+            .HasKeyValue(v, keyGenerator.sample(), valueGenerator.sample())
+      )
+
+    val el = edgeVariables(pVars).flatMap: v =>
+      val r = config.labelsPerEntity.sample(rnd)
+      Set.fill(r)(WhenClause.HasLabel(v, edgeLabelGenerator.sample()))
+
+    val ek = edgeVariables(pVars).flatMap: v =>
+      val r = config.propsPerEntity.sample(rnd)
+      Set.fill(r)(
+        if flip(config.existToValueConstraints.sample(rnd)) then
+          WhenClause.HasKey(v, keyGenerator.sample())
+        else
+          WhenClause
+            .HasKeyValue(v, keyGenerator.sample(), valueGenerator.sample())
+      )
+
+    el.union(nl).union(ek).union(nk)
+
+  def generateSet(pVars: Set[Variable], tVars: Set[Variable]): Set[SetClause] =
+    Set.fill(config.targetSetClauses.sample(rnd)) {
+      if edgeVariables(pVars.union(tVars)).isEmpty || flip(0.5) then
+        val vs = nodeVariables(pVars.union(tVars))
+        val v = Random.shuffle(vs.toList).head
+        if flip(0.8) then SetClause.SetLabel(v, nodeLabelGenerator.sample())
+        else
+          SetClause.SetKeyValue(
+            v,
+            keyGenerator.sample(),
+            valueGenerator.sample()
+          )
+      else
+        val vs = edgeVariables(pVars.union(tVars))
+        val v = Random.shuffle(vs.toList).head
+        if flip(0.8) then SetClause.SetLabel(v, edgeLabelGenerator.sample())
+        else
+          SetClause.SetKeyValue(
+            v,
+            keyGenerator.sample(),
+            valueGenerator.sample()
+          )
+    }
+
+  def generateRemove(pVars: Set[Variable]): Set[RemoveClause] =
+    Set.fill(config.targetRemoveClauses.sample(rnd)) {
+      if edgeVariables(pVars).isEmpty || flip(0.5) then
+        val vs = nodeVariables(pVars)
+        val v = Random.shuffle(vs.toList).head
+        if flip(0.8) then
+          RemoveClause.RemoveLabel(v, nodeLabelGenerator.sample())
+        else RemoveClause.RemoveKey(v, keyGenerator.sample())
+      else
+        val vs = edgeVariables(pVars)
+        val v = Random.shuffle(vs.toList).head
+        if flip(0.8) then
+          RemoveClause.RemoveLabel(v, edgeLabelGenerator.sample())
+        else RemoveClause.RemoveKey(v, keyGenerator.sample())
+    }
+
+  private def nodeVariables(vars: Set[Variable]): Set[Variable] =
+    vars.filter(v => v.name.startsWith("n"))
+
+  private def edgeVariables(vars: Set[Variable]): Set[Variable] =
+    vars.filter(v => v.name.startsWith("e"))
+
+  /** Sample a query instance, only. */
+  def sampleQuery(): GCORE =
+
+    // Reset the generators.
+    nodeVariableGenerator.reset()
+    edgeVariableGenerator.reset()
+    nodeLabelGenerator.reset()
+    edgeLabelGenerator.reset()
+    keyGenerator.reset()
+    valueGenerator.reset()
+
+    val pattern = generateFGP(template = false)
+    val templatePreExt = generateFGP(template = true)
+
+    val template =
+      if templatePreExt.size < config.maxPatterns.sample(rnd) && flip(
+          config.patternRetention.sample(rnd)
+        )
+      then
+        templatePreExt.union(
+          Random
+            .shuffle(pattern.toList)
+            .take(1)
+            .toSet
+        )
+      else templatePreExt
+
+    val patternVars = pattern.flatMap(_.variables)
+    val templateVars = template.flatMap(_.variables)
+
+    val w = generateWhen(patternVars)
+    val s = generateSet(patternVars, templateVars)
+    val r = generateRemove(patternVars)
+
+    val gq = GCORE(Construct(template, s, r), Match(pattern, w))
+
+    // Just try again on invalid queries; then, validity
+    // is pushed into GCORE.validate() and might be extended
+    // there, where required.
+    if (!gq.validate()) then sampleQuery() else gq
 
   /** Adapt shape candidates to set ratio for some marker. */
   private def ratioalize(
@@ -233,6 +348,16 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
     then left.union(right)
     else reduceRight(left, right.tail, targetRatio)
 
+  /** Filter shapes by validity. */
+  private def valid(shape: SHACLShape): Boolean =
+    val str = shape.toString()
+    List(
+      // Valid shapes must not contain type constraints, since the validation
+      // procedure currently does not handle them.
+      !str.contains("https://github.com/softlang/s2s/int-")
+      // TODO
+    ).reduce(_ && _)
+
   /** Sample a set of SHACLShapes */
   def sampleShapes(qi: GCORE): Set[SHACLShape] =
 
@@ -241,34 +366,21 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
         throw new RuntimeException("Non-convertable GCORE query in Generator.")
       case Some(qq) => qq
 
-    // The complete set of possible shapes.
-    val initial = ShapeGenerator(
+    // Maybe 50:50 simple subset and full?
+    //
+    // val simple = ShapeGenerator(
+    //   q.pattern.vocabulary.union(q.template.vocabulary),
+    //   ShapeHeuristic.NovaProGS(1, 1, opt = false)
+    // ).generate.filter(valid)
+
+    val full = ShapeGenerator(
       q.pattern.vocabulary.union(q.template.vocabulary),
-      ShapeHeuristic.default
-    ).generate.map(_.toSimple).filter(_.nonEmpty).map(_.get)
-
-    // Remove forall shapes, if they are not allowed.
-    val allowed =
-      if config.shapeConfig.includeForallConstraints then initial
-      else initial.filter(!_.isForallShape)
-
-    // Filter according to ratios for target/constraint.
-    val filtered1 =
-      ratioalize(
-        allowed,
-        !_.isConceptShape,
-        config.shapeConfig.propertyConceptConstraintRatio.sample(rnd)
-      )
-
-    val filtered = ratioalize(
-      filtered1,
-      _.hasExistentialTarget,
-      config.shapeConfig.propertyConceptTargetRatio.sample(rnd)
-    )
+      ShapeHeuristic.NovaProGS(1, 2, opt = false)
+    ).generate.filter(valid)
 
     // Randomly select required subset from filtered shapes.
     rnd
-      .shuffle(filtered.toList)
+      .shuffle(full.toList)
       .take(
         randRange(
           config.shapeConfig.minNumberOfShapes.sample(rnd),
@@ -276,42 +388,6 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
         )
       )
       .toSet
-
-  /** Sample a query instance, only. */
-  def sampleQuery(): GCORE =
-
-    // Reset the generators.
-    variableGenerator.reset()
-    nodeLabelGenerator.reset()
-    edgeLabelGenerator.reset()
-    keyGenerator.reset()
-    valueGenerator.reset()
-
-    val pattern = throw new NotImplementedError
-    // Set
-    //   .fill(config.maxPatternSize.sample(rnd))(generate)
-    //   .take(
-    //     randRange(
-    //       config.minPatternSize.sample(rnd),
-    //       config.maxPatternSize.sample(rnd)
-    //     )
-    //   )
-
-    // Do not generate fresh variables for template.
-    variableGenerator.lock()
-    // TODO variableGenerator.setThings(pattern.flatMap(_.variables))
-
-    val template = throw new NotImplementedError
-    // Set
-    //  .fill(config.maxTemplateSize.sample(rnd))(generate)
-    //  .take(
-    //    randRange(
-    //      config.minTemplateSize.sample(rnd),
-    //      config.maxTemplateSize.sample(rnd)
-    //    )
-    //  )
-
-    GCORE(template, pattern)
 
 /** A generator for SPARQL queries and SHACL shapes, given a
   * ProblemGeneratorConfig.

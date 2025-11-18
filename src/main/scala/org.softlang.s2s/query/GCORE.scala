@@ -34,24 +34,62 @@ class GCORE(
   def show(implicit state: BackendState): String =
     "CONSTRUCT " ++ template.show ++ "\nMATCH " ++ pattern.show
 
-  private val nodeEdgeVars: (Set[Var], Set[Var]) =
+  private val patternNodeEdge: (Set[Var], Set[Var]) =
     pattern.fullGraphPattern
-      .union(template.fullGraphPattern)
       .foldLeft((Set(), Set()))((acc, b) =>
         b match
           case GCORE.BasicGraphPattern.NodePattern(x) =>
-            (acc._1.union(Set(x.toVar)), acc._2)
+            (acc._1.union(Set(x.toVarOrBlank(pattern.variables))), acc._2)
           case GCORE.BasicGraphPattern.EdgePattern(x, z, y) =>
-            (acc._1.union(Set(x.toVar, y.toVar)), acc._2.union(Set(z.toVar)))
+            (
+              acc._1.union(
+                Set(
+                  x.toVarOrBlank(pattern.variables),
+                  y.toVarOrBlank(pattern.variables)
+                )
+              ),
+              acc._2.union(Set(z.toVarOrBlank(pattern.variables)))
+            )
       )
 
-  /** Node variables of the query. */
-  val nodeVariables: Set[Var] = nodeEdgeVars._1
+  private val templateNodeEdge: (Set[Var], Set[Var]) =
+    template.fullGraphPattern
+      .foldLeft((Set(), Set()))((acc, b) =>
+        b match
+          case GCORE.BasicGraphPattern.NodePattern(x) =>
+            (acc._1.union(Set(x.toVarOrBlank(pattern.variables))), acc._2)
+          case GCORE.BasicGraphPattern.EdgePattern(x, z, y) =>
+            (
+              acc._1.union(
+                Set(
+                  x.toVarOrBlank(pattern.variables),
+                  y.toVarOrBlank(pattern.variables)
+                )
+              ),
+              acc._2.union(Set(z.toVarOrBlank(pattern.variables)))
+            )
+      )
 
-  /** Edge variables of the query. */
-  val edgeVariables: Set[Var] = nodeEdgeVars._2
+  private val nodeEdge: (Set[Var], Set[Var]) =
+    (
+      patternNodeEdge._1.union(templateNodeEdge._1),
+      patternNodeEdge._2.union(templateNodeEdge._2)
+    )
+
+  val patternNodeVariables: Set[Var] = patternNodeEdge._1
+
+  val templateNodeVariables: Set[Var] = templateNodeEdge._1
+
+  val nodeVariables: Set[Var] = nodeEdge._1
+
+  val patternEdgeVariables: Set[Var] = patternNodeEdge._2
+
+  val templateEdgeVariables: Set[Var] = templateNodeEdge._2
+
+  val edgeVariables: Set[Var] = nodeEdge._2
 
   /** Left-node variables of the query. */
+  // TODO pattern?
   val leftNodeVariables: Set[Var] =
     pattern.fullGraphPattern
       .union(template.fullGraphPattern)
@@ -62,6 +100,7 @@ class GCORE(
       )
 
   /** Right-node variables of the query. */
+  // TODO pattern?
   val rightNodeVariables: Set[Var] =
     pattern.fullGraphPattern
       .union(template.fullGraphPattern)
@@ -103,42 +142,42 @@ class GCORE(
               case WhenClause.HasKey(_, k) => Some(k)
               case _                       => None
           }
-          // Must be at least one label/k(v) for a valid SCCQ, or 'x' must be in vars.
-          // TODO: Could (should!) be removed if GCORE.node sticks.
-          if labels.isEmpty && kvs.isEmpty && keys.isEmpty && !vars.contains(
-              x.toVar
-            )
-          then None
-          else
-            val vx = x.toVar
-            // Generate VAC pattern for all
-            // labels, key-values, and keys.
-            Some(
-              labels
-                .map { l =>
-                  AtomicPattern
-                    .VAC(vx, l.toIri(node = nodeVariables.contains(vx)))
-                }
-                .concat(kvs.map { (k, v) =>
-                  AtomicPattern.VPL(
-                    vx,
-                    k.toIri(node = nodeVariables.contains(vx)),
-                    v.toIri
-                  )
-                })
-                .concat(keys.map { k =>
-                  AtomicPattern.VPV(
-                    vx,
-                    k.toIri(node = nodeVariables.contains(vx)),
-                    Variable(k.keyname ++ "_" ++ x.name).toVar
-                  )
-                })
-                .concat(
-                  // TODO: NEW TEST ME
-                  if realnode then List(AtomicPattern.VAC(vx, GCORE.node))
-                  else Nil
+
+          //  Convert to variable or specially marked 'blank node' variable
+          //  that is converted to blank nodes in real templates.
+          //  Note, that this can never happen for pattern variables.
+          val vx = x.toVarOrBlank(pattern.variables)
+
+          def isNode(v: Var): Boolean =
+            nodeVariables.contains(v)
+
+          // Generate VAC pattern for all
+          // labels, key-values, and keys.
+          Some(
+            labels
+              .map { l =>
+                AtomicPattern
+                  .VAC(vx, l.toIri(node = isNode(vx)))
+              }
+              .concat(kvs.map { (k, v) =>
+                AtomicPattern.VPL(
+                  vx,
+                  k.toIri(node = isNode(vx)),
+                  v.toIri
                 )
-            )
+              })
+              .concat(keys.map { k =>
+                AtomicPattern.VPV(
+                  vx,
+                  k.toIri(node = isNode(vx)),
+                  Variable(k.keyname ++ "_" ++ x.name).toVar
+                )
+              })
+              .concat(
+                if realnode then List(AtomicPattern.VAC(vx, GCORE.node))
+                else Nil
+              )
+          )
         case BasicGraphPattern.EdgePattern(x, e, y) =>
           for
             n1 <- generateNodes(
@@ -179,25 +218,25 @@ class GCORE(
               case WhenClause.HasKeyValue(_, k, v) => Some((k, v))
               case _                               => None
           }
-          // Must be at least one for a valid SCCQ.
-          // TODO: Could (should!) be removed if GCORE.edge sticks.
-          if labels.isEmpty && kvs.isEmpty then None
-          else
-            val vx = x.toVar
-            val vy = y.toVar
-            val ve = e.toVar
-            val s = Set(
-              AtomicPattern.VPV(vx, nodeToEdgeIri, ve),
-              AtomicPattern.VPV(ve, edgeToNodeIri, vy),
-              // TODO: NEW TEST ME
-              AtomicPattern.VAC(ve, GCORE.edge)
-            )
-            generateNodes(
-              Set(BasicGraphPattern.NodePattern(e)),
-              Set(),
-              lok,
-              realnode = false
-            ).map(_.union(s))
+
+          // Convert to variables OR blank nodes (only happens in templates)
+          // which are internally represented as variables for now,
+          // marked internally via their name; this is a hack and should
+          // be fixed at some point in the E/SCCQ implementation.
+          val vx = x.toVarOrBlank(pattern.variables)
+          val vy = y.toVarOrBlank(pattern.variables)
+          val ve = e.toVarOrBlank(pattern.variables)
+          val s = Set(
+            AtomicPattern.VPV(vx, nodeToEdgeIri, ve),
+            AtomicPattern.VPV(ve, edgeToNodeIri, vy),
+            AtomicPattern.VAC(ve, GCORE.edge)
+          )
+          generateNodes(
+            Set(BasicGraphPattern.NodePattern(e)),
+            Set(),
+            lok,
+            realnode = false
+          ).map(_.union(s))
         case BasicGraphPattern.NodePattern(_) => Some(Nil)
       })
       .map(_.flatten.toSet)
@@ -221,10 +260,15 @@ class GCORE(
       case RemoveClause.RemoveKey(x, k) =>
         FilterPattern.notP(
           x.toVar,
-          k.toIri(node = nodeVariables.contains(x.toVar))
+          k.toIri(node =
+            nodeVariables.contains(x.toVarOrBlank(pattern.variables))
+          ) // TODO: can be use toVar here? Check other invocations, too.
         )
       case RemoveClause.RemoveLabel(x, l) =>
-        FilterPattern.notC(x.toVar, l.toIri(nodeVariables.contains(x.toVar)))
+        FilterPattern.notC(
+          x.toVar,
+          l.toIri(nodeVariables.contains(x.toVarOrBlank(pattern.variables)))
+        )
 
   private def generateFilter(): Set[FilterPattern] =
     template._3.map(removeToFilter)
@@ -288,7 +332,21 @@ class GCORE(
   /** Validate this query. */
   def validate(): Boolean =
     // Node and edge variables must be disjoint.
-    nodeVariables.intersect(edgeVariables).isEmpty
+    val nodeEdgeDisjointness = nodeVariables.intersect(edgeVariables).isEmpty
+    // Edge variables must be fresh, or occur with the same node variables.
+    // val edgeVariablePartners = template.fullGraphPattern.forall: p =>
+    //   p match
+    //     case BasicGraphPattern.NodePattern(_) => true
+    //     case ep @ BasicGraphPattern.EdgePattern(x, e, y) =>
+    //       !pattern.variables.contains(e) || pattern.patterns.contains(ep)
+    val edgeVariablePartners = template.fullGraphPattern.forall: p =>
+      p match
+        case BasicGraphPattern.NodePattern(_) => true
+        case ep @ BasicGraphPattern.EdgePattern(x, e, y) =>
+          !pattern.variables.contains(e) ||
+          (pattern.variables.contains(x) &&
+            pattern.variables.contains(y))
+    nodeEdgeDisjointness && edgeVariablePartners
 
 object GCORE:
 
@@ -297,6 +355,11 @@ object GCORE:
 
     /** Convert GCORE variable to SCCQ variable. */
     def toVar: Var = Var(name)
+
+    /** If not included in vars, mark as blank. */
+    def toVarOrBlank(vars: Set[Variable]): Var =
+      if vars.contains(this) then this.toVar
+      else this.toVar.toBlank
 
     def toIri(implicit scopes: Scopes): Iri = this.toVar.toIri
 
@@ -584,6 +647,10 @@ object GCORE:
           else ""
         bs ++ ws
 
+    def variables: Set[Variable] = fullGraphPattern.flatMap(_.variables)
+
+    def patterns: FullGraphPattern = fullGraphPattern
+
   type FullGraphPattern = Set[BasicGraphPattern]
 
   enum BasicGraphPattern extends Showable:
@@ -593,6 +660,10 @@ object GCORE:
     def show(implicit state: BackendState): String = this match
       case NodePattern(v)       => s"(${v.show})"
       case EdgePattern(x, z, y) => s"(${x.show})-[${z.show}]->(${y.show})"
+
+    def variables: Set[Variable] = this match
+      case NodePattern(x)       => Set(x)
+      case EdgePattern(x, z, y) => Set(x, z, y)
 
   /** Internal IRI for 'out' edges. */
   val nodeToEdgeIri =

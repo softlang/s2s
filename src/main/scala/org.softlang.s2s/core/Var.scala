@@ -15,44 +15,65 @@ final case class Var(v: String) extends Showable:
   def show(implicit state: BackendState): String = showNB
 
   /** Show without requiring BackendState */
-  def showNB: String = "?" ++ v
+  def showNB: String =
+    if isBlank then "_:" ++ v else "?" ++ v
+
+  /** True, if the var is actually a blank-node placeholder. */
+  def isBlank: Boolean = v.startsWith("blank_")
+
+  /** Get a copy of this var, dropping the blank prefix. */
+  def dropBlank: Var = if isBlank then Var(v.drop(6)) else this
+
+  /** Get a copy of this var, marked as blank. */
+  def toBlank: Var = Var("blank_" + v)
 
   def asConcept(implicit scopes: Scopes): Concept =
-    NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get).inScope(Scope.Variable)
+    NamedConcept(Iri.fromString(Iri.shar.expanded(v)).toOption.get)
+      .inScope(Scope.Variable)
 
-  def asConceptComponent(filters: Set[FilterPattern], component: NamedConcept)
-      (implicit scopes: Scopes): Option[Concept] =
-    if ! filters.contains(FilterPattern.notC(this, component.c.dropScope)) then
+  def asConceptComponent(filters: Set[FilterPattern], component: NamedConcept)(
+      implicit scopes: Scopes
+  ): Option[Concept] =
+    if !filters.contains(FilterPattern.notC(this, component.c.dropScope)) then
       // TODO: This is unsafe and can easily wrongly merge concepts!
       val approx = component.c.getRaw.reverse.takeWhile(_ != '/').reverse
       Some(
-        NamedConcept(Iri.fromString(Iri.shar.expanded(v ++ "_" ++ approx)).toOption.get)
+        NamedConcept(
+          Iri.fromString(Iri.shar.expanded(v ++ "_" ++ approx)).toOption.get
+        )
           .inScope(Scope.Variable)
       )
-    else
-      None
+    else None
 
-  def asRoleObjectComponent(filters: Set[FilterPattern], component: NamedRole)
-      (implicit scopes: Scopes): Option[(Concept, Concept)] =
-    if ! filters.contains(FilterPattern.notP(this, component.r.dropScope)) then
+  def asRoleObjectComponent(filters: Set[FilterPattern], component: NamedRole)(
+      implicit scopes: Scopes
+  ): Option[(Concept, Concept)] =
+    if !filters.contains(FilterPattern.notP(this, component.r.dropScope)) then
       // TODO: This is unsafe and can easily wrongly merge concepts!
       val approx = component.r.getRaw.reverse.takeWhile(_ != '/').reverse
-      Some((
-        NamedConcept(Iri.fromString(Iri.shar.expanded(v ++ "_" ++ approx)).toOption.get)
-          .inScope(Scope.Variable),
-        NamedConcept(Iri.fromString(Iri.shar.expanded(v ++ "_o_" ++ approx)).toOption.get)
-          .inScope(Scope.Variable)
-      ))
-    else
-      None
+      Some(
+        (
+          NamedConcept(
+            Iri.fromString(Iri.shar.expanded(v ++ "_" ++ approx)).toOption.get
+          )
+            .inScope(Scope.Variable),
+          NamedConcept(
+            Iri.fromString(Iri.shar.expanded(v ++ "_o_" ++ approx)).toOption.get
+          )
+            .inScope(Scope.Variable)
+        )
+      )
+    else None
 
-  def asRoleComponent(filters: Set[FilterPattern], component: NamedRole)
-      (implicit scopes: Scopes): Option[Concept] =
-      asRoleObjectComponent(filters, component).map(_._1)
+  def asRoleComponent(filters: Set[FilterPattern], component: NamedRole)(
+      implicit scopes: Scopes
+  ): Option[Concept] =
+    asRoleObjectComponent(filters, component).map(_._1)
 
-  def asObjectComponent(filters: Set[FilterPattern], component: NamedRole)
-      (implicit scopes: Scopes): Option[Concept] =
-      asRoleObjectComponent(filters, component).map(_._2)
+  def asObjectComponent(filters: Set[FilterPattern], component: NamedRole)(
+      implicit scopes: Scopes
+  ): Option[Concept] =
+    asRoleObjectComponent(filters, component).map(_._2)
 
   def toIri(implicit scopes: Scopes): Iri =
     this.asConcept.asInstanceOf[NamedConcept].c

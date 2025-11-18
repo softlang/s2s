@@ -1,6 +1,7 @@
 package org.softlang.s2s.generate
 
 import scala.util.Random
+import org.antlr.v4.parse.BlockSetTransformer.elementOptions_return
 
 /** A generator for things that have a maximum count, and a probability for
   * fresh creation and that can be generated given some integer ID.
@@ -26,13 +27,20 @@ class ThingGenerator[T](
   private var things: Set[T] = Set()
 
   /** Get a (possibly fresh) thing. */
-  private def mk: T =
-    // If this is the first call, or if there are open slots and coin
-    // flips for generating a fresh one (and not generator is not locked),
-    // generate a new concept.
-    if things.isEmpty ||
-      (!locked && (things.size < maximumCount || maximumCount == 0)
-        && flip(freshProbability))
+  private def doSample(): T =
+    if flip(freshProbability) then doFresh()
+    else doSelect()
+
+  /** Select an existing thing, unless on empty things, then just get a fresh
+    * one.
+    */
+  private def doSelect(): T =
+    if things.isEmpty then doFresh()
+    else rnd.shuffle(things.toList).head
+
+  /** Generate a fresh thing, unless maximum or locked, then get existing. */
+  private def doFresh(): T =
+    if things.isEmpty || ((things.size < maximumCount || maximumCount == 0) && !locked)
     then
       // Generate,
       val fresh = generator(things.size + 1)
@@ -40,20 +48,28 @@ class ThingGenerator[T](
       things = things.incl(fresh)
       // and return.
       fresh
-    // Else, draw a random existing one.
-    else rnd.shuffle(things.toList).head
+    else doSelect()
 
   /** Set or initialize things. */
   def setThings(t: Set[T]): Unit = things = t
 
+  /** Guaranteed a fresh thing, unless maximum is exceeded. */
+  def fresh(): T = doFresh()
+
   /** Sample this generator. */
-  def sample(): T = mk
+  def sample(): T = doSample()
+
+  /** Select an random, existing thing. */
+  def select(): T = doSelect()
 
   /** Lock generation of fresh instances. */
   def lock(): Unit = locked = true
 
   /** Unlock generation of fresh instances. */
   def unlock(): Unit = locked = false
+
+  /** Get all things. */
+  def allThings(): Set[T] = things
 
   /** Reset this generator. */
   def reset(): Unit =

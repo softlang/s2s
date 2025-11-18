@@ -23,14 +23,17 @@ class CandidateGenerator(
       accepted: S2STry[Set[SHACLShape]] = Right(Set())
   ): Set[SHACLShape] =
     heuristic match
-      case _:ShapeHeuristic.SimpleShapes if count == 0 =>
+      case _: ShapeHeuristic.SimpleShapes if count == 0 =>
         count += 1
         generate
-      case _:ShapeHeuristic.MediumProGS if count == 0 =>
+      case _: ShapeHeuristic.MediumProGS if count == 0 =>
+        count += 1
+        generate
+      case _: ShapeHeuristic.NovaProGS if count == 0 =>
         count += 1
         generate
       case _ => Set()
-    // TODO: Multiple phases depending on input.
-    // TODO: Extend for phase-wise, optimize generation
-    // of arbitrary DL SHACL shapes.
-    // See also @ShapeGenerator
+      // TODO: Multiple phases depending on input.
+      // TODO: Extend for phase-wise, optimize generation
+      // of arbitrary DL SHACL shapes.
+      // See also @ShapeGenerator

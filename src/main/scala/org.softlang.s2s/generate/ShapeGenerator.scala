@@ -9,6 +9,9 @@ import org.softlang.s2s.core.Vocabulary
 import org.softlang.s2s.core.dropScope
 import org.softlang.s2s.core.Scopes
 import scala.languageFeature.existentials
+import org.softlang.s2s.query.GCORE
+
+import scala.collection.mutable.Map as MMap
 
 /** Generate all shapes over a vocabulary. */
 class ShapeGenerator(
@@ -27,26 +30,151 @@ class ShapeGenerator(
 
   val proxy = findProxy("P")
 
+  /** Generate all node target queries (Concepts). */
+  private def generateNodeTargets: Set[Concept] =
+    voc.nodeLabels.union(voc.nodeKeys.map(key => Existential(key, Top)))
+
+  /** Generate all edge target queries (Concepts). */
+  private def generateEdgeTargets: Set[Concept] =
+    voc.edgeLabels.union(voc.edgeKeys.map(key => Existential(key, Top)))
+
   /** Generate all target queries (Concepts). */
   private def generateTargets: Set[Concept] =
     voc.concepts.toList
       .filter(c => !excludeTarget.contains(c.c))
       .concat(voc.properties.toList.flatMap { p =>
-        if excludeTarget.contains(p.r.dropScope) then
-          Set()
+        if excludeTarget.contains(p.r.dropScope) then Set()
         else Set(Existential(p, Top), Existential(Inverse(p), Top))
       })
       .toSet
 
+  private def generateNodeConstraints: Set[Concept] = heuristic match
+    case h: ShapeHeuristic.NovaProGS =>
+      nodeConstraintsNova(h.breadth, h.depth, h.depth)
+    case _ => generateConstraints
+
+  private def generateEdgeConstraints: Set[Concept] = heuristic match
+    case h: ShapeHeuristic.NovaProGS =>
+      edgeConstraintsNova(h.breadth, h.depth, h.depth)
+    case _ => generateConstraints
+
   /** Generate constraints (i.e., concepts). */
   private def generateConstraints: Set[Concept] = heuristic match
-    case s:ShapeHeuristic.SimpleShapes => generateConstraintsSimple(s)
-    case m:ShapeHeuristic.MediumProGS => generateConstraintsExtended(m)
-    case _:ShapeHeuristic.AllShapes => generateConstraintsFull
+    case s: ShapeHeuristic.SimpleShapes => generateConstraintsSimple(s)
+    case m: ShapeHeuristic.MediumProGS  => generateConstraintsExtended(m)
+    case m: ShapeHeuristic.NovaProGS =>
+      generateNodeConstraints.union(generateEdgeConstraints)
+    case _: ShapeHeuristic.AllShapes => generateConstraintsFull
+
+  private val ncache: MMap[Int, Set[Concept]] = MMap()
+
+  private def nodeConstraintsNova(breadth: Int, depth: Int, level: Int) =
+    ncache.get(level) match
+      case None =>
+        val c = generateNodeConstraintsNova(breadth, depth, level)
+        ncache.addOne((level, c))
+        c
+      case Some(c) => c
+
+  /** Generate node constraints for ProGS. */
+  private def generateNodeConstraintsNova(
+      breadth: Int,
+      depth: Int,
+      level: Int
+  ): Set[Concept] =
+    if level == 0 then
+      // A | ¬A | T | kn.T
+      val c = voc.nodeLabels
+      val k: Set[Concept] = voc.nodeKeys.map(k => Existential(k, Top))
+      c.union(c.map(Complement(_))).union(Set(Top)).union(k)
+    else
+      // Get all previous levels.
+      val n =
+        (0 until level)
+          .map(i => nodeConstraintsNova(breadth, depth, i))
+          .flatten
+          .toSet
+      // Build complements.
+      val cn: Set[Concept] = n.map(Complement(_))
+      // Get previous level of edge constraints.
+      val e =
+        (0 until level)
+          .map(i => edgeConstraintsNova(breadth, depth, i))
+          .flatten
+          .toSet
+          .filter(_ != Top)
+      val en: Set[Concept] = e.flatMap(ec =>
+        Set(
+          Existential(GCORE.nodeToEdgeRole, ec),
+          Existential(Inverse(GCORE.edgeToNodeRole), ec)
+        )
+      )
+
+      val s = n.union(cn).union(en).map(Concept.simplify(_)).filter(_ != Bottom)
+      val in =
+        intersectionsOf(breadth, s)
+          .map(Concept.simplify(_))
+          .filter(_ != Bottom)
+          .filter(_ != Top)
+      in
+
+  private val ecache: MMap[Int, Set[Concept]] = MMap()
+
+  private def edgeConstraintsNova(breadth: Int, depth: Int, level: Int) =
+    ecache.get(level) match
+      case None =>
+        val c = generateEdgeConstraintsNova(breadth, depth, level)
+        ecache.addOne((level, c))
+        c
+      case Some(c) => c
+
+  /** Generate edge constraints for ProGS. */
+  private def generateEdgeConstraintsNova(
+      breadth: Int,
+      depth: Int,
+      level: Int
+  ): Set[Concept] =
+    if level == 0 then
+      // A | ¬A | T | kn.T
+      val c = voc.edgeLabels
+      val k: Set[Concept] = voc.edgeKeys.map(k => Existential(k, Top))
+      c.union(c.map(Complement(_))).union(Set(Top)).union(k)
+    else
+      // Get all previous levels.
+      val e =
+        (0 until level)
+          .map(i => edgeConstraintsNova(breadth, depth, i))
+          .flatten
+          .toSet
+      // Build complements.
+      val ce: Set[Concept] = e.map(Complement(_))
+      // Get previous level of node constraints.
+      val n =
+        (0 until level)
+          .map(i => nodeConstraintsNova(breadth, depth, i))
+          .flatten
+          .toSet
+          .filter(_ != Top)
+      val nn: Set[Concept] = n.flatMap(nc =>
+        Set(
+          Existential(GCORE.edgeToNodeRole, nc),
+          Existential(Inverse(GCORE.nodeToEdgeRole), nc)
+        )
+      )
+
+      val s = e.union(ce).union(nn).map(Concept.simplify(_)).filter(_ != Bottom)
+      val in =
+        intersectionsOf(breadth, s)
+          .map(Concept.simplify(_))
+          .filter(_ != Bottom)
+          .filter(_ != Top)
+      in
 
   /** Generate additional constraints by ProGS heuristic. */
-  private def generateConstraintsExtended(h: ShapeHeuristic.MediumProGS, level: Int = 0): Set[Concept] =
-
+  private def generateConstraintsExtended(
+      h: ShapeHeuristic.MediumProGS,
+      level: Int = 0
+  ): Set[Concept] =
     // We use the following (syntactic) subset of ALCHOI axioms.
     // C = T | A | {a} | ∃r.C | ∃r-.C | ¬C | C ⊓ C
     //     ^^^^^^^^^^^^
@@ -68,7 +196,7 @@ class ShapeGenerator(
       // ∃r-.C | ∃r.C | C ⊓ C
       val composite =
         intersectionsOf(h.breadth, c)
-        .union(existentialsOver(c, voc.properties))
+          .union(existentialsOver(c, voc.properties))
       // C | ¬C
       composite
         .union(negationsOf(composite))
@@ -82,18 +210,18 @@ class ShapeGenerator(
 
   /** Construct all distinct intersection of 'breadth' elements. */
   private def intersectionsOf(breadth: Int, c: Set[Concept]): Set[Concept] =
-    (for
-      c <- c.toList.combinations(breadth)
+    (for c <- c.toList.combinations(breadth)
     yield Concept.intersectionOf(c)).toSet
 
   /** Construct all existentials for all r over all c. */
-  private def existentialsOver(c: Set[Concept], r: Set[NamedRole]): Set[Concept] =
+  private def existentialsOver(
+      c: Set[Concept],
+      r: Set[NamedRole]
+  ): Set[Concept] =
     (for
       ci <- c
       ri <- r
-    yield Set(
-      Existential(ri, ci),
-      Existential(Inverse(ri), ci))).flatten
+    yield Set(Existential(ri, ci), Existential(Inverse(ri), ci))).flatten
 
   /** Generate all constraints allowed by heuristic. */
   private def generateConstraintsFull: Set[Concept] =
@@ -136,7 +264,9 @@ class ShapeGenerator(
     leq.union(ce).union(cwn)
 
   /** Generate exactly simple SHACL constraints. */
-  private def generateConstraintsSimple(s: ShapeHeuristic.SimpleShapes): Set[Concept] =
+  private def generateConstraintsSimple(
+      s: ShapeHeuristic.SimpleShapes
+  ): Set[Concept] =
     voc.concepts.toList
       .concat(
         voc.properties.toList.flatMap { p =>
@@ -168,9 +298,7 @@ class ShapeGenerator(
   /** Generate all closed existential and universal constraints. */
   private val closedQuantification: Set[Concept] =
     voc.properties.toList
-      .flatMap(
-        r => Set(Existential(r, Top),
-                 Existential(Inverse(r), Top)))
+      .flatMap(r => Set(Existential(r, Top), Existential(Inverse(r), Top)))
       .toSet
 
   private def isNC(c: Concept): Boolean =
@@ -210,11 +338,43 @@ class ShapeGenerator(
   private def tautology(target: Concept, constraint: Concept): Boolean =
     target == constraint
 
+  /** Matches all tautologies. */
+  private def negated(target: Concept, constraint: Concept): Boolean =
+    constraint match
+      case Complement(c) => target == c
+      case _             => false
+
   /** Generate a set of shapes over a vocabulary, according to a heuristic. */
   def generate: Set[SHACLShape] =
-    val constraints = generateConstraints
-    for
-      t <- generateTargets
-      c <- constraints
-      if (!heuristic.optimize || !entailed(t, c)) && !tautology(t, c)
-    yield SHACLShape(Subsumption(t, c))
+    heuristic match
+      case ShapeHeuristic.NovaProGS(_, _, _) =>
+        val nodeConstraints = generateNodeConstraints
+        val nt = for
+          t <- generateNodeTargets
+          c <- nodeConstraints
+          if (!heuristic.optimize || !entailed(t, c)) && !tautology(
+            t,
+            c
+          ) && !negated(t, c) && c != Top
+        yield SHACLShape(Subsumption(t, c))
+
+        val edgeConstraints = generateEdgeConstraints
+        val et = for
+          t <- generateEdgeTargets
+          c <- edgeConstraints
+          if (!heuristic.optimize || !entailed(t, c)) && !tautology(
+            t,
+            c
+          ) && !negated(t, c) && c != Top
+        yield SHACLShape(Subsumption(t, c))
+
+        // Return the union of both sets.
+        nt.union(et)
+
+      case _ =>
+        val constraints = generateConstraints
+        for
+          t <- generateTargets
+          c <- constraints
+          if (!heuristic.optimize || !entailed(t, c)) && !tautology(t, c)
+        yield SHACLShape(Subsumption(t, c))

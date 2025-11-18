@@ -17,7 +17,14 @@ import org.softlang.s2s.parser.JsonLDParser
 
 object AlgorithmInput:
 
-  def fromSetOfShapes(
+  def fromSetOfShapesGCORE(
+      q: GCORE,
+      shapes: Set[SHACLShape],
+      inputScopes: Scopes
+  ): AlgorithmInput =
+    AlgorithmInput.GCOREAxioms(q, Axioms(shapes.map(_.axiom), inputScopes))
+
+  def fromSetOfShapesSCCQ(
       q: SCCQ,
       shapes: Set[SHACLShape],
       inputScopes: Scopes

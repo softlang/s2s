@@ -19,7 +19,8 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   val shar = Shar()
   import shar._
 
-  implicit val scopes: Scopes = Scopes("•", in = 0, med = 1, out = 2, variable = -1)
+  implicit val scopes: Scopes =
+    Scopes("•", in = 0, med = 1, out = 2, variable = -1)
 
   // GCORE 'g' converts successfully to SCCQ, test vs 's'.
   def assertConvertsTo(g: GCORE, s: SCCQ, debug: Boolean = false): Unit =
@@ -37,11 +38,6 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertEquals(conv.get.template.toSet, s.template.toSet)
     assertEquals(conv.get.pattern.toSet, s.pattern.toSet)
     assertEquals(conv.get.eccq.get.filter, s.eccq.get.filter)
-
-  // Given query can not be converted to a valid SCCQ.
-  def assertInvalid(g: GCORE): Unit =
-    val conv = g.toSCCQ
-    assert(conv.isEmpty)
 
   // Basic conversion between Iri/Var and Label, Key, Variable, and Values.
 
@@ -104,21 +100,34 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   test("shape to set clause") {
     val v1 = Variable("x")
     val l1 = Label("Person")
-    assertEquals(GCORE.shapeToSetClause(
-      SHACLShape(Subsumption(NamedConcept(v1.toIri), NamedConcept(l1.toIri(true))))
-    ), Right(SetClause.SetLabel(v1, l1)))
+    assertEquals(
+      GCORE.shapeToSetClause(
+        SHACLShape(
+          Subsumption(NamedConcept(v1.toIri), NamedConcept(l1.toIri(true)))
+        )
+      ),
+      Right(SetClause.SetLabel(v1, l1))
+    )
 
     val k1 = Key("hasName")
     val a1 = Value.StringValue("Tim")
-    assertEquals(GCORE.shapeToSetClause(
-      SHACLShape(Subsumption(NamedConcept(v1.toIri), Existential(NamedRole(k1.toIri(true)), NominalConcept(a1.toIri))))
-    ), Right(SetClause.SetKeyValue(v1, k1, a1)))
+    assertEquals(
+      GCORE.shapeToSetClause(
+        SHACLShape(
+          Subsumption(
+            NamedConcept(v1.toIri),
+            Existential(NamedRole(k1.toIri(true)), NominalConcept(a1.toIri))
+          )
+        )
+      ),
+      Right(SetClause.SetKeyValue(v1, k1, a1))
+    )
   }
 
   // Tests dealing node labels.
 
-  test("pure node fails") {
-    assertInvalid(
+  test("pure node succeeds") {
+    assertConvertsTo(
       GCORE(
         template = Construct(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
@@ -129,6 +138,15 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set()
         )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        eccq = Some(ECCQ())
       )
     )
   }
@@ -151,19 +169,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         eccq = Some(ECCQ())
       )
     )
   }
 
-  test("when = remove fails") {
-    assertInvalid(
+  test("when = remove works as expected") {
+    assertConvertsTo(
       GCORE(
         template = Construct(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
@@ -178,12 +196,28 @@ class GCOREtoSCCQTests extends munit.FunSuite:
             WhenClause.HasLabel(Variable("x"), Label("Person"))
           )
         )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("x"), Label("Person").toIri(true))
+            )
+          )
+        )
       )
     )
   }
 
-  test("when <:< remove fails") {
-    assertInvalid(
+  test("when <:< remove works too") {
+    assertConvertsTo(
       GCORE(
         template = Construct(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
@@ -199,6 +233,23 @@ class GCOREtoSCCQTests extends munit.FunSuite:
             WhenClause.HasLabel(Variable("x"), Label("Person"))
           )
         )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
+        ),
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("x"), Label("Person").toIri(true)),
+              FilterPattern.notC(Var("x"), Label("Dog").toIri(true))
+            )
+          )
+        )
       )
     )
   }
@@ -212,7 +263,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
             SetClause.SetLabel(Variable("x"), Label("Dog"))
           ),
           remove = Set(
-            RemoveClause.RemoveLabel(Variable("x"), Label("Person")),
+            RemoveClause.RemoveLabel(Variable("x"), Label("Person"))
           )
         ),
         pattern = Match(
@@ -225,17 +276,19 @@ class GCOREtoSCCQTests extends munit.FunSuite:
       SCCQ(
         template = List(
           AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("x"), Label("Person").toIri(true))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("x"), Label("Person").toIri(true))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -260,18 +313,20 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VAC(Var("x"), Label("Friendly").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("Dog").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("Friendly").toIri(true)),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("x"), Label("Person").toIri(true))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("x"), Label("Person").toIri(true))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -281,37 +336,87 @@ class GCOREtoSCCQTests extends munit.FunSuite:
   val out = GCORE.nodeToEdgeIri
   val in = GCORE.edgeToNodeIri
 
-  test("pure edge fails") {
-    assertInvalid(
+  test("pure edge succeeds") {
+    assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(),
           remove = Set()
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set()
         )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
+        ),
+        pattern = List(
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
+        ),
+        eccq = Some(ECCQ())
       )
     )
   }
 
-  test("pure edge fails, even non-empty nodes") {
-    assertInvalid(
+  test("pure edge works, even non-empty nodes") {
+    assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(),
           remove = Set()
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("x"), Label("Person")),
             WhenClause.HasLabel(Variable("y"), Label("Friendly"))
           )
         )
+      ),
+      SCCQ(
+        template = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("y"), Label("Friendly").toIri(true)),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
+        ),
+        pattern = List(
+          AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
+          AtomicPattern.VAC(Var("y"), Label("Friendly").toIri(true)),
+          AtomicPattern.VPV(Var("x"), out, Var("e")),
+          AtomicPattern.VPV(Var("e"), in, Var("y")),
+          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VAC(Var("y"), GCORE.node),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
+        ),
+        eccq = Some(ECCQ())
       )
     )
   }
@@ -320,14 +425,20 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(),
           remove = Set()
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
-            WhenClause.HasLabel(Variable("e"), Label("knows")),
+            WhenClause.HasLabel(Variable("e"), Label("knows"))
           )
         )
       ),
@@ -338,7 +449,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
@@ -346,7 +457,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         eccq = Some(ECCQ())
       )
@@ -357,15 +468,21 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(),
           remove = Set()
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("e"), Label("knows")),
-            WhenClause.HasLabel(Variable("e"), Label("likes")),
+            WhenClause.HasLabel(Variable("e"), Label("likes"))
           )
         )
       ),
@@ -377,7 +494,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
@@ -386,7 +503,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         eccq = Some(ECCQ())
       )
@@ -397,19 +514,25 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
-            SetClause.SetLabel(Variable("e"), Label("hates")),
+            SetClause.SetLabel(Variable("e"), Label("hates"))
           ),
           remove = Set(
             RemoveClause.RemoveLabel(Variable("e"), Label("likes"))
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("e"), Label("knows")),
-            WhenClause.HasLabel(Variable("e"), Label("likes")),
+            WhenClause.HasLabel(Variable("e"), Label("likes"))
           )
         )
       ),
@@ -421,7 +544,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
@@ -430,13 +553,15 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VPV(Var("e"), in, Var("y")),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -447,7 +572,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
             SetClause.SetLabel(Variable("e"), Label("hates"))
           ),
@@ -456,7 +584,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("e"), Label("knows")),
             WhenClause.HasLabel(Variable("e"), Label("likes")),
@@ -473,7 +604,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
@@ -483,13 +614,15 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("x"), Label("Person").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -498,7 +631,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
             SetClause.SetLabel(Variable("e"), Label("hates"))
           ),
@@ -507,7 +643,10 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("e"), Label("knows")),
             WhenClause.HasLabel(Variable("e"), Label("likes")),
@@ -524,7 +663,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VAC(Var("e"), Label("knows").toIri(false)),
@@ -534,13 +673,15 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("y"), Label("Dog").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("e"), Label("likes").toIri(false))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -549,18 +690,24 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
             SetClause.SetLabel(Variable("e"), Label("hates")),
-            SetClause.SetLabel(Variable("x"), Label("QuasiCat")),
+            SetClause.SetLabel(Variable("x"), Label("QuasiCat"))
           ),
           remove = Set(
             RemoveClause.RemoveLabel(Variable("e"), Label("likes")),
-            RemoveClause.RemoveLabel(Variable("x"), Label("DogLover")),
+            RemoveClause.RemoveLabel(Variable("x"), Label("DogLover"))
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
             WhenClause.HasLabel(Variable("e"), Label("knows")),
             WhenClause.HasLabel(Variable("e"), Label("likes")),
@@ -583,7 +730,7 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
@@ -596,14 +743,16 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           AtomicPattern.VAC(Var("y"), Label("Animal").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notC(Var("e"), Label("likes").toIri(false)),
-            FilterPattern.notC(Var("x"), Label("DogLover").toIri(true))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notC(Var("e"), Label("likes").toIri(false)),
+              FilterPattern.notC(Var("x"), Label("DogLover").toIri(true))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -621,18 +770,27 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         pattern = Match(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set(
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim"))
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim"))
           )
         )
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         eccq = Some(ECCQ())
       )
@@ -650,24 +808,51 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         pattern = Match(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set(
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            )
           )
         )
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         eccq = Some(ECCQ())
       )
@@ -689,27 +874,50 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         pattern = Match(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set(
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            )
           )
         )
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notP(Var("x"), Key("employed").toIri(true))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notP(Var("x"), Key("employed").toIri(true))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -727,18 +935,21 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         pattern = Match(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set(
-            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42))
           )
         )
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         eccq = Some(ECCQ())
       )
@@ -760,29 +971,54 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         pattern = Match(
           Set(BasicGraphPattern.NodePattern(Variable("x"))),
           when = Set(
-            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true))
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            )
           )
         )
       ),
       SCCQ(
         template = List(
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
         pattern = List(
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VAC(Var("x"), GCORE.node),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern.VAC(Var("x"), GCORE.node)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notP(Var("x"), Key("employed").toIri(true))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notP(Var("x"), Key("employed").toIri(true))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -793,20 +1029,33 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
-            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001))
+            SetClause
+              .SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001))
           ),
           remove = Set(
             RemoveClause.RemoveKey(Variable("e"), Key("manager"))
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
-            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
-            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("HR")),
-            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false))
+            WhenClause
+              .HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause
+              .HasKeyValue(Variable("e"), Key("role"), Value.StringValue("HR")),
+            WhenClause.HasKeyValue(
+              Variable("e"),
+              Key("manager"),
+              Value.BooleanValue(false)
+            )
           )
         )
       ),
@@ -814,27 +1063,49 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2001).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("HR").toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2001).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("HR").toIri
+          ),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2000).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("HR").toIri),
-          AtomicPattern.VPL(Var("e"), Key("manager").toIri(false), Value.BooleanValue(false).toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2000).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("HR").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("manager").toIri(false),
+            Value.BooleanValue(false).toIri
+          ),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notP(Var("e"), Key("manager").toIri(false))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notP(Var("e"), Key("manager").toIri(false))
+            )
           )
-        ))
+        )
       )
     )
   }
@@ -845,10 +1116,15 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
-            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
-            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
+            SetClause
+              .SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
+            SetClause
+              .SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
             SetClause.SetKeyValue(Variable("y"), Key("age"), Value.IntValue(43))
           ),
           remove = Set(
@@ -858,17 +1134,47 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
-            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
-            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false)),
-            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true)),
-            WhenClause.HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("y"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("y"), Key("employed"), Value.BooleanValue(true))
+            WhenClause
+              .HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause.HasKeyValue(
+              Variable("e"),
+              Key("role"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("e"),
+              Key("manager"),
+              Value.BooleanValue(false)
+            ),
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            ),
+            WhenClause
+              .HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("y"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("y"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            )
           )
         )
       ),
@@ -876,39 +1182,89 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2001).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2001).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("y"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2000).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("e"), Key("manager").toIri(false), Value.BooleanValue(false).toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("y"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2000).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("manager").toIri(false),
+            Value.BooleanValue(false).toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern
+            .VPL(Var("y"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notP(Var("e"), Key("manager").toIri(false)),
-            FilterPattern.notP(Var("x"), Key("employed").toIri(true)),
-            FilterPattern.notP(Var("y"), Key("employed").toIri(true)),
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notP(Var("e"), Key("manager").toIri(false)),
+              FilterPattern.notP(Var("x"), Key("employed").toIri(true)),
+              FilterPattern.notP(Var("y"), Key("employed").toIri(true))
             )
-        ))
+          )
+        )
       )
     )
   }
@@ -919,11 +1275,17 @@ class GCOREtoSCCQTests extends munit.FunSuite:
     assertConvertsTo(
       GCORE(
         template = Construct(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           set = Set(
-            SetClause.SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
-            SetClause.SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
-            SetClause.SetKeyValue(Variable("y"), Key("age"), Value.IntValue(43)),
+            SetClause
+              .SetKeyValue(Variable("e"), Key("since"), Value.IntValue(2001)),
+            SetClause
+              .SetKeyValue(Variable("x"), Key("age"), Value.IntValue(43)),
+            SetClause
+              .SetKeyValue(Variable("y"), Key("age"), Value.IntValue(43)),
             SetClause.SetLabel(Variable("x"), Label("A2"))
           ),
           remove = Set(
@@ -934,21 +1296,51 @@ class GCOREtoSCCQTests extends munit.FunSuite:
           )
         ),
         pattern = Match(
-          Set(BasicGraphPattern.EdgePattern(Variable("x"), Variable("e"), Variable("y"))),
+          Set(
+            BasicGraphPattern
+              .EdgePattern(Variable("x"), Variable("e"), Variable("y"))
+          ),
           when = Set(
-            WhenClause.HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
-            WhenClause.HasKeyValue(Variable("e"), Key("role"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("e"), Key("manager"), Value.BooleanValue(false)),
-            WhenClause.HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("x"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("x"), Key("employed"), Value.BooleanValue(true)),
-            WhenClause.HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
-            WhenClause.HasKeyValue(Variable("y"), Key("name"), Value.StringValue("Tim")),
-            WhenClause.HasKeyValue(Variable("y"), Key("employed"), Value.BooleanValue(true)),
+            WhenClause
+              .HasKeyValue(Variable("e"), Key("since"), Value.IntValue(2000)),
+            WhenClause.HasKeyValue(
+              Variable("e"),
+              Key("role"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("e"),
+              Key("manager"),
+              Value.BooleanValue(false)
+            ),
+            WhenClause
+              .HasKeyValue(Variable("x"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("x"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            ),
+            WhenClause
+              .HasKeyValue(Variable("y"), Key("age"), Value.IntValue(42)),
+            WhenClause.HasKeyValue(
+              Variable("y"),
+              Key("name"),
+              Value.StringValue("Tim")
+            ),
+            WhenClause.HasKeyValue(
+              Variable("y"),
+              Key("employed"),
+              Value.BooleanValue(true)
+            ),
             WhenClause.HasLabel(Variable("x"), Label("A")),
             WhenClause.HasLabel(Variable("x"), Label("A1")),
             WhenClause.HasLabel(Variable("y"), Label("B")),
-            WhenClause.HasLabel(Variable("e"), Label("c")),
+            WhenClause.HasLabel(Variable("e"), Label("c"))
           )
         )
       ),
@@ -956,47 +1348,98 @@ class GCOREtoSCCQTests extends munit.FunSuite:
         template = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2001).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(43).toIri),
-          AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2001).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern
+            .VPL(Var("y"), Key("age").toIri(true), Value.IntValue(43).toIri),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
           AtomicPattern.VAC(Var("e"), Label("c").toIri(false)),
           AtomicPattern.VAC(Var("x"), Label("A").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("A2").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("B").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
         pattern = List(
           AtomicPattern.VPV(Var("x"), out, Var("e")),
           AtomicPattern.VPV(Var("e"), in, Var("y")),
-          AtomicPattern.VPL(Var("e"), Key("since").toIri(false), Value.IntValue(2000).toIri),
-          AtomicPattern.VPL(Var("e"), Key("role").toIri(false), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("e"), Key("manager").toIri(false), Value.BooleanValue(false).toIri),
-          AtomicPattern.VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("x"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("x"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
-          AtomicPattern.VPL(Var("y"), Key("age").toIri(true), Value.IntValue(42).toIri),
-          AtomicPattern.VPL(Var("y"), Key("name").toIri(true), Value.StringValue("Tim").toIri),
-          AtomicPattern.VPL(Var("y"), Key("employed").toIri(true), Value.BooleanValue(true).toIri),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("since").toIri(false),
+            Value.IntValue(2000).toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("role").toIri(false),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("e"),
+            Key("manager").toIri(false),
+            Value.BooleanValue(false).toIri
+          ),
+          AtomicPattern
+            .VPL(Var("x"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("x"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
+          AtomicPattern
+            .VPL(Var("y"), Key("age").toIri(true), Value.IntValue(42).toIri),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("name").toIri(true),
+            Value.StringValue("Tim").toIri
+          ),
+          AtomicPattern.VPL(
+            Var("y"),
+            Key("employed").toIri(true),
+            Value.BooleanValue(true).toIri
+          ),
           AtomicPattern.VAC(Var("e"), Label("c").toIri(false)),
           AtomicPattern.VAC(Var("x"), Label("A").toIri(true)),
           AtomicPattern.VAC(Var("x"), Label("A1").toIri(true)),
           AtomicPattern.VAC(Var("y"), Label("B").toIri(true)),
           AtomicPattern.VAC(Var("x"), GCORE.node),
           AtomicPattern.VAC(Var("y"), GCORE.node),
-          AtomicPattern.VAC(Var("e"), GCORE.edge),
+          AtomicPattern.VAC(Var("e"), GCORE.edge)
         ),
-        eccq = Some(ECCQ(
-          filter = Set(
-            FilterPattern.notP(Var("e"), Key("manager").toIri(false)),
-            FilterPattern.notP(Var("x"), Key("employed").toIri(true)),
-            FilterPattern.notP(Var("y"), Key("employed").toIri(true)),
-            FilterPattern.notC(Var("x"), Label("A1").toIri(true))
-          )))
+        eccq = Some(
+          ECCQ(
+            filter = Set(
+              FilterPattern.notP(Var("e"), Key("manager").toIri(false)),
+              FilterPattern.notP(Var("x"), Key("employed").toIri(true)),
+              FilterPattern.notP(Var("y"), Key("employed").toIri(true)),
+              FilterPattern.notC(Var("x"), Label("A1").toIri(true))
+            )
+          )
+        )
       )
     )
   }
