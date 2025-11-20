@@ -210,7 +210,10 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
             .HasKeyValue(v, keyGenerator.sample(), valueGenerator.sample())
       )
 
-    el.union(nl).union(ek).union(nk)
+    rnd
+      .shuffle(el.union(nl).union(ek).union(nk).toList)
+      .take(config.targetWhenClauses.sample(rnd))
+      .toSet
 
   def generateSet(pVars: Set[Variable], tVars: Set[Variable]): Set[SetClause] =
     Set.fill(config.targetSetClauses.sample(rnd)) {
@@ -375,7 +378,7 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
 
     val full = ShapeGenerator(
       q.pattern.vocabulary.union(q.template.vocabulary),
-      ShapeHeuristic.NovaProGS(1, 2, opt = false)
+      config.shapeConfig.sampleHeuristic
     ).generate.filter(valid)
 
     // Randomly select required subset from filtered shapes.
@@ -532,7 +535,7 @@ class ProblemGeneratorRDF(config: SCCQProblemGeneratorConfig)(implicit
     // The complete set of possible shapes.
     val initial = ShapeGenerator(
       q.pattern.vocabulary.union(q.template.vocabulary),
-      ShapeHeuristic.default
+      config.shapeConfig.sampleHeuristic
     ).generate.map(_.toSimple).filter(_.nonEmpty).map(_.get)
 
     // Remove forall shapes, if they are not allowed.

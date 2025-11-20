@@ -34,6 +34,44 @@ class GCORE(
   def show(implicit state: BackendState): String =
     "CONSTRUCT " ++ template.show ++ "\nMATCH " ++ pattern.show
 
+  /** Get the set of all labels used in this query. */
+  def labels: Set[Label] =
+    val wl = pattern.when.flatMap: w =>
+      w match
+        case WhenClause.HasLabel(_, l) => Set(l)
+        case _                         => Set()
+
+    val sl = template.set.flatMap: s =>
+      s match
+        case SetClause.SetLabel(_, l) => Set(l)
+        case _                        => Set()
+
+    val rl = template.remove.flatMap: r =>
+      r match
+        case RemoveClause.RemoveLabel(_, l) => Set(l)
+        case _                              => Set()
+
+    wl.union(sl).union(rl)
+
+  /** Get the set of all keys used in this query. */
+  def keys: Set[Key] =
+    val wk = pattern.when.flatMap: w =>
+      w match
+        case WhenClause.HasKey(_, k) => Set(k)
+        case _                       => Set()
+
+    val sk = template.set.flatMap: s =>
+      s match
+        case SetClause.SetKeyValue(_, k, _) => Set(k)
+        case _                              => Set()
+
+    val rk = template.remove.flatMap: r =>
+      r match
+        case RemoveClause.RemoveKey(_, k) => Set(k)
+        case _                            => Set()
+
+    wk.union(sk).union(rk)
+
   private val patternNodeEdge: (Set[Var], Set[Var]) =
     pattern.fullGraphPattern
       .foldLeft((Set(), Set()))((acc, b) =>
@@ -255,23 +293,33 @@ class GCORE(
       nodes <- generateNodes(fgp, edges.toList.variables, lok)
     yield edges.union(nodes).toList
 
-  private def removeToFilter(r: RemoveClause): FilterPattern =
+  /** Convert a RemoveClause to a FilterPattern. */
+  private def removeToFilter(r: RemoveClause): Option[FilterPattern] =
     r match
       case RemoveClause.RemoveKey(x, k) =>
-        FilterPattern.notP(
-          x.toVar,
-          k.toIri(node =
-            nodeVariables.contains(x.toVarOrBlank(pattern.variables))
-          ) // TODO: can be use toVar here? Check other invocations, too.
-        )
+        if pattern.variables.contains(x) then
+          Some(
+            FilterPattern.notP(
+              x.toVar,
+              k.toIri(node =
+                nodeVariables.contains(x.toVarOrBlank(pattern.variables))
+              ) // TODO: can be use toVar here? Check other invocations, too.
+            )
+          )
+        else None
       case RemoveClause.RemoveLabel(x, l) =>
-        FilterPattern.notC(
-          x.toVar,
-          l.toIri(nodeVariables.contains(x.toVarOrBlank(pattern.variables)))
-        )
+        if pattern.variables.contains(x) then
+          Some(
+            FilterPattern.notC(
+              x.toVar,
+              l.toIri(nodeVariables.contains(x.toVarOrBlank(pattern.variables)))
+            )
+          )
+        else None
 
+  /** Generate SPARQL filter patterns for this query. */
   private def generateFilter(): Set[FilterPattern] =
-    template._3.map(removeToFilter)
+    template.remove.flatMap(removeToFilter)
 
   /** Convert this query to a SCCQ. */
   val toSCCQ: Option[SCCQ] =

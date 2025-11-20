@@ -8,6 +8,7 @@ import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
 import org.softlang.s2s.generate.given_Conversion_Float_Float_FloatRange
 import org.softlang.s2s.generate.given_Conversion_Int_ConstantInt
 import org.softlang.s2s.generate.given_Conversion_Int_Int_IntRange
+import org.softlang.s2s.core.ShapeHeuristic
 
 /** Profiling for S2S from generated examples. */
 object Profile:
@@ -55,7 +56,8 @@ object Profile:
       maxNumberOfShapes = 2,
       propertyConceptTargetRatio = -1.0f,
       propertyConceptConstraintRatio = -1.0f,
-      includeForallConstraints = true
+      includeForallConstraints = true,
+      sampleHeuristic = ShapeHeuristic.default
     ),
     seed = seed
   )

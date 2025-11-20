@@ -19,21 +19,17 @@ class ClosedConceptAssumptionTemplate(
 
   private def gens(lc: Iri, l: NamedConcept): List[Concept] =
     if Label.isNodeLabel(lc) then
-      input.nodeVariables
+      input.nodeVariablesNonBlank // We do not need to include blanks here.
         .flatMap(v => v.asConceptComponent(input.filters, l).toSet)
         .toList
     else
-      input.edgeVariables
+      input.edgeVariablesNonBlank // We do not need to include blanks here.
         .flatMap(v => v.asConceptComponent(input.filters, l).toSet)
         .toList
 
   override protected def extendAxioms(axioms: Set[Axiom]): Set[Axiom] =
     if input.isECCQ then
       val asi = a.concepts.map(_.asInstanceOf[Concept])
-
-      // TOOD: What was debugged here?
-      // println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-      // input.outConcepts.foreach(println)
 
       val additional: Set[Axiom] = input.outConcepts.diff(asi).flatMap { c =>
         c match

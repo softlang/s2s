@@ -21,14 +21,14 @@ object AlgorithmInput:
       q: GCORE,
       shapes: Set[SHACLShape],
       inputScopes: Scopes
-  ): AlgorithmInput =
+  ): AlgorithmInput.GCOREAxioms =
     AlgorithmInput.GCOREAxioms(q, Axioms(shapes.map(_.axiom), inputScopes))
 
   def fromSetOfShapesSCCQ(
       q: SCCQ,
       shapes: Set[SHACLShape],
       inputScopes: Scopes
-  ): AlgorithmInput =
+  ): AlgorithmInput.SCCQAxioms =
     AlgorithmInput.SCCQAxioms(q, Axioms(shapes.map(_.axiom), inputScopes))
 
 /** Specifies the possible inputs for the Algorithm. */
@@ -109,6 +109,12 @@ enum AlgorithmInput:
     case _: SCCQAxioms      => Set()
     case GCOREAxioms(q, _)  => q.nodeVariables
 
+  /** Node variables that are not blank of a GCORE query. */
+  val nodeVariablesNonBlank: Set[Var] = this match
+    case _: SCCQSimpleSHACL => Set()
+    case _: SCCQAxioms      => Set()
+    case GCOREAxioms(q, _)  => q.nodeVariables.filter(!_.isBlank)
+
   /** Left node variables of a GCORE query. */
   val leftNodeVariables: Set[Var] = this match
     case _: SCCQSimpleSHACL => Set()
@@ -126,6 +132,12 @@ enum AlgorithmInput:
     case _: SCCQSimpleSHACL => Set()
     case _: SCCQAxioms      => Set()
     case GCOREAxioms(q, _)  => q.edgeVariables
+
+  /** Edge variables that are not blanks of a GCORE query. */
+  val edgeVariablesNonBlank: Set[Var] = this match
+    case _: SCCQSimpleSHACL => Set()
+    case _: SCCQAxioms      => Set()
+    case GCOREAxioms(q, _)  => q.edgeVariables.filter(!_.isBlank)
 
   /** Return input constraints as axioms. */
   val shapeAxioms: Axioms = this match

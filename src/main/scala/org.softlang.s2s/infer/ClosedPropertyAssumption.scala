@@ -48,21 +48,20 @@ class ClosedPropertyAssumption(
             // If inverse, use gen objects instead of variable concepts.
             if inverse then
               if Key.isNodeKey(role.r) then
-                input.nodeVariables.flatMap(v =>
+                input.nodeVariablesNonBlank.flatMap(v =>
                   v.asRoleComponent(input.filters, role).toSet
                 )
               else if Key.isEdgeKey(role.r) then
-                input.edgeVariables.flatMap(v =>
+                input.edgeVariablesNonBlank.flatMap(v =>
                   v.asRoleComponent(input.filters, role).toSet
                 )
               else Set()
             // If not inverse, use variable concepts.
-            else
-              if Key.isNodeKey(role.r) then
-                input.nodeVariables.map(_.asConcept)
-              else if Key.isEdgeKey(role.r) then
-                input.edgeVariables.map(_.asConcept)
-              else Set()
+            else if Key.isNodeKey(role.r) then
+              input.nodeVariablesNonBlank.map(_.asConcept)
+            else if Key.isEdgeKey(role.r) then
+              input.edgeVariablesNonBlank.map(_.asConcept)
+            else Set()
           List(
             // ∃𝑝.C ⊑ D1 ⊔ ... ⊔ Dn ⊔ ... ⊔ V1 ⊔ ... ⊔ Vm (or O1 ⊔ ... ⊔ Om for inverse)
             Subsumption(ex, Concept.unionOf(rhs ++ vx)),
@@ -155,9 +154,13 @@ class ClosedPropertyAssumption(
       else if template && input.isECCQ then
         val vxp =
           if Key.isNodeKey(p.r) then
-            input.nodeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet)
+            input.nodeVariablesNonBlank.flatMap(
+              _.asRoleComponent(input.filters, p).toSet
+            )
           else if Key.isEdgeKey(p.r) then
-            input.edgeVariables.flatMap(_.asRoleComponent(input.filters, p).toSet)
+            input.edgeVariablesNonBlank.flatMap(
+              _.asRoleComponent(input.filters, p).toSet
+            )
           else Set()
 
         Set(
@@ -209,14 +212,12 @@ class ClosedPropertyAssumption(
       if rhs.isEmpty then Set()
       else if template && input.isECCQ then
         val make = (x: Var) =>
-          for
-            (pc, oc) <- x.asRoleObjectComponent(input.filters, p)
+          for (pc, oc) <- x.asRoleObjectComponent(input.filters, p)
           yield Intersection(oc, Existential(Inverse(p), pc))
         val vxp =
-          if Key.isNodeKey(p.r) then
-            input.nodeVariables.flatMap(make)
+          if Key.isNodeKey(p.r) then input.nodeVariablesNonBlank.flatMap(make)
           else if Key.isEdgeKey(p.r) then
-            input.edgeVariables.flatMap(make)
+            input.edgeVariablesNonBlank.flatMap(make)
           else Set()
         Set(
           Equality(Existential(Inverse(p), Top), Concept.unionOf(rhs ++ vxp))

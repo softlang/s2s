@@ -157,7 +157,8 @@ class ConfigurationComparison(
         maxNumberOfShapes = 2,
         propertyConceptTargetRatio = -1.0f,
         propertyConceptConstraintRatio = -1.0f,
-        includeForallConstraints = true
+        includeForallConstraints = true,
+        sampleHeuristic = ShapeHeuristic.default
       )
     )
 

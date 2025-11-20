@@ -133,14 +133,14 @@ class Algorithm(
         val evC = vC.filter(c => Label.isEdgeLabel(c.c))
 
         val ncs: Set[Axiom] = for
-          nv <- input.nodeVariables
+          nv <- input.nodeVariablesNonBlank
           c <- nvC
           lhs <- nv.asConceptComponent(input.filters, c)
         // yield Subsumption(lhs, Intersection(nv.asConcept, c))
         yield Equality(lhs, Intersection(nv.asConcept, c))
 
         val ecs: Set[Axiom] = for
-          ev <- input.edgeVariables
+          ev <- input.edgeVariablesNonBlank
           c <- evC
           lhs <- ev.asConceptComponent(input.filters, c)
         // yield Subsumption(lhs, Intersection(ev.asConcept, c))
@@ -161,14 +161,17 @@ class Algorithm(
         val evP = vP.filter(r => Key.isEdgeKey(r.r))
 
         val nps: Set[Axiom] = for
-          nv <- input.nodeVariables
+          nv <- input.nodeVariablesNonBlank
           p <- nvP
           (lhs, o) <- nv.asRoleObjectComponent(input.filters, p)
         // yield Subsumption(lhs, Intersection(nv.asConcept, Existential(p, o)))
         yield Equality(lhs, Intersection(nv.asConcept, Existential(p, o)))
 
+        // :blank_h_name ≡ (:blank_h)⊓(∃:name.(:blank_h_o_name)) // dropped without blanks
+        // :p_name ≡ (:p)⊓(∃:name.(:p_o_name))
+
         val eps: Set[Axiom] = for
-          ev <- input.edgeVariables
+          ev <- input.edgeVariablesNonBlank
           p <- evP
           (lhs, o) <- ev.asRoleObjectComponent(input.filters, p)
         // yield Subsumption(lhs, Intersection(ev.asConcept, Existential(p, o)))
@@ -176,7 +179,6 @@ class Algorithm(
 
         // Explicit subsumption for shape properties.
         // or the form ∃:age_o_o.⊤ ≡ :x_age (where 'age' occurrs in shapes only).
-        // TODO: Review
         val subsp: Set[Axiom] = for
           nv <- input.nodeVariables
           p <- shapeProperties.getOrElse(Set())

@@ -1,5 +1,7 @@
 package org.softlang.s2s.generate
 
+import org.softlang.s2s.core.ShapeHeuristic
+
 /** A general, non-query specific problem generator. */
 sealed trait ProblemGeneratorConfig:
   /** Generator configuration for shapes. */
@@ -27,7 +29,10 @@ case class ShapeGeneratorConfig(
     propertyConceptConstraintRatio: FloatParameter,
 
     /** Allow universal quantification in constraints. */
-    includeForallConstraints: Boolean
+    includeForallConstraints: Boolean,
+
+    /** ShapeHeuristic used for sampleing input shapes. */
+    sampleHeuristic: ShapeHeuristic
 ):
 
   private def fieldNames: List[String] =
@@ -206,10 +211,16 @@ case class GCOREProblemGeneratorConfig(
     /** Probability to retain one BGP from the pattern, if there is space. */
     patternRetention: FloatParameter,
 
-    /** Labels attached to each entity. */
+    /** Labels attached to each entity when generating when clauses. This is
+      * before the target number is selected; thus, determines the likelihood
+      * and diversity of labels in WHEN clauses, not their size.
+      */
     labelsPerEntity: IntParameter,
 
-    /** Properties attached to each entity. */
+    /** Properties attached to each entity when generating when clauses. This is
+      * before the target number is selected; thus, determines the likelihood
+      * and diversity of labels in WHEN clauses, not their size.
+      */
     propsPerEntity: IntParameter,
 
     /** Set clauses. */
@@ -217,6 +228,9 @@ case class GCOREProblemGeneratorConfig(
 
     /** Remove clauses. */
     targetRemoveClauses: IntParameter,
+
+    /** Remove clauses. */
+    targetWhenClauses: IntParameter,
 
     /** Existence vs value constraints. */
     existToValueConstraints: FloatParameter,

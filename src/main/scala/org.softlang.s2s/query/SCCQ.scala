@@ -137,40 +137,45 @@ class SCCQ(
 
     // Take only node and edge variables into consideration, not any variables generated for
     // properties by the conversion from G-CORE to SPARQL.
+    // Then Generate two fresh variables, for each variable v.
     val patternVariables =
-      eccq.map(e => e.nodeVariables.union(e.edgeVariables)).getOrElse(Set())
-
-    // Generate two fresh variables, for each variable v.
-    val pv = patternVariables.map(v => (v -> (Var.fresh(), Var.fresh()))).toMap
-
-    // Filter only nodes.
-    val pvn = pv.filter((v, _) =>
-      eccq.map(e => e.nodeVariables).getOrElse(Set()).contains(v)
-    )
-
-    // Filter only edges.
-    val pve = pv.filter((v, _) =>
-      eccq.map(e => e.edgeVariables).getOrElse(Set()).contains(v)
-    )
+      eccq
+        .map(e => e.nodeVariables.union(e.edgeVariables))
+        .getOrElse(Set())
+        .map(v => (v -> (Var.fresh(), Var.fresh())))
+        .toMap
+        .view
+        .filterKeys(v => !v.isBlank)
+        .toMap
 
     // Separator for lines in output.
     val sep = " .\n    "
 
-    // Filter for variables that occur in the template.
-    val tv = pv.view.filterKeys(v => template.variables.contains(v))
-
     val p =
-      if isECCQ then
-        po ++ pv.view.filterKeys(v => !v.isBlank).map(additionalTriples)
+      if isECCQ then po ++ patternVariables.map(additionalTriples)
       else po
     val t =
       if isECCQ then
-        to ++ tv.view.filterKeys(v => !v.isBlank).map(additionalTriples)
+        // Filter for variables that occur in the template.
+        val tv =
+          patternVariables.view.filterKeys(v => template.variables.contains(v))
+        to ++ tv.map(additionalTriples)
       else to
     val f =
       if isECCQ then
+        // Filter only nodes.
+        val pvn = patternVariables
+          .filter((v, _) =>
+            eccq.map(e => e.nodeVariables).getOrElse(Set()).contains(v)
+          )
+        // Filter only edges.
+        val pve = patternVariables.filter((v, _) =>
+          eccq.map(e => e.edgeVariables).getOrElse(Set()).contains(v)
+        )
         // Filters from GCORE filter expressions.
-        eccq.map(e => e.filter.map(makeFilter(_, pv))).getOrElse(Nil)
+        eccq
+          .map(e => e.filter.map(makeFilter(_, patternVariables)))
+          .getOrElse(Nil)
         // Filters for meta edges and nodes.
           ++ pvn.map(metaFilterNode)
           ++ pve.map(metaFilterEdge)

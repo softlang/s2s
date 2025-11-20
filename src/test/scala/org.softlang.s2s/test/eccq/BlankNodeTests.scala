@@ -166,7 +166,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     ),
     q3,
     Set(
-      "ln:A ⊑ ln:B"
+      "ln:A ⊑ ln:B",
+      "ln:B ⊑ ln:A"
     )
   )
 
@@ -190,8 +191,11 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     q3,
     Set(
       "ln:A ⊑ ln:B",
+      "ln:B ⊑ ln:A",
       "ln:B ⊑ ln:C",
-      "ln:A ⊑ ln:C"
+      "ln:C ⊑ ln:B",
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -287,7 +291,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     noshapes,
     q6,
     Set(
-      "ln:A ⊑ ln:C"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -300,7 +305,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     Set(
       "ln:A ⊑ ln:B",
       "ln:A ⊑ ln:C",
-      "ln:C ⊑ ln:B"
+      "ln:C ⊑ ln:B",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -344,19 +350,11 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     q698,
     Set(
       "ln:A ⊑ ln:B",
-      "ln:A ⊑ ln:C"
-      // Algorithm improvement: If the fresh variable
-      // is entirely unconstrained, it can be dropped
-      // from consideration, so that more shapes
-      // can be inferred.
-      // This is not a relevant case, however, because
-      // the variable (y) is quite useless, anyways,
-      // in this case.
-      //
-      // "ln:C ⊑ ln:B",
-      // "ln:B ⊑ ln:C",
-      // "ln:B ⊑ ln:A",
-      // "ln:C ⊑ ln:A"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A",
+      "ln:C ⊑ ln:B",
+      "ln:B ⊑ ln:C",
+      "ln:B ⊑ ln:A"
     )
   )
 
@@ -367,7 +365,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     ),
     q6,
     Set(
-      "ln:A ⊑ ln:C"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -378,7 +377,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     ),
     q6,
     Set(
-      "ln:A ⊑ ln:C"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -389,7 +389,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     ),
     q6,
     Set(
-      "ln:A ⊑ ln:C"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 
@@ -400,7 +401,8 @@ class BlankNodeTests extends ValidationSuite("e_blank_"):
     ),
     q6,
     Set(
-      "ln:A ⊑ ln:C"
+      "ln:A ⊑ ln:C",
+      "ln:C ⊑ ln:A"
     )
   )
 

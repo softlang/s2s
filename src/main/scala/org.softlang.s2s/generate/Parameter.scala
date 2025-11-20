@@ -28,9 +28,12 @@ given Conversion[Int, ConstantInt] with
 /** An parameter for Int values, on a range. */
 case class IntRange(private var mini: Int, private var maxi: Int)
     extends IntParameter:
+
   override def toString: String = min.toString ++ "-" ++ max.toString
+
   def sample(rnd: Random): Int =
-    rnd.between(min, max)
+    rnd.between(min, max + 1)
+
   def mult(j: Float): Unit =
     mini = (min.toFloat * j).round
     maxi = (max.toFloat * j).round
@@ -40,6 +43,29 @@ case class IntRange(private var mini: Int, private var maxi: Int)
 
 given Conversion[(Int, Int), IntRange] with
   def apply(i: (Int, Int)): IntRange = IntRange(i._1, i._2)
+
+case class IntNormal(private var mini: Int, private var maxi: Int)
+    extends IntParameter:
+  override def toString: String = min.toString ++ "~" ++ max.toString
+
+  def sample(rnd: Random): Int =
+    val mean = (min + max) / 2.0
+    val stdDev = (max - min) / 6.0
+
+    @annotation.tailrec
+    def sample(): Double =
+      val value = mean + rnd.nextGaussian() * stdDev
+      if value >= min && value <= max then value
+      else sample()
+
+    sample().round.toInt
+
+  def mult(j: Float): Unit =
+    mini = (min.toFloat * j).round
+    maxi = (max.toFloat * j).round
+
+  def min: Int = mini
+  def max: Int = maxi
 
 /** An parameter for Float values. */
 trait FloatParameter extends Parameter[Float]
@@ -65,3 +91,22 @@ case class FloatRange(private var minF: Float, private var maxF: Float)
 
 given Conversion[(Float, Float), FloatRange] with
   def apply(i: (Float, Float)): FloatRange = FloatRange(i._1, i._2)
+
+case class FloatNormal(private var mini: Float, private var maxi: Float)
+    extends FloatParameter:
+  override def toString: String = min.toString ++ "~" ++ max.toString
+
+  def sample(rnd: Random): Float =
+    val mean = (min + max) / 2.0
+    val stdDev = (max - min) / 6.0
+
+    @annotation.tailrec
+    def sample(): Float =
+      val value = mean + rnd.nextGaussian() * stdDev
+      if value >= min && value <= max then value.toFloat
+      else sample()
+
+    sample()
+
+  def min: Float = mini
+  def max: Float = maxi
