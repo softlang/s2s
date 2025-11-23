@@ -1,4 +1,3 @@
-
 """Rendering of (small) RDF graphs."""
 
 # from rdflib.extras.external_graph_libs import rdflib_to_networkx_multidigraph
@@ -6,11 +5,14 @@
 # import matplotlib.pyplot as plt
 
 import io
+from pathlib import Path
+
 import pydotplus
+from rdflib import Graph
 from rdflib.tools.rdf2dot import rdf2dot
 
 
-def render(graph, store_path):
+def render(graph: Graph, store_path: str):
     """Take an rdflib graph, and render it."""
     stream = io.StringIO()
     rdf2dot(graph, stream)

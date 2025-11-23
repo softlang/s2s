@@ -11,6 +11,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import de.pseifer.shar.core.BackendState
 import scala.annotation.threadUnsafe
+import org.softlang.s2s.query.GCORE
 
 /** A generator for validation data, based on test samples (see
   * ValidationSuite.scala) or random generation (see Generator.scala).
@@ -46,10 +47,14 @@ class ValidationDataGenerator(state: BackendState):
       .map(_.dropScope(input.getScopes))
       .mkString("\n")
       .filterNot(c => c == '<' || c == '>')
+
     val pvoc = input.vocabularyIn.properties
       .map(_.dropScope(input.getScopes))
+      .filter(_ != GCORE.nodeToEdgeRole)
+      .filter(_ != GCORE.edgeToNodeRole)
       .mkString("\n")
       .filterNot(c => c == '<' || c == '>')
+
     val ivoc = input.vocabularyIn.nominals
       .map(_.dropScope(input.getScopes))
       .mkString("\n")

@@ -1,104 +1,50 @@
-
 """Generation of random RDF graphs."""
 
 import random
-from dataclasses import dataclass
 
+from data import Status
+from gconfig import Config
+from pyshacl import validate  # pyright: ignore[reportUnknownVariableType]
 from rdflib import Graph
+from rdflib.query import Result
 from rdflib.term import URIRef
-from pyshacl import validate
-
 from vocabulary import Vocabulary
-
-
-@dataclass
-class Config:
-    """A configuration for generating and pruning graphs."""
-
-    # The vocabulary from which to generate the graph.
-    voc: Vocabulary
-
-    # Target number of triples/statements in graphs.
-    # This scales the entire graph.
-    number_of_triples: int
-
-    # Tuple, consisting of:
-    # - Ratio values between 0 and 1
-    # - randomization factor applied as follows:
-    #   x - x * rf to x + x * rf
-    # for x in the ratios listed below.
-    node_to_triple_ratio: (float, float)
-    concept_property_ratio: (float, float)
-    property_label_ratio: (float, float)
-
-    # Enable property graph mode if True.
-    property_mode: bool
-
-    # Prefix for generated nodes.
-    gen_node_prefix = "https://github.com/softlang/s2s/gen/node"
-
-    # Prefix for generated edges.
-    gen_edge_prefix = "https://github.com/softlang/s2s/gen/edge"
-
-    def rnd_number_of_nodes(self) -> int:
-        """Return a random number of nodes."""
-        return int(
-            self._rnd(self.node_to_triple_ratio) * self.number_of_triples)
-
-    def rnd_concept_property_ratio(self) -> float:
-        """Ratio of element elements of the generated graph.
-
-        - Ratio of concepts to properties (RDF) or
-        - Ratio of nodes to edges (property graph).
-        """
-        return self._rnd(self.concept_property_ratio)
-
-    def rnd_property_label_ratio(self) -> float:
-        """For property graphs, ratio of labels to key-value pairs."""
-        return self._rnd(self.property_label_ratio)
-
-    def _rnd(self, xf: (float, float)) -> float:
-        """Randomize x with randomization facor f."""
-        x, f = xf
-        return random.uniform(x - x * f, x + x * f)
-
 
 # Function: 'generate' graphs and helper functions.
 
 
-def _gen_property_nodes(config, cpr, non):
+def _gen_property_nodes(config: Config, cpr: float, non: int):
     """Generate only ratio*nodes nodes, for actual nodes (excl. edges)."""
     reduced = int(cpr * non)
-    return [
-        URIRef("{}{}".format(config.gen_node_prefix, i))
-        for i in range(0, reduced)
-    ]
+    return [URIRef("{}{}".format(config.gen_node_prefix, i)) for i in range(0, reduced)]
 
 
-def _gen_rdf_nodes(config, non):
+def _gen_rdf_nodes(config: Config, non: int):
     """Generate the non required nodes."""
-    return list(set(
-        URIRef("{}{}".format(config.gen_node_prefix, i))
-        for i in range(0, non)
-    ).union(config.voc.nominals))
+    return list(
+        set(
+            URIRef("{}{}".format(config.gen_node_prefix, i)) for i in range(0, non)
+        ).union(config.voc.nominals)
+    )
 
 
-def _gen_property_edge(config, i):
+def _gen_property_edge(config: Config, i: int):
     """Generate a new edge from some unique identifier."""
     edge = URIRef("{}{}".format(config.gen_edge_prefix, i))
     return edge
 
 
-def _initial_graph(config, cpr):
+def _initial_graph(
+    config: Config, cpr: float
+) -> tuple[Graph, list[URIRef], list[URIRef]]:
     """Initialize a graph, before generating its triples."""
     # In property mapping mode, generate the basic structure here.
     g = Graph()
     non = config.rnd_number_of_nodes()
     if config.property_mode:
         nodes = _gen_property_nodes(config, cpr, non)
-        edges = []
-        rest = int(
-            (1.0 - cpr) * non)
+        edges: list[URIRef] = []
+        rest = int((1.0 - cpr) * non)
 
         # Sample edges.
         for i in range(0, rest):
@@ -108,23 +54,24 @@ def _initial_graph(config, cpr):
             edge = _gen_property_edge(config, i)
             edges.append(edge)
             # Add n1-nte->e and e-etn->n2 triples to the graph.
-            g.add((node1, config.voc.meta_nte, edge))
-            g.add((edge, config.voc.meta_etn, node2))
-            # TODO add meta edges node/edge
-            g.add((edge, config.voc.rdf_type, config.voc.meta_edge))
+            _ = g.add((node1, config.voc.meta_nte, edge))
+            _ = g.add((edge, config.voc.meta_etn, node2))
+            _ = g.add((edge, config.voc.rdf_type, config.voc.meta_edge))
 
         # Add meta node type to all nodes.
         for n in nodes:
-            g.add((n, config.voc.rdf_type, config.voc.meta_node))
+            _ = g.add((n, config.voc.rdf_type, config.voc.meta_node))
 
     # In standard RDF mode, just generate the nodes.
     else:
         nodes = _gen_rdf_nodes(config, non)
-        edges = None
+        edges = []
     return (g, nodes, edges)
 
 
-def _random_prop_triple(config, nodes, edges, cpr, plr):
+def _random_prop_triple(
+    config: Config, nodes: list[URIRef], edges: list[URIRef], cpr: float, plr: float
+):
     """Return a random property-graph triple, or None."""
     # Generate a node-triple if true, or edge-triple otherwise.
     rnd_do_node = random.random() > cpr
@@ -155,7 +102,7 @@ def _random_prop_triple(config, nodes, edges, cpr, plr):
             return None
 
 
-def _random_rdf_triple(config, nodes, cpr):
+def _random_rdf_triple(config: Config, nodes: list[URIRef], cpr: float):
     """Return a random triple, or None if no triples are possible."""
     draw = random.random() > cpr
     if config.voc.properties and draw:
@@ -173,27 +120,27 @@ def _random_rdf_triple(config, nodes, cpr):
         return None
 
 
-def generate(config):
+def generate(config: Config):
     """Generate a new graph with the given settings."""
     cpr = config.rnd_concept_property_ratio()
     lpr = config.rnd_property_label_ratio()
     g, nodes, edges = _initial_graph(config, cpr)
 
     # Generate the required number of triples.
-    for i in range(0, config.number_of_triples):
+    for _ in range(0, config.number_of_triples):
         if config.property_mode:
             draw = _random_prop_triple(config, nodes, edges, cpr, lpr)
         else:
             draw = _random_rdf_triple(config, nodes, cpr)
         if draw:
-            g.add(draw)
+            _ = g.add(draw)
     return g
 
 
 # Function: 'count_targets' and helper functions.
 
 
-def _ask(graph, q):
+def _ask(graph: Graph, q: str):
     """Execute ask query against the graph."""
     r = graph.query(q)
     for ri in r:
@@ -203,23 +150,33 @@ def _ask(graph, q):
             return False
 
 
-def _has_class_target(graph, c):
+def _has_class_target(graph: Graph, c: URIRef):
     """Test, whether the graph has a specific class target."""
-    return _ask(graph, """
+    return _ask(
+        graph,
+        """
         ASK {{
             ?t1 a <{}>
-        }}""".format(c))
+        }}""".format(
+            c
+        ),
+    )
 
 
-def _has_property_target(graph, p):
+def _has_property_target(graph: Graph, p: URIRef):
     """Test, whether the graph has a specific class target."""
-    return _ask(graph, """
+    return _ask(
+        graph,
+        """
         ASK {{
             ?t1 <{}> ?t2
-        }}""".format(p))
+        }}""".format(
+            p
+        ),
+    )
 
 
-def count_targets(shapes, graph):
+def count_targets(shapes: Graph, graph: Graph):
     """
     Test, whether a given graph satisfies all targets of all shapes.
 
@@ -227,34 +184,65 @@ def count_targets(shapes, graph):
     times, and the total count of identified target queries.
     """
     # Obtain all class targets.
-    target_classes = shapes.query("""
+    target_classes = shapes.query(
+        """
         SELECT DISTINCT ?c WHERE {
             ?s <http://www.w3.org/ns/shacl#targetClass> ?c
-        }""")
+        }"""
+    )
 
     # Obtain all property (subject/object) targets.
-    target_subjects = shapes.query("""
+    target_subjects = shapes.query(
+        """
         SELECT DISTINCT ?p WHERE {
             ?s <http://www.w3.org/ns/shacl#targetSubjectsOf> ?p
-        }""")
-    target_objects = shapes.query("""
+        }"""
+    )
+    target_objects = shapes.query(
+        """
         SELECT DISTINCT ?p WHERE {
             ?s <http://www.w3.org/ns/shacl#targetObjectsOf> ?p
-        }""")
+        }"""
+    )
 
     # For all these cases, verify that there are targets
     # in the current iteration of the pruned graph.
 
-    ct = [_has_class_target(graph, t["c"]) for t in target_classes]
-    st = [_has_property_target(graph, t["p"]) for t in target_subjects]
-    ot = [_has_property_target(graph, t["p"]) for t in target_objects]
+    ct = [
+        _has_class_target(
+            graph,
+            t[  # pyright: ignore[reportCallIssue, reportArgumentType, reportIndexIssue]
+                "c"
+            ],
+        )
+        for t in target_classes
+    ]
+
+    st = [
+        _has_property_target(
+            graph,
+            t[  # pyright: ignore[reportCallIssue, reportArgumentType, reportIndexIssue]
+                "p"
+            ],
+        )
+        for t in target_subjects
+    ]
+    ot = [
+        _has_property_target(
+            graph,
+            t[  # pyright: ignore[reportCallIssue, reportArgumentType, reportIndexIssue]
+                "p"
+            ],
+        )
+        for t in target_objects
+    ]
 
     total = 0
-    for c in target_classes:
+    for _ in target_classes:
         total += 1
-    for p in target_subjects:
+    for _ in target_subjects:
         total += 1
-    for p in target_objects:
+    for _ in target_objects:
         total += 1
 
     return ((ct + st + ot).count(False), total)
@@ -263,46 +251,55 @@ def count_targets(shapes, graph):
 # Function: 'prune' and helper functions.
 
 
-def _validation_report(shapes, graph):
+def _validation_report(shapes: Graph, graph: Graph) -> tuple[bool, Graph]:
     """Produce a SHACL validation report."""
-    is_valid, report, _ = validate(
-        data_graph=graph,
-        shacl_graph=shapes)
-    return is_valid, report
+    is_valid, report, _ = validate(  # pyright: ignore[reportUnknownVariableType]
+        data_graph=graph, shacl_graph=shapes
+    )
+    return (
+        is_valid,
+        report,  # pyright: ignore[reportUnknownVariableType, reportReturnType]
+    )
 
 
-def _violating_nodes(report):
+def _violating_nodes(report: Graph) -> Result:
     """Return the nodes violating input shapes."""
-    return report.query("""
+    return report.query(
+        """
         SELECT ?n ?s ?c WHERE {
             ?x <http://www.w3.org/ns/shacl#focusNode> ?n .
             ?x <http://www.w3.org/ns/shacl#sourceShape> ?s .
             ?x <http://www.w3.org/ns/shacl#sourceConstraintComponent> ?c .
         }
-    """)
+    """
+    )
 
 
-def _all_subject_triples(graph, node):
+def _all_subject_triples(graph: Graph, node: URIRef):
     """Return all triples for a given node that must be removed."""
     q = """
         SELECT ?p ?o WHERE {{
             <{n}> ?p ?o
         }}
-    """.format(n=node)
+    """.format(
+        n=node
+    )
     return graph.query(q)
 
 
-def _all_object_triples(graph, node):
+def _all_object_triples(graph: Graph, node: URIRef):
     """Return all triples for a given node that must be removed."""
     q = """
         SELECT ?s ?p WHERE {{
             ?s ?p <{n}>
         }}
-    """.format(n=node)
+    """.format(
+        n=node
+    )
     return graph.query(q)
 
 
-def _dangling_edges(graph, node, voc):
+def _dangling_edges(graph: Graph, node: URIRef, voc: Vocabulary):
     """Return all dangling edge triples for some node."""
     q = """
         SELECT ?e WHERE {{
@@ -310,55 +307,98 @@ def _dangling_edges(graph, node, voc):
             UNION
             {{ ?e <{etn}> <{n}> }}
         }}
-    """.format(n=node,
-               nte=voc.meta_nte_raw,
-               etn=voc.meta_etn_raw)
+    """.format(
+        n=node, nte=voc.meta_nte_raw, etn=voc.meta_etn_raw
+    )
     return graph.query(q)
 
 
-def _purge_violations(graph, report, property_mode, voc):
+def _purge_violations(
+    graph: Graph, report: Graph, property_mode: bool, voc: Vocabulary
+):
     """Remove nodes that violate any shapes according to 'report'."""
     violations = _violating_nodes(report)
-    for node, shape, constraint in violations:
+    for (
+        node,  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
+        _,  # pyright: ignore[reportUnknownVariableType]
+        _,  # pyright: ignore[reportUnknownVariableType]
+    ) in violations:
 
         # All triples where node is subject and object.
-        subjects = _all_subject_triples(graph, node)
-        objects = _all_object_triples(graph, node)
+        subjects = _all_subject_triples(
+            graph, node  # pyright: ignore[reportArgumentType]
+        )
+        objects = _all_object_triples(
+            graph, node  # pyright: ignore[reportArgumentType]
+        )
 
         # Edges that are now 'dangling', since one node is missing.
         # Careful: Need to get this /before/ removing the nodes!
-        dangling = _dangling_edges(graph, node, voc)
+        dangling = _dangling_edges(
+            graph, node, voc  # pyright: ignore[reportArgumentType]
+        )
 
-        for p, o in subjects:
-            graph.remove((node, p, o))
+        for (
+            p,  # pyright: ignore[reportGeneralTypeIssues, reportAssignmentType, reportUnknownVariableType]
+            o,  # pyright: ignore[reportUnknownVariableType]
+        ) in subjects:
+            _ = graph.remove((node, p, o))  # pyright: ignore[reportUnknownArgumentType]
 
-        for s, p in objects:
-            graph.remove((s, p, node))
+        for (
+            s,  # pyright: ignore[reportGeneralTypeIssues, reportAssignmentType, reportUnknownVariableType]
+            p,  # pyright: ignore[reportUnknownVariableType]
+        ) in objects:
+            graph.remove(
+                (
+                    s,
+                    p,
+                    node,
+                )  # pyright: ignore[reportUnusedCallResult, reportUnknownArgumentType]
+            )
 
-        if "node" in node and property_mode:
+        if ("node" in node) and property_mode:  # pyright: ignore[reportOperatorIssue]
             # Remove all edges for removed reified edges (property graphs).
-            for e, in dangling:
-                for p, o in _all_subject_triples(graph, e):
-                    graph.remove((e, p, o))
-                for s, p in _all_object_triples(graph, e):
-                    graph.remove((s, p, e))
+            for (
+                e,  # pyright: ignore[reportGeneralTypeIssues, reportAssignmentType, reportUnknownVariableType]
+            ) in dangling:
+                for (
+                    p,  # pyright: ignore[reportGeneralTypeIssues, reportAssignmentType, reportUnknownVariableType]
+                    o,  # pyright: ignore[reportUnknownVariableType]
+                ) in _all_subject_triples(
+                    graph, e  # pyright: ignore[reportArgumentType]
+                ):
+                    _ = graph.remove(
+                        (e, p, o)  # pyright: ignore[reportUnknownArgumentType]
+                    )
+                for (
+                    s,  # pyright: ignore[reportGeneralTypeIssues, reportAssignmentType, reportUnknownVariableType]
+                    p,  # pyright: ignore[reportUnknownVariableType]
+                ) in _all_object_triples(
+                    graph, e  # pyright: ignore[reportArgumentType]
+                ):
+                    _ = graph.remove(
+                        (s, p, e)  # pyright: ignore[reportUnknownArgumentType]
+                    )
 
 
-def prune(config, shapes, graph, max_iterations=10):
+def prune(
+    config: Config, shapes: Graph, graph: Graph, max_iterations: int = 10
+) -> Status:
     """Prune a graph with a shapes graph, removing violations."""
-    for i in range(0, max_iterations):
+    global total
+    for _ in range(0, max_iterations):
         is_valid, report = _validation_report(shapes, graph)
         (missing_targets, total_targets) = count_targets(shapes, graph)
 
         # If the report comes back clean, break, indicating validity.
         if is_valid and missing_targets == 0:
-            return "ok"
-        elif missing_targets > 0:
-            return "missing targets {}/{}".format(
-                missing_targets, total_targets)
-
+            return Status.OK
+        elif is_valid and missing_targets == total_targets:
+            return Status.MISSING_ALL_TARGETS
+        elif is_valid and missing_targets > 0:
+            return Status.MISSING_TARGETS
         # Otherwise, prune and continue checking.
         _purge_violations(graph, report, config.property_mode, config.voc)
 
     # If we reach max_iterations, return False.
-    return "failed to prune in {} steps".format(max_iterations)
+    return Status.GRAPH_GENERATION_TIMEOUT
