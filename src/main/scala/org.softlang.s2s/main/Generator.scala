@@ -91,9 +91,14 @@ class Statistics:
   private def stats: List[Stats] =
     samples.map(stat).toList
 
+  def format(label: String, size: Int): String =
+    "----------------------------------------------\n"
+      + "SAMPLE: " + label + " (" + size.toString() + ")\n" + this.toString()
+
   override def toString(): String =
     val s = stats
-    "Type\t\tMin\tMax\tAverage\tMedian\n"
+    "----------------------------------------------\n"
+      + "Type\t\tMin\tMax\tAverage\tMedian\n"
       + "----------------------------------------------\n"
       + s.pretty("Node Variables", _.nodeVariables)
       + s.pretty("Edge Variables", _.edgeVariables)
@@ -168,7 +173,7 @@ object Generator
   )
 
   // See ProblemGeneratorConfig Class for documentation (!)
-  val gconfig = GCOREProblemGeneratorConfig(
+  def mediumConfig(seed: String) = GCOREProblemGeneratorConfig(
     freshValue = 1.0f,
     valuesCount = 100,
     freshVariable = 0.5f,
@@ -197,22 +202,67 @@ object Generator
       includeForallConstraints = false,
       sampleHeuristic = ShapeHeuristic.NovaProGS(2, 1, opt = true)
     ),
-    seed = "TGDK2025"
+    seed = seed
   )
 
-  def run(iterations: Int, debug: Boolean): Unit =
+  def smallConfig(seed: String) = mediumConfig(seed).copy(
+    minPatterns = 1,
+    maxPatterns = 1,
+    shapeConfig = ShapeGeneratorConfig(
+      minNumberOfShapes = 1,
+      maxNumberOfShapes = 1,
+      propertyConceptTargetRatio = -1.0f,
+      propertyConceptConstraintRatio = -1.0f,
+      includeForallConstraints = true, // TODO?
+      sampleHeuristic = ShapeHeuristic.NovaProGS(1, 1, opt = true)
+    )
+  )
+
+  // val largeConfig = mediumConfig.copy(
+  //  shapeConfig = ShapeGeneratorConfig(
+  //    minNumberOfShapes = 2,
+  //    maxNumberOfShapes = 4,
+  //    propertyConceptTargetRatio = -1.0f,
+  //    propertyConceptConstraintRatio = -1.0f,
+  //    includeForallConstraints = false,
+  //    sampleHeuristic = ShapeHeuristic.NovaProGS(2, 2, opt = true)
+  //  )
+  // )
+
+  // val negativeConfig = smallConfig.copy(seed = "TBD3")
+
+  def run(debug: Boolean): Unit =
+    val samples = 250
+
+    val s1 = Statistics()
+    generateGCORE(samples, smallConfig("TGDK1"), "gen_small_1", debug, s1)
+    generateGCORE(samples, smallConfig("TGDK2"), "gen_small_2", debug, s1)
+    generateGCORE(samples, smallConfig("TGDK3"), "gen_small_3", debug, s1)
+    generateGCORE(samples, smallConfig("TGDK4"), "gen_small_4", debug, s1)
+    println(s1.format("gen_small", samples * 4))
+
+    val s2 = Statistics()
+    generateGCORE(samples, mediumConfig("TGDK5"), "gen_normal_1", debug, s2)
+    generateGCORE(samples, mediumConfig("TGDK6"), "gen_normal_2", debug, s2)
+    generateGCORE(samples, mediumConfig("TGDK7"), "gen_normal_3", debug, s2)
+    generateGCORE(samples, mediumConfig("TGDK8"), "gen_normal_4", debug, s2)
+    println(s2.format("gen_normal", samples * 4))
+
+  private def generateGCORE(
+      iterations: Int,
+      config: GCOREProblemGeneratorConfig,
+      label: String,
+      debug: Boolean,
+      stats: Statistics
+  ): Unit =
     val scopes: Scopes = defaultScopes
-    val sgen = ProblemGeneratorRDF(sconfig)(scopes)
-    val ggen = ProblemGeneratorPG(gconfig)(scopes)
-
+    val ggen = ProblemGeneratorPG(config)(scopes)
     val vgen = ValidationDataGenerator(shar.state)
-
-    val stats = Statistics()
 
     var it = 0
 
     while (it < iterations) do
-      println(s"\nSAMPLE::${it}")
+      if debug then println(s"\nSAMPLE::${it}")
 
       val (query, shapes) = ggen.sample()
       val input = AlgorithmInput.fromSetOfShapesGCORE(query, shapes, scopes)
@@ -234,32 +284,46 @@ object Generator
           println("Generator error: " + err.toString)
         case Right(output) =>
           if !output.isEmpty then
-            vgen.generate(input, output, "gen", log, gen = true)
+            vgen.generate(
+              input,
+              output,
+              "gen",
+              log,
+              gen = true,
+              genSubDir = label
+            )
             stats.add(query, shapes, output)
             it += 1
 
-    println(stats)
+  // TODO
+  // private def generateSCCQ(
+  //     iterations: Int,
+  //     config: SCCQProblemGeneratorConfig,
+  //     label: String,
+  //     debug: Boolean
+  // ): Unit =
+  //   val scopes: Scopes = defaultScopes
+  //   val sgen = ProblemGeneratorRDF(config)(scopes)
+  //   val vgen = ValidationDataGenerator(shar.state)
 
-    // SPARQL Variant (TODO)
-    //
-    // for i <- 0 until iterations do
-    //   val (query, shapes) = sgen.sample()
+  //   for i <- 0 until iterations do
+  //     val (query, shapes) = sgen.sample()
 
-    //   val input = AlgorithmInput.fromSetOfShapesSCCQ(query, shapes, scopes)
+  //     val input = AlgorithmInput.fromSetOfShapesSCCQ(query, shapes, scopes)
 
-    //   if debug then
-    //     println("\n\n::: Sampled Input Query :::\n")
-    //     println(input.formatQuery(shar.state))
-    //     println("\n\n::: Sampled Input Shapes :::\n")
-    //     println(input.formatShapes.toOption.getOrElse(""))
+  //     if debug then
+  //       println("\n\n::: Sampled Input Query :::\n")
+  //       println(input.formatQuery(shar.state))
+  //       println("\n\n::: Sampled Input Shapes :::\n")
+  //       println(input.formatShapes.toOption.getOrElse(""))
 
-    //   val (tryoutput, log) = constructShapes(input)
+  //     val (tryoutput, log) = constructShapes(input)
 
-    //   if debug then
-    //     println("\n\n::: Generated Outputs :::\n")
-    //     println(log)
+  //     if debug then
+  //       println("\n\n::: Generated Outputs :::\n")
+  //       println(log)
 
-    //   tryoutput match
-    //     case Left(err) => println("Generator error: " + err.toString)
-    //     case Right(output) =>
-    //       vgen.generate(input, output, "gen", log, gen = true)
+  //     tryoutput match
+  //       case Left(err) => println("Generator error: " + err.toString)
+  //       case Right(output) =>
+  //         vgen.generate(input, output, "gen", log, gen = true)

@@ -35,12 +35,12 @@ def _gen_property_edge(config: Config, i: int):
 
 
 def _initial_graph(
-    config: Config, cpr: float
+    config: Config, cpr: float, it: int
 ) -> tuple[Graph, list[URIRef], list[URIRef]]:
     """Initialize a graph, before generating its triples."""
     # In property mapping mode, generate the basic structure here.
     g = Graph()
-    non = config.rnd_number_of_nodes()
+    non = config.rnd_number_of_nodes(it)
     if config.property_mode:
         nodes = _gen_property_nodes(config, cpr, non)
         edges: list[URIRef] = []
@@ -120,14 +120,14 @@ def _random_rdf_triple(config: Config, nodes: list[URIRef], cpr: float):
         return None
 
 
-def generate(config: Config):
+def generate(config: Config, it: int):
     """Generate a new graph with the given settings."""
     cpr = config.rnd_concept_property_ratio()
     lpr = config.rnd_property_label_ratio()
-    g, nodes, edges = _initial_graph(config, cpr)
+    g, nodes, edges = _initial_graph(config, cpr, it)
 
     # Generate the required number of triples.
-    for _ in range(0, config.number_of_triples):
+    for _ in range(0, config.number_of_triples(it)):
         if config.property_mode:
             draw = _random_prop_triple(config, nodes, edges, cpr, lpr)
         else:
@@ -258,7 +258,7 @@ def _validation_report(shapes: Graph, graph: Graph) -> tuple[bool, Graph]:
     )
     return (
         is_valid,
-        report,  # pyright: ignore[reportUnknownVariableType, reportReturnType]
+        report,  # pyright: ignore[reportUnknownVariableType]
     )
 
 

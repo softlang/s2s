@@ -13,6 +13,8 @@ class Args(Namespace):
     render: bool = False
     number_of_triples: int = 100
     repetitions: int = 1
+    tries: int = 100
+    increase: int = 0
 
 
 @dataclass
@@ -24,7 +26,8 @@ class Config:
 
     # Target number of triples/statements in graphs.
     # This scales the entire graph.
-    number_of_triples: int
+    triples_baseline: int
+    triples_increase: int
 
     # Tuple, consisting of:
     # - Ratio values between 0 and 1
@@ -44,9 +47,13 @@ class Config:
     # Prefix for generated edges.
     gen_edge_prefix: str = "https://github.com/softlang/s2s/gen/edge"
 
-    def rnd_number_of_nodes(self) -> int:
+    def number_of_triples(self, it: int) -> int:
+        """The number of triples, based on the current iteration."""
+        return it * self.triples_increase + self.triples_baseline
+
+    def rnd_number_of_nodes(self, it: int) -> int:
         """Return a random number of nodes."""
-        return int(self._rnd(self.node_to_triple_ratio) * self.number_of_triples)
+        return int(self._rnd(self.node_to_triple_ratio) * self.number_of_triples(it))
 
     def rnd_concept_property_ratio(self) -> float:
         """Ratio of element elements of the generated graph.

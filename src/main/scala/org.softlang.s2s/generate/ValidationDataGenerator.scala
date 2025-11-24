@@ -28,7 +28,8 @@ class ValidationDataGenerator(state: BackendState):
       output: Set[SHACLShape],
       name: String,
       log: Log,
-      gen: Boolean = false
+      gen: Boolean = false,
+      genSubDir: String = ""
   ): Unit =
 
     // Produce all validation data.
@@ -60,11 +61,17 @@ class ValidationDataGenerator(state: BackendState):
       .mkString("\n")
       .filterNot(c => c == '<' || c == '>')
 
+    // Directory based on supplied label or 'generated/'
+    val gendir =
+      if (genSubDir == "") then "generated/"
+      else if genSubDir.endsWith("/") then genSubDir
+      else genSubDir + "/"
+
     val (subdir, qname) =
       if gen then
         if input.isECCQ
-        then ("generated/", "query.gcore")
-        else ("generated/", "query.sparql")
+        then (gendir, "query.gcore")
+        else (gendir, "query.sparql")
       else if input.isECCQ
       then ("eccq/", "query.gcore")
       else ("sccq/", "query.sparql")

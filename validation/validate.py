@@ -58,7 +58,25 @@ def main():
         action="store",
         default=1,
         type=int,
-        help="Number of repititions per sample (default: 1)",
+        help="Number of full repititions per sample (default: 1)",
+    )
+
+    _ = parser.add_argument(
+        "-t",
+        "--tries",
+        action="store",
+        default=100,
+        type=int,
+        help="Max number of generation attempts (default: 100)",
+    )
+
+    _ = parser.add_argument(
+        "-i",
+        "--increase",
+        action="store",
+        default=0,
+        type=int,
+        help="Triple increate per unsuccessfull attempt (default: 0)",
     )
 
     # Parse CLI

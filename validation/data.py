@@ -21,11 +21,11 @@ class Data:
 
     path: str | None = None
 
-    def insize(self) -> int | None:
-        len(self.in_graph) if self.in_graph else -1
+    def insize(self) -> int:
+        return len(self.in_graph) if self.in_graph else -1
 
-    def outsize(self) -> int | None:
-        len(self.out_graph) if self.out_graph else -1
+    def outsize(self) -> int:
+        return len(self.out_graph) if self.out_graph else -1
 
     out_missing_targets: int | None = None
     out_total_targets: int | None = None

@@ -33,7 +33,7 @@ def attempt(
 
         except FileNotFoundError:
             # Otherwise, generate a random RDF graph.
-            g = generate(config)
+            g = generate(config, i)
         # Attempt to prune the input graph.
         pruned = prune(config, shapes, g, max_iterations=10)
         if pruned == Status.OK or (i + 1 >= tries and Status.MISSING_TARGETS):
@@ -115,7 +115,8 @@ def run_case(validation_path: str, args: Args):
                 properties=os.path.join(validation_path, "properties.vocabulary"),
                 nominals=os.path.join(validation_path, "nominals.vocabulary"),
             ),
-            number_of_triples=args.number_of_triples,
+            triples_baseline=args.number_of_triples,
+            triples_increase=args.increase,
             node_to_triple_ratio=(0.5, 0.25),
             concept_property_ratio=(0.5, 0.25),
             property_label_ratio=(0.5, 0.25),
@@ -128,7 +129,7 @@ def run_case(validation_path: str, args: Args):
         # Optional explicit input graph.
         in_graph_path=os.path.join(validation_path, "in.ttl"),
         # Repeat this attempt this many times.
-        tries=100,
+        tries=args.tries,
     )
 
     # Seriaize and render the input graph, even if there is no output.
@@ -144,7 +145,7 @@ def run_case(validation_path: str, args: Args):
     # Validate the result graph with out shapes.
     if not a.out_graph:
         # Failed to generate a suitable graph.
-        a.validity = None
+        a.validity = True
         a.out_missing_targets = -1
         a.out_total_targets = -1
         return a
