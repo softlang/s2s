@@ -10,7 +10,6 @@ import org.softlang.s2s.query._
 
 import scala.util.Random
 import scala.annotation.threadUnsafe
-import org.antlr.v4.parse.ANTLRParser.throwsSpec_return
 
 // TODO
 //
@@ -130,6 +129,26 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
     config.freshLabel.sample(rnd),
     config.labelsCount.sample(rnd),
     id => Label("L" ++ id.toString),
+    rnd
+  )
+
+  /** Generator for singleton Vocabularies. */
+  private val vocabularyGenerator = ThingGenerator[Vocabulary](
+    1.0f,
+    3,
+    id =>
+      Vocabulary(
+        Set(),
+        Set(
+          NamedConcept(Label("J" ++ id.toString).toIri(true)),
+          NamedConcept(Label("j" ++ id.toString).toIri(false))
+        ),
+        Set(
+          NamedRole(Key("H" ++ id.toString).toIri(true)),
+          NamedRole(Key("h" ++ id.toString).toIri(false))
+        ),
+        Set()
+      ),
     rnd
   )
 
@@ -369,21 +388,27 @@ class ProblemGeneratorPG(config: GCOREProblemGeneratorConfig)(implicit
         throw new RuntimeException("Non-convertable GCORE query in Generator.")
       case Some(qq) => qq
 
-    // Maybe 50:50 simple subset and full?
-    //
-    // val simple = ShapeGenerator(
-    //   q.pattern.vocabulary.union(q.template.vocabulary),
-    //   ShapeHeuristic.NovaProGS(1, 1, opt = false)
-    // ).generate.filter(valid)
+    val voc = q.pattern.vocabulary
+    val size =
+      ((voc.concepts.size + voc.properties.size).toDouble * config.vocExpansionFactor
+        .sample(rnd)).round.toInt
 
-    val full = ShapeGenerator(
-      q.pattern.vocabulary.union(q.template.vocabulary),
-      config.shapeConfig.sampleHeuristic
-    ).generate.filter(valid)
+    val expVoc = List
+      .fill(size)(vocabularyGenerator.sample())
+      .fold(voc)(_.union(_))
+
+    val full =
+      ShapeGenerator(expVoc, config.shapeConfig.sampleHeuristic).generate
+        .filter(valid)
+
+    // Reduce negation.
+
+    val kp = config.shapeConfig.keepNegation.sample(rnd)
+    val reduced = full.filter(s => !(s.hasNegation && !flip(kp)))
 
     // Randomly select required subset from filtered shapes.
     rnd
-      .shuffle(full.toList)
+      .shuffle(reduced.toList)
       .take(
         randRange(
           config.shapeConfig.minNumberOfShapes.sample(rnd),

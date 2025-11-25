@@ -155,6 +155,7 @@ class ConfigurationComparison(
       shapeConfig = ShapeGeneratorConfig(
         minNumberOfShapes = 0,
         maxNumberOfShapes = 2,
+        keepNegation = 0.5f,
         propertyConceptTargetRatio = -1.0f,
         propertyConceptConstraintRatio = -1.0f,
         includeForallConstraints = true,

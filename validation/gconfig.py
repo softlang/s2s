@@ -15,6 +15,7 @@ class Args(Namespace):
     repetitions: int = 1
     tries: int = 100
     increase: int = 0
+    outfile: str | None = None
 
 
 @dataclass

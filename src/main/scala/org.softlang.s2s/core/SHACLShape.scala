@@ -23,6 +23,40 @@ case class SHACLShape(val axiom: Subsumption) extends Showable:
       Subsumption(axiom.c.dropScope, axiom.d.dropScope)
     )
 
+  /** Calculate the depth (number of primitive clauses) of the shape. */
+  def depth: Int =
+    var cnt = 0
+    def count(c: Concept): Unit =
+      cnt += 1
+    Concept.foreach(count, axiom.d)
+    cnt
+
+  /** Calculate the breadth (number of Union or Intersection) of a shape. */
+  def breadth: Int =
+    var cnt = 1
+    def count(c: Concept): Concept =
+      c match
+        case Union(_, _) =>
+          cnt += 1
+          c
+        case Intersection(_, _) =>
+          cnt += 1
+          c
+        case _ =>
+          c
+    val _ = Concept.map(count, axiom.d)
+    cnt
+
+  /** True, if the shape contains negation. */
+  def hasNegation: Boolean =
+    var flag = false
+    def set(c: Concept): Unit =
+      c match
+        case Complement(_) => flag = true
+        case _             => ()
+    Concept.foreach(set, axiom.d)
+    flag
+
   /** Test, whether `candidate` is a target of this shape `inPattern`. */
   // TODO: Remove with new method.
   def hasTarget(
@@ -54,7 +88,6 @@ case class SHACLShape(val axiom: Subsumption) extends Showable:
     SimpleSHACLShape.fromAxiom(axiom) match
       case Right(s) => Some(s)
       case Left(_)  => None
-
 
 object SHACLShape:
 

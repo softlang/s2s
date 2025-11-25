@@ -5,6 +5,33 @@ import org.softlang.s2s.test.ValidationSuite
 class TestTests extends ValidationSuite("test_", generateValidation = false):
 
   // Query from the running example in the paper.
+  // val q =
+  //   gcore(
+  //     construct = "(n1)-[en1n2]->(n2)",
+  //     matc = "(n1)-[en1n2]->(n2)",
+  //     set = "n2:L1 AND n2:L3 AND en1n2:l3",
+  //     where = "en1n2.k1 AND en1n2:l1 AND n2:L1 AND n1:L1 AND en1n2:l2"
+  //   )
+
+  // val q =
+  //   gcore(
+  //     construct = "(x)-[z]->(y)",
+  //     matc = "(x)-[z]->(y)",
+  //     set = "y:A"
+  //     // where = "en1n2.k1 AND en1n2:l1 AND n2:L1 AND n1:L1 AND en1n2:l2"
+  //   )
+
+  // val shapes_in = Set(
+  //   "∃kn:BBBB.(⊤) ⊑ ∃-:meta_etn.(le:b)"
+  // )
+
+  // val shapes_out = Set(
+  //   "∃kn:BBBB.(⊤) ⊑ ln:A"
+  // )
+
+  // entails("violation", shapes_in, q, shapes_out, debugging = true)
+
+  // Query from the running example in the paper.
   val paper_query =
     gcore(
       construct = "(x)-[e]->(y)",

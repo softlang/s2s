@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
 
 from csvout import csv_gather, csv_header
 from gconfig import Args
@@ -79,8 +80,21 @@ def main():
         help="Triple increate per unsuccessfull attempt (default: 0)",
     )
 
+    _ = parser.add_argument(
+        "-o",
+        "--outfile",
+        action="store",
+        default=0,
+        type=str,
+        help="File for output; use stdout otherwise",
+    )
+
     # Parse CLI
     args = parser.parse_args(namespace=Args())
+
+    # Set stdout to outfile, if it was defined.
+    if args.outfile:
+        sys.stdout = open(args.outfile, "w")
 
     # In any case, print CSV header for output.
     print(csv_header())

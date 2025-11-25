@@ -32,7 +32,13 @@ case class ShapeGeneratorConfig(
     includeForallConstraints: Boolean,
 
     /** ShapeHeuristic used for sampleing input shapes. */
-    sampleHeuristic: ShapeHeuristic
+    sampleHeuristic: ShapeHeuristic,
+
+    /** Shapes that contain negation are only kept with this probability; i.e.,
+      * 0.0f means negation is removed completely, while 1.0f means all are
+      * kept.
+      */
+    keepNegation: FloatParameter
 ):
 
   private def fieldNames: List[String] =
@@ -55,6 +61,20 @@ case class ShapeGeneratorConfig(
 
   override def toString: String =
     fieldNames.zip(fields).map((n, f) => s"$n: $f").mkString("\n")
+
+object ShapeGeneratorConfig:
+  def nova(min: Int, max: Int, heuristic: ShapeHeuristic) =
+    ShapeGeneratorConfig(
+      minNumberOfShapes = ConstantInt(min),
+      maxNumberOfShapes = ConstantInt(max),
+      keepNegation = ConstantFloat(0.1f),
+      // The following fields are not used for NovaProGS shapes:
+      propertyConceptTargetRatio = ConstantFloat(-1.0f),
+      propertyConceptConstraintRatio = ConstantFloat(-1.0f),
+      includeForallConstraints = true,
+      //
+      sampleHeuristic = heuristic
+    )
 
 /** A generator configuration for SCCQ queries. */
 case class SCCQProblemGeneratorConfig(
@@ -207,6 +227,11 @@ case class GCOREProblemGeneratorConfig(
 
     /** When producing a loop, redraw edge with this probability. */
     loopRedraw: FloatParameter,
+
+    /** Node and Edge labels in pattern times this factor are added as fresh
+      * labels and properties.
+      */
+    vocExpansionFactor: FloatParameter,
 
     /** Probability to retain one BGP from the pattern, if there is space. */
     patternRetention: FloatParameter,

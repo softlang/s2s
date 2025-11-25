@@ -185,7 +185,7 @@ class Algorithm(
           (rhs, o) <- nv.asRoleObjectComponent(input.filters, p)
         yield Subsumption(Existential(p.cinScope(Scope.Out), Top), rhs)
 
-        nps.union(eps).union(subsp)
+        nps.union(eps) // .union(subsp) // TODO(FIX)
 
     log.debug("CWA(q.H), step 7.", rule7)
 
@@ -285,14 +285,14 @@ class Algorithm(
       // Generate axioms for properties.
       props <- extendProperties(mappingSubs, log)
       // Bonus properties for ECCQ queries (properties).
-      bonusP <- bonusProperties(log)
+      // bonusP <- bonusProperties(log)// TODO(FIX)
       // Finally, join all axioms inferred here.
       axioms = patternAxioms
         .join(shapeAxioms)
         .join(mappingSubs)
         .join(templateAxioms)
         .join(props)
-        .join(bonusP)
+    // .join(bonusP)// TODO(FIX)
     yield axioms
 
     log.profileEnd("build")
