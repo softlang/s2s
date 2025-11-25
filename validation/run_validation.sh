@@ -29,8 +29,8 @@ mkdir -p results
         '-d data/gen_wide_2 -o results/gen_wide_2.csv'
         '-d data/gen_deep_1 -o results/gen_deep_1.csv'
         '-d data/gen_deep_2 -o results/gen_deep_2.csv'
-        #'-d data/gen_large_1 -o results/gen_large_1.csv'
-        #'-d data/gen_large_2 -o results/gen_large_2.csv'
+        '-d data/gen_large_1 -o results/gen_large_1.csv'
+        '-d data/gen_large_2 -o results/gen_large_2.csv'
     )
 
     for cmd in "${COMMANDS[@]}"; do

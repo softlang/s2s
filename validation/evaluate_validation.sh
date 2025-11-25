@@ -2,7 +2,7 @@
 
 # T
 
-files="results/gen_small_1.csv results/gen_small_2.csv results/gen_wide_1.csv results/gen_wide_2.csv results/gen_deep_1.csv results/gen_deep_2.csv results/gen_large_1.csv results/gen_large_2.csv"
+files="results/*.csv"
 
 echo ""
 
