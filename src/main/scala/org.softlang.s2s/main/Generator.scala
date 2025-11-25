@@ -268,31 +268,25 @@ object Generator
   def run(samples_x8: Int, debug: Boolean = false): Unit =
     val samples = samples_x8
 
-    // val s1 = Statistics()
-    // generateGCORE(samples, smallConfig("TGDK_S_1"), "gen_small_1", debug, s1)
-    // generateGCORE(samples, smallConfig("TGDK_S_2"), "gen_small_2", debug, s1)
-    // println(s1.format("gen_small", samples * 2))
+    val s1 = Statistics()
+    generateGCORE(samples, smallConfig("TGDK_S_1"), "gen_small_1", debug, s1)
+    generateGCORE(samples, smallConfig("TGDK_S_2"), "gen_small_2", debug, s1)
+    println(s1.format("gen_small", samples * 2))
 
-    // val s2 = Statistics()
-    // generateGCORE(samples, deepConfig("TGDK_D_1"), "gen_deep_1", debug, s2)
-    // generateGCORE(samples, deepConfig("TGDK_D_2"), "gen_deep_2", debug, s2)
-    // println(s2.format("gen_deep", samples * 2))
+    val s2 = Statistics()
+    generateGCORE(samples, deepConfig("TGDK_D_1"), "gen_deep_1", debug, s2)
+    generateGCORE(samples, deepConfig("TGDK_D_2"), "gen_deep_2", debug, s2)
+    println(s2.format("gen_deep", samples * 2))
 
-    // val s3 = Statistics()
-    // generateGCORE(samples, wideConfig("TGDK_W_1"), "gen_wide_1", debug, s3)
-    // generateGCORE(samples, wideConfig("TGDK_W_2"), "gen_wide_2", debug, s3)
-    // println(s3.format("gen_wide", samples * 2))
+    val s3 = Statistics()
+    generateGCORE(samples, wideConfig("TGDK_W_1"), "gen_wide_1", debug, s3)
+    generateGCORE(samples, wideConfig("TGDK_W_2"), "gen_wide_2", debug, s3)
+    println(s3.format("gen_wide", samples * 2))
 
     val s4 = Statistics()
     generateGCORE(samples, largeConfig("TGDK_L_1"), "gen_large_1", debug, s4)
     generateGCORE(samples, largeConfig("TGDK_L_2"), "gen_large_2", debug, s4)
     println(s4.format("gen_large", samples * 2))
-
-    //// TEST
-    // val samples = 1
-    // val t = Statistics()
-    // generateGCORE(samples, deepConfig(""), "get_test", debug, t)
-    // println(t.format("get_test", samples))
 
   private def generateGCORE(
       iterations: Int,
@@ -309,7 +303,6 @@ object Generator
 
     while (it < iterations) do
       if debug then println(s"\nSAMPLE::${it}")
-      println(it)
 
       val (query, shapes) = ggen.sample()
       val input = AlgorithmInput.fromSetOfShapesGCORE(query, shapes, scopes)

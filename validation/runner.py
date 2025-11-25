@@ -117,7 +117,7 @@ def run_case(validation_path: str, args: Args):
             ),
             triples_baseline=args.number_of_triples,
             triples_increase=args.increase,
-            node_to_triple_ratio=(0.5, 0.25),
+            node_to_triple_ratio=(0.25, 0.1),
             concept_property_ratio=(0.5, 0.25),
             property_label_ratio=(0.5, 0.25),
             property_mode=property_mode,

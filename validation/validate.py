@@ -75,9 +75,9 @@ def main():
         "-i",
         "--increase",
         action="store",
-        default=0,
+        default=10,
         type=int,
-        help="Triple increate per unsuccessfull attempt (default: 0)",
+        help="Triple increate per unsuccessfull attempt (default: 10)",
     )
 
     _ = parser.add_argument(
