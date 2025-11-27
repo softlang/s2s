@@ -4,8 +4,11 @@
 
 import os
 import shutil
+import signal
 import sys
 import time
+from contextlib import contextmanager
+from types import FrameType
 
 from csvout import csv_row
 from data import Data, Status
@@ -16,23 +19,22 @@ from rdflib import Graph
 from render import render
 from vocabulary import Vocabulary
 
-import signal
-from contextlib import contextmanager
 
 class TimeoutError(Exception):
     pass
 
-@contextmanager
-def timeout(seconds):
-    def handler(signum, frame):
-        raise TimeoutError(f"Timed out after {seconds}s")
 
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(seconds)
+@contextmanager
+def timeout(seconds: int):
+    def handler(signum: int, _: FrameType | None) -> None:
+        raise TimeoutError(f"Timed out after {seconds}s ({signum})")
+
+    _ = signal.signal(signal.SIGALRM, handler)
+    _ = signal.alarm(seconds)
     try:
         yield
     finally:
-        signal.alarm(0)
+        _ = signal.alarm(0)
 
 
 def attempt(
@@ -160,7 +162,7 @@ def run_case(validation_path: str, args: Args):
         # Repeat this attempt this many times.
         tries=args.tries,
         # Timeout
-        time=args.timeout
+        time=args.timeout,
     )
 
     # Seriaize and render the input graph, even if there is no output.
