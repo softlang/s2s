@@ -2,7 +2,7 @@
 
 # T
 
-files="results/gen_small*.csv"
+files="results/*.csv"
 
 echo ""
 

@@ -23,18 +23,18 @@ source venv/bin/activate
 
     SCRIPT="validate.py"
     declare -a COMMANDS=(
-        '-d data/gen_wide_1 -o results/gen_wide_1_b.csv'
-        '-d data/gen_wide_2 -o results/gen_wide_2_b.csv'
-        '-d data/gen_wide_3 -o results/gen_wide_3_b.csv'
-        '-d data/gen_wide_4 -o results/gen_wide_4_b.csv'
-        #'-d data/gen_deep_1 -o results/gen_deep_1_b.csv'
-        #'-d data/gen_deep_2 -o results/gen_deep_2_b.csv'
-        #'-d data/gen_deep_3 -o results/gen_deep_3_b.csv'
-        #'-d data/gen_deep_4 -o results/gen_deep_4_b.csv'
-        #'-d data/gen_large_1 -o results/gen_large_1_b.csv'
-        #'-d data/gen_large_2 -o results/gen_large_2_b.csv'
-        #'-d data/gen_large_3 -o results/gen_large_3_b.csv'
-        #'-d data/gen_large_4 -o results/gen_large_4_b.csv'
+        '-d data/gen_small_1 -o results/gen_small_1.csv'
+        '-d data/gen_small_2 -o results/gen_small_2.csv'
+        '-d data/gen_small_3 -o results/gen_small_3.csv'
+        '-d data/gen_wide_1 -o results/gen_wide_1.csv'
+        '-d data/gen_wide_2 -o results/gen_wide_2.csv'
+        '-d data/gen_wide_3 -o results/gen_wide_3.csv'
+        '-d data/gen_deep_1 -o results/gen_deep_1.csv'
+        '-d data/gen_deep_2 -o results/gen_deep_2.csv'
+        '-d data/gen_deep_3 -o results/gen_deep_3.csv'
+        '-d data/gen_large_1 -o results/gen_large_1.csv'
+        '-d data/gen_large_2 -o results/gen_large_2.csv'
+        '-d data/gen_large_3 -o results/gen_large_3.csv'
     )
 
     for cmd in "${COMMANDS[@]}"; do
@@ -48,12 +48,3 @@ source venv/bin/activate
     ./evaluate_validation.sh
 )
 
-        # ORIGINAL
-        #'-d data/gen_small_1 -o results/gen_small_1_b.csv'
-        #'-d data/gen_small_2 -o results/gen_small_2_b.csv'
-        #'-d data/gen_wide_1 -o results/gen_wide_1_b.csv'
-        #'-d data/gen_wide_2 -o results/gen_wide_2_b.csv'
-        #'-d data/gen_deep_1 -o results/gen_deep_1_b.csv'
-        #'-d data/gen_deep_2 -o results/gen_deep_2_b.csv'
-        #'-d data/gen_large_1 -o results/gen_large_1_b.csv'
-        #'-d data/gen_large_2 -o results/gen_large_2_b.csv'
