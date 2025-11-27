@@ -38,12 +38,12 @@ class Algorithm(
   implicit val ishar: Shar = shar
 
   /** Build axioms for the query pattern. */
-  def buildAxiomsPattern(pattern: AtomicPatterns, log: Log): Axioms =
+  def buildAxiomsPattern(pattern: AtomicPatterns, template: AtomicPatterns, log: Log): Axioms =
     log.profileStart("build-dca-p")
 
     // DCA for query pattern.
 
-    val dcaP = ClosedConceptAssumptionPattern(pattern).axioms
+    val dcaP = ClosedConceptAssumptionPattern(pattern, template).axioms
 
     // Step 1 (in the Paper), relevant for (debug) info only.
     val dcaP1 = dcaP.filter(a =>
@@ -91,8 +91,10 @@ class Algorithm(
 
   /** Process the query pattern. */
   def processPattern(log: Log): S2STry[Axioms] =
-    for p <- input.pattern
-    yield buildAxiomsPattern(p, log)
+    for 
+      p <- input.pattern
+      t <- input.template
+    yield buildAxiomsPattern(p, t, log)
 
   /** Build axioms for the query template. */
   def buildAxiomsTemplate(

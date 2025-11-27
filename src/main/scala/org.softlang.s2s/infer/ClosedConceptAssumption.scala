@@ -51,7 +51,8 @@ class ClosedConceptAssumptionTemplate(
   val rightScope = Scope.Out
 
 class ClosedConceptAssumptionPattern(
-    a: AtomicPatterns
+    a: AtomicPatterns,
+    b: AtomicPatterns
 )(implicit scopes: Scopes)
     extends ClosedConceptAssumption(a, false, true)(scopes):
 
@@ -69,8 +70,9 @@ class ClosedConceptAssumptionPattern(
           Set(
             Subsumption(NamedConcept(v), r.inScope(Scope.In))
           ).union(
-            if a.hasCyclicVCG then Set()
-            else Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
+            if (a ++ b).hasCyclicVCG then Set()
+            else 
+              Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
           )
         case a => Set(a)
       )

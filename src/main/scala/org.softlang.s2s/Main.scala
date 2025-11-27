@@ -17,4 +17,4 @@ import org.softlang.s2s.main.Server
 
 @main def serve(): Unit = Server.main(Array())
 
-@main def gen(): Unit = Generator.run(samples_x8 = 15, debug = false)
+@main def gen(): Unit = Generator.run(samples_x8 = 6250, debug = false)

@@ -9,7 +9,7 @@ class ClosedConceptAssumptionPatternTests extends munit.FunSuite with TestData:
   // The function under test here.
   
   def work(sccq: SCCQ): Set[Axiom] =
-    ClosedConceptAssumptionPattern(sccq.pattern).axioms
+    ClosedConceptAssumptionPattern(sccq.pattern, Nil).axioms
 
   //  Empty
 
