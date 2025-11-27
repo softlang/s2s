@@ -76,3 +76,13 @@ class TestTests extends ValidationSuite("test_", generateValidation = false):
     paper_query,
     paper_shapes_out.union(paper_shapes_ext)
   )
+
+  // Cycles across the template may not introduce (invalid) shapes.
+  val qt =
+    gcore(
+      construct = "(y)-[f]->(a), (a)-[l]->(x)",
+      matc = "(x)-[k]->(y), (a)",
+      where = "a:A AND y:B AND x:A"
+    )
+
+  includes("qt", noshapes, qt, noshapes)

@@ -64,15 +64,16 @@ class ClosedConceptAssumptionPattern(
         case a => a
       )
 
+    val isCyclic = (a ++ b).hasCyclicVCG
+
     val a2 =
       a1.flatMap(_ match
         case Equality(NamedConcept(v), r) if v.isVariable =>
           Set(
             Subsumption(NamedConcept(v), r.inScope(Scope.In))
           ).union(
-            if (a ++ b).hasCyclicVCG then Set()
-            else 
-              Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
+            if isCyclic then Set()
+            else Set(Subsumption(r.inScope(Scope.In), NamedConcept(v)))
           )
         case a => Set(a)
       )

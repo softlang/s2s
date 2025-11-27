@@ -83,28 +83,31 @@ extension (aps: AtomicPatterns)
 
   /** True, if the variable connectivity graph is cyclic. */
   def hasCyclicVCG: Boolean =
+
+    val data = aps
+      .map(_.variables)
+      .filter(_.size == 2)
+
+    // Determine whether an edge exists.
     def hasEdge(s1: Set[Var], s2: Set[Var]): Boolean =
       s1.intersect(s2).nonEmpty
 
-    def hasCycleOne(lst: List[Set[Var]]): Boolean =
-      lst.sliding(2).forall(l => hasEdge(l(0), l(1))) && hasEdge(
-        lst.head,
-        lst.last
-      )
+    val visited = scala.collection.mutable.Set[Int]()
 
-    def hasCycle(lst: List[Set[Var]]): Boolean =
-      (3 to lst.size)
-        .map { i =>
-          lst.take(i)
-        }
-        .exists(hasCycleOne)
+    def hasCycleDFS(node: Int, parent: Int): Boolean =
+      visited.add(node)
 
-    // Finally, apply these functions.
-    aps
-      .map(_.variables)
-      .filter(_.size == 2)
-      .permutations
-      .exists(hasCycle)
+      (0 until data.size).exists { neighbor =>
+        if neighbor != node && hasEdge(data(node), data(neighbor)) then
+          if !visited.contains(neighbor) then hasCycleDFS(neighbor, node)
+          else neighbor != parent // cycle detected
+        else false
+      }
+
+    val result = (0 until data.size).exists { start =>
+      !visited.contains(start) && hasCycleDFS(start, -1)
+    }
+    result
 
 /** Extended query data.
   *
