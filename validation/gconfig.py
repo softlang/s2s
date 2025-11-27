@@ -16,6 +16,7 @@ class Args(Namespace):
     tries: int = 100
     increase: int = 0
     outfile: str | None = None
+    timeout: int = 60
 
 
 @dataclass

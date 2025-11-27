@@ -13,6 +13,8 @@ class Status(Enum):
     EMPTY_INPUT = 5
     MISSING_TARGETS_OUT = 6
     MISSING_ALL_TARGETS_OUT = 7
+    QUERY_TIMEOUT = 8
+    OK_MISSING = 9
 
 
 @dataclass

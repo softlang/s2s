@@ -89,6 +89,15 @@ def main():
         help="File for output; use stdout otherwise",
     )
 
+    _ = parser.add_argument(
+        "-u",
+        "--timeout",
+        action="store",
+        default=60,
+        type=int,
+        help="Timeout query execution after this many seconds (default: 60)",
+    )
+
     # Parse CLI
     args = parser.parse_args(namespace=Args())
 

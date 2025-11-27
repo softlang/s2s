@@ -16,9 +16,27 @@ from rdflib import Graph
 from render import render
 from vocabulary import Vocabulary
 
+import signal
+from contextlib import contextmanager
+
+class TimeoutError(Exception):
+    pass
+
+@contextmanager
+def timeout(seconds):
+    def handler(signum, frame):
+        raise TimeoutError(f"Timed out after {seconds}s")
+
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 def attempt(
-    config: Config, shapes: Graph, query: str, in_graph_path: str, tries: int
+    config: Config, shapes: Graph, query: str, in_graph_path: str, tries: int, time: int
 ) -> Data:
     """Attempt to get input an result graphs."""
 
@@ -30,16 +48,23 @@ def attempt(
             # If there is a given input graph, use this one.
             g = Graph()
             _ = g.parse(in_graph_path)
-
         except FileNotFoundError:
             # Otherwise, generate a random RDF graph.
             g = generate(config, i)
+
         # Attempt to prune the input graph.
         pruned = prune(config, shapes, g, max_iterations=10)
+
         if pruned == Status.OK or (i + 1 >= tries and Status.MISSING_TARGETS):
             if g:
                 # Attempt to run query and construct output graph.
-                out = g.query(query)
+                try:
+                    with timeout(time):
+                        out = g.query(query)
+                except TimeoutError:
+                    data.error = Status.QUERY_TIMEOUT
+                    return data
+
                 if out:
                     go = Graph()
                     for triple in out:
@@ -47,7 +72,11 @@ def attempt(
                             triple  # pyright: ignore[reportArgumentType, reportUnusedCallResult]
                         )
                     # Success: Return early.
-                    data.error = pruned
+                    if pruned == Status.MISSING_TARGETS:
+                        data.error = Status.OK_MISSING
+                    else:
+                        data.error = Status.OK
+
                     data.in_graph = g
                     data.out_graph = go
                     return data
@@ -130,6 +159,8 @@ def run_case(validation_path: str, args: Args):
         in_graph_path=os.path.join(validation_path, "in.ttl"),
         # Repeat this attempt this many times.
         tries=args.tries,
+        # Timeout
+        time=args.timeout
     )
 
     # Seriaize and render the input graph, even if there is no output.

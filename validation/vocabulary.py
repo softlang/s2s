@@ -60,22 +60,22 @@ class Vocabulary:
         self.edge_properties: list[URIRef] = [
             URIRef(p) for p in self.raw_properties if self.epp_raw in p
         ]
-        self.edge_properties.append(URIRef(self.a_ekey))
+        #self.edge_properties.append(URIRef(self.a_ekey))
 
         self.node_properties: list[URIRef] = [
             URIRef(p) for p in self.raw_properties if self.npp_raw in p
         ]
-        self.node_properties.append(URIRef(self.a_nkey))
+        #self.node_properties.append(URIRef(self.a_nkey))
 
         self.edge_labels: list[URIRef] = [
             URIRef(c) for c in self.raw_concepts if self.elp_raw in c
         ]
-        self.edge_labels.append(URIRef(self.a_elab))
+        #self.edge_labels.append(URIRef(self.a_elab))
 
         self.node_labels: list[URIRef] = [
             URIRef(c) for c in self.raw_concepts if self.nlp_raw in c
         ]
-        self.node_labels.append(URIRef(self.a_nlab))
+        #self.node_labels.append(URIRef(self.a_nlab))
 
     def _load_dim(self, path: str) -> list[str]:
         """Load one thing from a file; might be empty."""

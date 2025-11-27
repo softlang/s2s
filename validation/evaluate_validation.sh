@@ -2,7 +2,7 @@
 
 # T
 
-files="results/*.csv"
+files="results/gen_small*.csv"
 
 echo ""
 
@@ -16,6 +16,9 @@ echo ""
 
 echo -n "OK                       "
 cat $files | grep "OK,True" | wc -l
+
+echo -n "OK_MISSING               "
+cat $files | grep "OK_MISSING,True" | wc -l
 
 echo -n "MISSING_TARGETS          "
 cat $files | grep "MISSING_TARGETS,True" | wc -l
@@ -35,6 +38,8 @@ cat $files | grep "EMPTY_OUTPUT,True" | wc -l
 echo -n "EMPTY_INPUT              "
 cat $files | grep "EMPTY_INPUT,True" | wc -l
 
+echo -n "QUERY_TIMEOUT            "
+cat $files | grep "QUERY_TIMEOUT,True" | wc -l
+
 echo -n "GRAPH_GENERATION_TIMEOUT "
 cat $files | grep "GRAPH_GENERATION_TIMEOUT,True" | wc -l
-
