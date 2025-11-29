@@ -16,6 +16,7 @@ import scala.collection.mutable.ListBuffer as MList
 import org.softlang.s2s.query.GCORE
 
 import scala.math.Numeric.Implicits.infixNumericOps
+import scala.util.Random
 
 /** Observe Generator output, determining statistical information. */
 class Statistics:
@@ -126,8 +127,8 @@ class Statistics:
 
   def format(label: String, size: Int): String =
     "----------------------------------------------\n"
-      + "SAMPLE: " + label + " (" + size.toString()+ ") "  
-      + stats.prettyTime("Time", _.time) + "\n" 
+      + "SAMPLE: " + label + " (" + size.toString() + ") "
+      + stats.prettyTime("Time", _.time) + "\n"
       + this.toString()
 
   override def toString(): String =
@@ -318,12 +319,21 @@ object Generator
     generateGCORE(samples, largeConfig("TGDK_L_4"), "gen_large_4", debug, s4)
     println(s4.format("gen_large", samples * 4))
 
+    // Generate a few failure samples, to validate the validator.
+    val f = Statistics()
+    generateGCORE(250, smallConfig("TGDK_F_1"), "gen_fail_1", debug, f, true)
+    generateGCORE(250, deepConfig("TGDK_F_2"), "gen_fail_2", debug, f, true)
+    generateGCORE(250, wideConfig("TGDK_F_3"), "gen_fail_3", debug, f, true)
+    generateGCORE(250, largeConfig("TGDK_F_4"), "gen_fail_4", debug, f, true)
+    println(f.format("gen_fail", 1000))
+
   private def generateGCORE(
       iterations: Int,
       config: GCOREProblemGeneratorConfig,
       label: String,
       debug: Boolean,
-      stats: Statistics
+      stats: Statistics,
+      fail: Boolean = false
   ): Unit =
     val scopes: Scopes = defaultScopes
     val ggen = ProblemGeneratorPG(config)(scopes)
@@ -358,50 +368,29 @@ object Generator
           println("Generator error: " + err.toString)
         case Right(output) =>
           if !output.isEmpty then
+            // If we deliberately want failing samples,
+            // just generate some random shapes instead.
+            val out =
+              if fail then
+                val candidates = log.profile.flatMap { p =>
+                  p match
+                    case ProfileEntry.Candidates(c, _) => Some(c)
+                    case _                             => None
+                }.flatten
+                Random().shuffle(candidates).take(7).toSet
+              else output
             vgen.generate(
               input,
-              output,
+              out,
               "gen",
               log,
               gen = true,
               genSubDir = label
             )
-            val candidates = log.profile.flatMap { p => p match
-              case ProfileEntry.Candidates(c, _) => Some(c.size)
-              case _ => None
+            val candidates = log.profile.flatMap { p =>
+              p match
+                case ProfileEntry.Candidates(c, _) => Some(c.size)
+                case _                             => None
             }.sum
-            stats.add(query, shapes, output, time, candidates)
+            stats.add(query, shapes, out, time, candidates)
             it += 1
-
-  // TODO
-  // private def generateSCCQ(
-  //     iterations: Int,
-  //     config: SCCQProblemGeneratorConfig,
-  //     label: String,
-  //     debug: Boolean
-  // ): Unit =
-  //   val scopes: Scopes = defaultScopes
-  //   val sgen = ProblemGeneratorRDF(config)(scopes)
-  //   val vgen = ValidationDataGenerator(shar.state)
-
-  //   for i <- 0 until iterations do
-  //     val (query, shapes) = sgen.sample()
-
-  //     val input = AlgorithmInput.fromSetOfShapesSCCQ(query, shapes, scopes)
-
-  //     if debug then
-  //       println("\n\n::: Sampled Input Query :::\n")
-  //       println(input.formatQuery(shar.state))
-  //       println("\n\n::: Sampled Input Shapes :::\n")
-  //       println(input.formatShapes.toOption.getOrElse(""))
-
-  //     val (tryoutput, log) = constructShapes(input)
-
-  //     if debug then
-  //       println("\n\n::: Generated Outputs :::\n")
-  //       println(log)
-
-  //     tryoutput match
-  //       case Left(err) => println("Generator error: " + err.toString)
-  //       case Right(output) =>
-  //         vgen.generate(input, output, "gen", log, gen = true)
