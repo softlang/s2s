@@ -1,6 +1,7 @@
 package org.softlang.s2s.main
 
 import org.softlang.s2s.infer.Shapes2Shapes
+import org.softlang.s2s.analysis.ProfileEntry
 import org.softlang.s2s.core._
 import org.softlang.s2s.generate._
 import org.softlang.s2s.generate.given_Conversion_Float_ConstantFloat
@@ -22,7 +23,9 @@ class Statistics:
   case class Sample(
       query: GCORE,
       input: Set[SHACLShape],
-      output: Set[SHACLShape]
+      output: Set[SHACLShape],
+      time: Long,
+      candidates: Int
   )
 
   private val samples: MList[Sample] = MList.empty
@@ -41,7 +44,9 @@ class Statistics:
       outShapes: Int,
       shapeNesting: Double,
       shapeClauses: Double,
-      shapeNegation: Int
+      shapeNegation: Int,
+      time: Long,
+      candidates: Int
   )
 
   extension [T, N: Numeric](l: Iterable[T])
@@ -75,13 +80,21 @@ class Statistics:
       val med = f"${s._4.toDouble}%.2f"
       s"${name.take(15)}\t ${min}\t ${max}\t ${avg}\t ${med}\n"
 
+    def prettyTime(name: String, f: T => N): String =
+      val s = statsOver(f)
+      val avg = f"${s._3.toDouble}%.2f"
+      val med = f"${s._4.toDouble}%.2f"
+      s"${name.take(15)}: ${avg} (${med})"
+
   /** Add a new sample to the statistics log. */
   def add(
       query: GCORE,
       input: Set[SHACLShape],
-      output: Set[SHACLShape]
+      output: Set[SHACLShape],
+      time: Long,
+      candidates: Int
   ): Unit =
-    samples.addOne(Sample(query, input, output))
+    samples.addOne(Sample(query, input, output, time, candidates))
 
   private def stat(sample: Sample): Stats =
     Stats(
@@ -102,7 +115,10 @@ class Statistics:
       outShapes = sample.output.size,
       shapeNesting = sample.input.map(_.depth).averageOver(identity),
       shapeClauses = sample.input.map(_.breadth).averageOver(identity),
-      shapeNegation = sample.input.count(_.hasNegation)
+      shapeNegation = sample.input.count(_.hasNegation),
+      // Time
+      time = sample.time,
+      candidates = sample.candidates
     )
 
   private def stats: List[Stats] =
@@ -110,7 +126,9 @@ class Statistics:
 
   def format(label: String, size: Int): String =
     "----------------------------------------------\n"
-      + "SAMPLE: " + label + " (" + size.toString() + ")\n" + this.toString()
+      + "SAMPLE: " + label + " (" + size.toString()+ ") "  
+      + stats.prettyTime("Time", _.time) + "\n" 
+      + this.toString()
 
   override def toString(): String =
     val s = stats
@@ -128,6 +146,7 @@ class Statistics:
       + s.pretty("Distinct Keys", _.distinctProperties)
       + s.pretty("Input Shapes", _.inShapes)
       + s.pretty("Output Shapes", _.outShapes)
+      + s.pretty("Cand. Shapes", _.candidates)
       + s.pretty("Shape Comp.", _.shapeNesting)
       + s.pretty("Shape Clauses", _.shapeClauses)
       + s.pretty("Shape Negation", _.shapeNegation)
@@ -137,7 +156,7 @@ object Generator
     extends Shapes2Shapes(
       Configuration.default.copy(
         reasoner = ActiveReasoner.Hermit,
-        shapeHeuristic = ShapeHeuristic.NovaProGS(1, 1, opt = true) // TOGGLE
+        shapeHeuristic = ShapeHeuristic.NovaProGS(2, 1, opt = true) // TOGGLE
       )
     ):
 
@@ -265,32 +284,39 @@ object Generator
   )
 
   /** Samples per set, total of 8 * samples. */
-  def run(samples_x12: Int, debug: Boolean = false): Unit =
-    val samples = samples_x12
+  def run(samples_x16: Int, debug: Boolean = false): Unit =
+    val samples = samples_x16
+
+    // Run a few samples as warmup, so time measurement is accurate.
+    generateGCORE(100, smallConfig("warmup"), "gen_warmup", debug, Statistics())
 
     val s1 = Statistics()
     generateGCORE(samples, smallConfig("TGDK_S_1"), "gen_small_1", debug, s1)
     generateGCORE(samples, smallConfig("TGDK_S_2"), "gen_small_2", debug, s1)
     generateGCORE(samples, smallConfig("TGDK_S_3"), "gen_small_3", debug, s1)
-    println(s1.format("gen_small", samples * 3))
+    generateGCORE(samples, smallConfig("TGDK_S_4"), "gen_small_4", debug, s1)
+    println(s1.format("gen_small", samples * 4))
 
     val s2 = Statistics()
     generateGCORE(samples, deepConfig("TGDK_D_1"), "gen_deep_1", debug, s2)
     generateGCORE(samples, deepConfig("TGDK_D_2"), "gen_deep_2", debug, s2)
     generateGCORE(samples, deepConfig("TGDK_D_3"), "gen_deep_3", debug, s2)
-    println(s2.format("gen_deep", samples * 3))
+    generateGCORE(samples, deepConfig("TGDK_D_4"), "gen_deep_4", debug, s2)
+    println(s2.format("gen_deep", samples * 4))
 
     val s3 = Statistics()
     generateGCORE(samples, wideConfig("TGDK_W_1"), "gen_wide_1", debug, s3)
     generateGCORE(samples, wideConfig("TGDK_W_2"), "gen_wide_2", debug, s3)
     generateGCORE(samples, wideConfig("TGDK_W_3"), "gen_wide_3", debug, s3)
-    println(s3.format("gen_wide", samples * 3))
+    generateGCORE(samples, wideConfig("TGDK_W_4"), "gen_wide_4", debug, s3)
+    println(s3.format("gen_wide", samples * 4))
 
     val s4 = Statistics()
     generateGCORE(samples, largeConfig("TGDK_L_1"), "gen_large_1", debug, s4)
     generateGCORE(samples, largeConfig("TGDK_L_2"), "gen_large_2", debug, s4)
     generateGCORE(samples, largeConfig("TGDK_L_3"), "gen_large_3", debug, s4)
-    println(s4.format("gen_large", samples * 3))
+    generateGCORE(samples, largeConfig("TGDK_L_4"), "gen_large_4", debug, s4)
+    println(s4.format("gen_large", samples * 4))
 
   private def generateGCORE(
       iterations: Int,
@@ -317,7 +343,11 @@ object Generator
         println("\n\n::: Sampled Input Shapes :::\n")
         println(input.formatShapes.toOption.getOrElse(""))
 
+      val start = System.nanoTime()
       val (tryoutput, log) = constructShapes(input)
+      val end = System.nanoTime()
+      val durationNanos = end - start
+      val time = durationNanos / 1_000_000
 
       if debug then
         println("\n\n::: Generated Outputs :::\n")
@@ -336,7 +366,11 @@ object Generator
               gen = true,
               genSubDir = label
             )
-            stats.add(query, shapes, output)
+            val candidates = log.profile.flatMap { p => p match
+              case ProfileEntry.Candidates(c, _) => Some(c.size)
+              case _ => None
+            }.sum
+            stats.add(query, shapes, output, time, candidates)
             it += 1
 
   // TODO

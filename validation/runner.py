@@ -38,7 +38,7 @@ def timeout(seconds: int):
 
 
 def attempt(
-    config: Config, shapes: Graph, query: str, in_graph_path: str, tries: int, time: int
+    config: Config, shapes: Graph, query: str, in_graph_path: str, shapes_out: Graph, tries: int, time: int
 ) -> Data:
     """Attempt to get input an result graphs."""
 
@@ -73,15 +73,29 @@ def attempt(
                         go.add(
                             triple  # pyright: ignore[reportArgumentType, reportUnusedCallResult]
                         )
-                    # Success: Return early.
-                    if pruned == Status.MISSING_TARGETS:
-                        data.error = Status.OK_MISSING
-                    else:
-                        data.error = Status.OK
 
-                    data.in_graph = g
-                    data.out_graph = go
-                    return data
+                    # Check, whether the output graph actually includes targets.
+                    (missing_targets, total_targets) = count_targets(shapes_out, go)
+
+                    if missing_targets == 0 or (i >= (tries/2) and missing_targets < total_targets):
+                        # Success: Return early.
+                        if pruned == Status.MISSING_TARGETS:
+                            data.error = Status.OK_MISSING_IN
+                        elif missing_targets > 0:
+                            data.error = Status.OK_MISSING_OUT
+                        else:
+                            data.error = Status.OK
+
+                        data.in_graph = g
+                        data.out_graph = go
+                        return data
+                    else:
+                        data.out_missing_targets = missing_targets
+                        data.out_total_targets = total_targets
+                        if missing_targets == total_targets:
+                            data.error = Status.MISSING_ALL_TARGETS_OUT
+                        else:
+                            data.error = Status.MISSING_TARGETS_OUT
                 else:
                     data.error = Status.EMPTY_OUTPUT
                     data.in_graph = g
@@ -159,6 +173,8 @@ def run_case(validation_path: str, args: Args):
         query=q,
         # Optional explicit input graph.
         in_graph_path=os.path.join(validation_path, "in.ttl"),
+        # The output shapes.
+        shapes_out=shapes_out,
         # Repeat this attempt this many times.
         tries=args.tries,
         # Timeout
@@ -192,7 +208,7 @@ def run_case(validation_path: str, args: Args):
         )
 
         # Check, whether the output graph actually includes targets.
-        (missing_targets, total_targets) = count_targets(shapes_out, a.out_graph)
+        # (missing_targets, total_targets) = count_targets(shapes_out, a.out_graph)
 
         # If there is a validation error, log the issues.
         if not is_valid:
@@ -210,13 +226,13 @@ def run_case(validation_path: str, args: Args):
         a.validity = is_valid
         a.out_graph_file = os.path.join(out_path, "out.ttl")
         a.in_graph_file = os.path.join(out_path, "in.ttl")
-        a.out_missing_targets = missing_targets
-        a.out_total_targets = total_targets
+        # a.out_missing_targets = missing_targets
+        # a.out_total_targets = total_targets
 
-        if a.error == Status.OK and missing_targets == total_targets:
-            a.error = Status.MISSING_ALL_TARGETS_OUT
-        elif a.error == Status.OK and missing_targets > 0:
-            a.error = Status.MISSING_TARGETS_OUT
+        #if a.error == Status.OK and missing_targets == total_targets:
+        #    a.error = Status.MISSING_ALL_TARGETS_OUT
+        #elif a.error == Status.OK and missing_targets > 0:
+        #    a.error = Status.MISSING_TARGETS_OUT
         return a
 
 

@@ -14,7 +14,8 @@ class Status(Enum):
     MISSING_TARGETS_OUT = 6
     MISSING_ALL_TARGETS_OUT = 7
     QUERY_TIMEOUT = 8
-    OK_MISSING = 9
+    OK_MISSING_IN = 9
+    OK_MISSING_OUT = 10
 
 
 @dataclass
