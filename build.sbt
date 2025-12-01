@@ -12,7 +12,7 @@ enablePlugins(JavaAppPackaging)
 lazy val root = project
   .in(file("."))
   .enablePlugins(Antlr4Plugin)
-  // .dependsOn(shar)
+  .dependsOn(shar)
   .settings(
     // Project metadata.
     name := "s2s",
@@ -41,7 +41,7 @@ lazy val root = project
     // Dependencies.
     // Development dependency, local only - install manually and comment out 'dependsOn(shar)'.
     // Note: This is only needed so metals works correctly with the GitHub dependency for SHAR.
-    libraryDependencies += "de.pseifer" %% "shar" % "1.0.0",
+    // libraryDependencies += "de.pseifer" %% "shar" % "1.0.0",
     // Dependencies.
     libraryDependencies += "net.sourceforge.owlapi" % "owlapi-api" % "5.1.20",
     // JFact reasoner support.

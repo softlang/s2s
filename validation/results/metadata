@@ -1,0 +1,84 @@
+----------------------------------------------
+SAMPLE: gen_small (25000) Time: 13.94 (11.00)
+----------------------------------------------
+Type		Min	Max	Average	Median
+----------------------------------------------
+Node Variables	 1.00	 4.00	 2.27	 2.00
+Edge Variables	 0.00	 2.00	 1.50	 2.00
+Atoms MATCH	 1.00	 1.00	 1.00	 1.00
+Atoms CONSTRUCT	 1.00	 1.00	 1.00	 1.00
+WHEN Clauses	 0.00	 5.00	 3.15	 3.00
+SET Clauses	 0.00	 3.00	 1.59	 2.00
+REMOVE Clauses	 0.00	 2.00	 0.99	 1.00
+Distinct Labels	 0.00	 9.00	 3.67	 4.00
+Distinct Keys	 0.00	 5.00	 1.31	 1.00
+Input Shapes	 1.00	 1.00	 1.00	 1.00
+Output Shapes	 1.00	 186.00	 7.54	 2.00
+Cand. Shapes	 20.00	 862.00	 256.24	 240.00
+Shape Comp.	 1.00	 3.00	 2.16	 2.00
+Shape Clauses	 1.00	 1.00	 1.00	 1.00
+Shape Negation	 0.00	 1.00	 0.07	 0.00
+
+----------------------------------------------
+SAMPLE: gen_deep (25000) Time: 34.81 (25.00)
+----------------------------------------------
+Type		Min	Max	Average	Median
+----------------------------------------------
+Node Variables	 1.00	 5.00	 3.52	 4.00
+Edge Variables	 0.00	 6.00	 2.54	 2.00
+Atoms MATCH	 1.00	 3.00	 1.21	 1.00
+Atoms CONSTRUCT	 1.00	 3.00	 2.21	 2.00
+WHEN Clauses	 0.00	 5.00	 3.20	 3.00
+SET Clauses	 0.00	 3.00	 1.57	 2.00
+REMOVE Clauses	 0.00	 2.00	 0.99	 1.00
+Distinct Labels	 0.00	 9.00	 3.64	 4.00
+Distinct Keys	 0.00	 5.00	 1.33	 1.00
+Input Shapes	 1.00	 4.00	 2.63	 3.00
+Output Shapes	 1.00	 262.00	 7.53	 2.00
+Cand. Shapes	 20.00	 1740.00	 408.25	 370.00
+Shape Comp.	 1.00	 4.00	 2.96	 3.00
+Shape Clauses	 1.00	 1.00	 1.00	 1.00
+Shape Negation	 0.00	 4.00	 0.28	 0.00
+
+----------------------------------------------
+SAMPLE: gen_wide (25000) Time: 42.23 (29.50)
+----------------------------------------------
+Type		Min	Max	Average	Median
+----------------------------------------------
+Node Variables	 1.00	 5.00	 3.52	 4.00
+Edge Variables	 0.00	 6.00	 2.53	 2.00
+Atoms MATCH	 1.00	 3.00	 1.21	 1.00
+Atoms CONSTRUCT	 1.00	 3.00	 2.20	 2.00
+WHEN Clauses	 0.00	 5.00	 3.18	 3.00
+SET Clauses	 0.00	 3.00	 1.56	 2.00
+REMOVE Clauses	 0.00	 2.00	 0.98	 1.00
+Distinct Labels	 0.00	 9.00	 3.61	 4.00
+Distinct Keys	 0.00	 5.00	 1.33	 1.00
+Input Shapes	 1.00	 4.00	 2.61	 3.00
+Output Shapes	 1.00	 256.00	 9.85	 2.00
+Cand. Shapes	 26.00	 1884.00	 510.25	 468.00
+Shape Comp.	 1.00	 7.00	 4.95	 5.00
+Shape Clauses	 1.00	 2.00	 1.86	 2.00
+Shape Negation	 0.00	 4.00	 0.39	 0.00
+
+----------------------------------------------
+SAMPLE: gen_large (25000) Time: 51.68 (36.00)
+----------------------------------------------
+Type		Min	Max	Average	Median
+----------------------------------------------
+Node Variables	 1.00	 5.00	 3.54	 4.00
+Edge Variables	 0.00	 6.00	 2.55	 3.00
+Atoms MATCH	 1.00	 3.00	 1.22	 1.00
+Atoms CONSTRUCT	 1.00	 3.00	 2.21	 2.00
+WHEN Clauses	 0.00	 5.00	 3.16	 3.00
+SET Clauses	 0.00	 3.00	 1.54	 2.00
+REMOVE Clauses	 0.00	 2.00	 0.98	 1.00
+Distinct Labels	 0.00	 9.00	 3.59	 4.00
+Distinct Keys	 0.00	 5.00	 1.32	 1.00
+Input Shapes	 3.00	 7.00	 5.07	 5.00
+Output Shapes	 1.00	 258.00	 11.18	 2.00
+Cand. Shapes	 56.00	 2502.00	 610.32	 576.00
+Shape Comp.	 1.00	 3.00	 2.16	 2.00
+Shape Clauses	 1.00	 1.00	 1.00	 1.00
+Shape Negation	 0.00	 4.00	 0.32	 0.00
+

@@ -377,7 +377,10 @@ object Generator
                     case ProfileEntry.Candidates(c, _) => Some(c)
                     case _                             => None
                 }.flatten
-                Random().shuffle(candidates).take(7).toSet
+                Random()
+                  .shuffle(candidates)
+                  .take(7)
+                  .toSet
               else output
             vgen.generate(
               input,
