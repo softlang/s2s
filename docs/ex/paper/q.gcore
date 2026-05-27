@@ -1,0 +1,7 @@
+CONSTRUCT (x)-[e]->(y)
+  SET y:POI
+  REMOVE y:Person
+MATCH (x)-[e]->(y)
+WHERE x.name = "Smith"
+  AND y:Person
+  AND e:obs

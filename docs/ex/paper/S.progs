@@ -1,0 +1,2 @@
+le:obs ⊑ ∃-:meta_nte.ln:Agent ⊓ ∃:meta_etn.ln:Person
+ln:Agent ⊑ ∃:meta_nte.(le:obs ⊓ ∃:meta_etn.ln:Person)
