@@ -100,7 +100,7 @@ class SPARQLParser extends RegexParsers {
 
   def GraphTerm: Parser[TripleType] =
     IRIref // | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL
-  // TODO!
+  // TODO: Perhaps add remaining constructs here as well.
 
   def WhereClause: Parser[List[Triple]] =
     ("WHERE" ?) ~> GroupGraphPattern

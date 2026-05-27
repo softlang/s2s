@@ -12,57 +12,65 @@ class GCOREParser extends RegexParsers:
   import org.softlang.s2s.query.GCORE._
 
   /** Apply the parser to parse a RETURN query. */
-  def parseReturn(input: String): S2STry[GCORE] = parseAll(pBasicReturnQuery, input) match
-    case Success(result, _) => 
-      // translate result._1 to CONSTRUCT
-      val construct = Construct(Set(), Set(), Set()) // TODO
-      Right(GCORE(construct, result._1, ret = Some(result._2)))
-    case failure : NoSuccess => Left(UnparsableQueryError(failure.msg))
+  def parseReturn(input: String): S2STry[GCORE] =
+    parseAll(pBasicReturnQuery, input) match
+      case Success(result, _) =>
+        // translate result._1 to CONSTRUCT
+        val construct = Construct(
+          Set(),
+          Set(),
+          Set()
+        ) // TODO: Should have proper representation in GCORE.scala
+        Right(GCORE(construct, result._1, ret = Some(result._2)))
+      case failure: NoSuccess => Left(UnparsableQueryError(failure.msg))
 
   /** Apply the parser to parse a CONSTRUCT query. */
-  def parseConstruct(input: String): S2STry[GCORE] = parseAll(pBasicGraphQuery, input) match
-    case Success(result, _) => Right(GCORE(result._1, result._2))
-    case failure : NoSuccess => Left(UnparsableQueryError(failure.msg))
+  def parseConstruct(input: String): S2STry[GCORE] =
+    parseAll(pBasicGraphQuery, input) match
+      case Success(result, _) => Right(GCORE(result._1, result._2))
+      case failure: NoSuccess => Left(UnparsableQueryError(failure.msg))
 
   /** Apply the parser to parse a CONSTRUCT or RETURN query. */
   def apply(input: String): S2STry[GCORE] = parseConstruct(input) match
-    case Right(result) => Right(result)
-    case Left(errConstruct) => 
+    case Right(result)      => Right(result)
+    case Left(errConstruct) =>
       // If parsing CONSTRUCT fails, attempt RETURN.
       parseReturn(input) match
-        case Right(result) => Right(result)
-        case Left(errReturn) => 
+        case Right(result)   => Right(result)
+        case Left(errReturn) =>
           // Heuristic to deside which error to return.
           if input.contains("RETURN") && !input.contains("CONSTRUCT") then
             // On pure RETURN queries, return the RETURN parsing error.
             Left(errReturn)
           else
             // On other queries, return the CONSTRUCT error. Thus, notify
-            // that CONSTRUCT queries might not have a RETURN clause.
+            // that CONSTRUCT queries may not have a RETURN clause.
             Left(errConstruct)
 
   // Queries
- 
-  def pBasicReturnQuery: Parser[(Match, Return)] = 
-    pMatch ~ pReturn ^^ {
-      case m ~ r => (m, r)
+
+  def pBasicReturnQuery: Parser[(Match, Return)] =
+    pMatch ~ pReturn ^^ { case m ~ r =>
+      (m, r)
     }
 
-  def pBasicGraphQuery: Parser[(Construct, Match)] = 
-    pConstruct ~ pMatch ^^ {
-      case c ~ m => (c,m)
+  def pBasicGraphQuery: Parser[(Construct, Match)] =
+    pConstruct ~ pMatch ^^ { case c ~ m =>
+      (c, m)
     }
 
-  def pConstruct: Parser[Construct] = 
-    "CONSTRUCT" ~> repsep(pBasicGraphPattern, ",") ~ opt("SET" ~> pSetClauses) ~ opt("REMOVE" ~> pRemoveClauses) ^^ {
-      case f ~ s ~ r => Construct(f.toSet, s.toSet.flatten, r.toSet.flatten)
+  def pConstruct: Parser[Construct] =
+    "CONSTRUCT" ~> repsep(pBasicGraphPattern, ",") ~ opt(
+      "SET" ~> pSetClauses
+    ) ~ opt("REMOVE" ~> pRemoveClauses) ^^ { case f ~ s ~ r =>
+      Construct(f.toSet, s.toSet.flatten, r.toSet.flatten)
     }
 
   // RETURN <kind> (,* <kind>)
- 
-  def pReturn: Parser[Return] = 
-    "RETURN" ~> repsep(pKind, ",") ^^ {
-      case k => Return(k)
+
+  def pReturn: Parser[Return] =
+    "RETURN" ~> repsep(pKind, ",") ^^ { case k =>
+      Return(k)
     }
 
   def pKind: Parser[Kind] =
@@ -78,9 +86,11 @@ class GCOREParser extends RegexParsers:
     pVariable ^^ (Kind.VarRaw(_))
 
   def pMatch: Parser[Match] =
-    "MATCH" ~> repsep(pBasicGraphPattern, ",") ~ opt("WHERE" ~> pWhenClauses) ^^ { 
+    "MATCH" ~> repsep(pBasicGraphPattern, ",") ~ opt(
+      "WHERE" ~> pWhenClauses
+    ) ^^ {
       case f ~ Some(w) => Match(f.toSet, w.toSet)
-      case f ~ None => Match(f.toSet, Set())
+      case f ~ None    => Match(f.toSet, Set())
     }
 
   // Set and Remove clauses.
@@ -90,19 +100,21 @@ class GCOREParser extends RegexParsers:
 
   def pSetClause: Parser[SetClause] =
     pSetKeyValue | pSetLabel
-  
+
   def pSetLabel: Parser[SetClause.SetLabel] =
     pVariable ~ pLabel ^^ { case x ~ k => SetClause.SetLabel(x, k) }
 
   def pSetKeyValue: Parser[SetClause.SetKeyValue] =
-    pVariable ~ pKey ~ "=" ~  pValue ^^ { case x ~ k ~ _ ~ v => SetClause.SetKeyValue(x, k, v) }
+    pVariable ~ pKey ~ "=" ~ pValue ^^ { case x ~ k ~ _ ~ v =>
+      SetClause.SetKeyValue(x, k, v)
+    }
 
   def pRemoveClauses: Parser[Set[RemoveClause]] =
     rep1sep(pRemoveClause, "AND") ^^ { _.toSet }
 
   def pRemoveClause: Parser[RemoveClause] =
-    pRemoveKey| pRemoveLabel
-  
+    pRemoveKey | pRemoveLabel
+
   def pRemoveLabel: Parser[RemoveClause.RemoveLabel] =
     pVariable ~ pLabel ^^ { case x ~ k => RemoveClause.RemoveLabel(x, k) }
 
@@ -116,7 +128,7 @@ class GCOREParser extends RegexParsers:
 
   def pWhenClause: Parser[WhenClause] =
     pHasKeyValue | pHasKey | pHasLabel
-  
+
   def pHasKey: Parser[WhenClause.HasKey] =
     pVariable ~ pKey ^^ { case x ~ k => WhenClause.HasKey(x, k) }
 
@@ -124,7 +136,9 @@ class GCOREParser extends RegexParsers:
     pVariable ~ pLabel ^^ { case x ~ k => WhenClause.HasLabel(x, k) }
 
   def pHasKeyValue: Parser[WhenClause.HasKeyValue] =
-    pVariable ~ pKey ~ "=" ~  pValue ^^ { case x ~ k ~ _ ~ v => WhenClause.HasKeyValue(x, k, v) }
+    pVariable ~ pKey ~ "=" ~ pValue ^^ { case x ~ k ~ _ ~ v =>
+      WhenClause.HasKeyValue(x, k, v)
+    }
 
   // Basic graph pattern.
 
@@ -135,8 +149,9 @@ class GCOREParser extends RegexParsers:
     "(" ~> pVariable <~ ")" ^^ (BasicGraphPattern.NodePattern(_))
 
   def pEdgePattern: Parser[BasicGraphPattern.EdgePattern] =
-    "(" ~ pVariable ~ ")-[" ~ pVariable ~ "]->(" ~ pVariable ~ ")" ^^ { case _ ~ x ~ _ ~ z ~ _ ~ y ~ _ =>
-      BasicGraphPattern.EdgePattern(x, z, y)
+    "(" ~ pVariable ~ ")-[" ~ pVariable ~ "]->(" ~ pVariable ~ ")" ^^ {
+      case _ ~ x ~ _ ~ z ~ _ ~ y ~ _ =>
+        BasicGraphPattern.EdgePattern(x, z, y)
     }
 
   // Values
@@ -144,8 +159,8 @@ class GCOREParser extends RegexParsers:
   def pValue: Parser[Value] =
     pStringValue | pBooleanValue | pIntValue | pSpliced
 
-  def pBooleanValue: Parser[Value.BooleanValue] = 
-    ("true" | "false")  ^^ { case b => Value.BooleanValue(b.toBoolean) }
+  def pBooleanValue: Parser[Value.BooleanValue] =
+    ("true" | "false") ^^ { case b => Value.BooleanValue(b.toBoolean) }
 
   def pIntValue: Parser[Value.IntValue] =
     INT ^^ { case i => Value.IntValue(i.toInt) }
@@ -159,15 +174,19 @@ class GCOREParser extends RegexParsers:
   // Names - variable, label, and key.
 
   def pVariable: Parser[Variable] =
-    NAME ^^ (Variable(_)) | "{" ~> NAME <~ "}" ^^ { case s => Variable(s, spliced = true) }
+    NAME ^^ (Variable(_)) | "{" ~> NAME <~ "}" ^^ { case s =>
+      Variable(s, spliced = true)
+    }
 
   def pLabel: Parser[Label] =
-    ":" ~> NAME ^^ (Label(_)) | ":" ~> "{" ~> NAME <~ "}" ^^ { case s => Label(s, spliced = true) }
+    ":" ~> NAME ^^ (Label(_)) | ":" ~> "{" ~> NAME <~ "}" ^^ { case s =>
+      Label(s, spliced = true)
+    }
 
   def pKey: Parser[Key] =
     "." ~> NAME ^^ (Key(_))
 
-  private val NAME: Regex = 
+  private val NAME: Regex =
     """[a-zA-Z]([a-zA-Z0-9-_]*[a-zA-Z0-9-_])?""".r
 
   private val INT: Regex =

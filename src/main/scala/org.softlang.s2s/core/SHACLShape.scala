@@ -4,7 +4,7 @@ import de.pseifer.shar.core.BackendState
 import de.pseifer.shar.core.Showable
 import de.pseifer.shar.dl._
 
-import org.softlang.s2s.query.AtomicPattern // TODO remove with hasTarget
+import org.softlang.s2s.query.AtomicPattern
 
 /** An arbitrary SHACL shape, expressed by a Subsumption axiom. */
 case class SHACLShape(val axiom: Subsumption) extends Showable:
@@ -58,7 +58,6 @@ case class SHACLShape(val axiom: Subsumption) extends Showable:
     flag
 
   /** Test, whether `candidate` is a target of this shape `inPattern`. */
-  // TODO: Remove with new method.
   def hasTarget(
       candidate: Var,
       inPattern: Set[AtomicPattern]

@@ -127,7 +127,6 @@ class GCORE(
   val edgeVariables: Set[Var] = nodeEdge._2
 
   /** Left-node variables of the query. */
-  // TODO pattern?
   val leftNodeVariables: Set[Var] =
     pattern.fullGraphPattern
       .union(template.fullGraphPattern)
@@ -138,7 +137,6 @@ class GCORE(
       )
 
   /** Right-node variables of the query. */
-  // TODO pattern?
   val rightNodeVariables: Set[Var] =
     pattern.fullGraphPattern
       .union(template.fullGraphPattern)
@@ -303,7 +301,7 @@ class GCORE(
               x.toVar,
               k.toIri(node =
                 nodeVariables.contains(x.toVarOrBlank(pattern.variables))
-              ) // TODO: can be use toVar here? Check other invocations, too.
+              )
             )
           )
         else None
@@ -761,7 +759,7 @@ object GCORE:
           case NamedConcept(d) =>
             Right(
               SetClause.SetLabel(v, Label.fromIri(d, node = true))
-            ) // TODO: What to select here?
+            )
           case Existential(NamedRole(r), NominalConcept(i)) =>
             Right(
               SetClause.SetKeyValue(
@@ -769,7 +767,7 @@ object GCORE:
                 Key.fromIri(r, node = true),
                 Value.fromIri(i)
               )
-            ) // TODO: ditto
+            )
           case _ =>
             Left(UnconvertableShapeError(shape))
       case _ =>

@@ -38,7 +38,11 @@ class Algorithm(
   implicit val ishar: Shar = shar
 
   /** Build axioms for the query pattern. */
-  def buildAxiomsPattern(pattern: AtomicPatterns, template: AtomicPatterns, log: Log): Axioms =
+  def buildAxiomsPattern(
+      pattern: AtomicPatterns,
+      template: AtomicPatterns,
+      log: Log
+  ): Axioms =
     log.profileStart("build-dca-p")
 
     // DCA for query pattern.
@@ -91,7 +95,7 @@ class Algorithm(
 
   /** Process the query pattern. */
   def processPattern(log: Log): S2STry[Axioms] =
-    for 
+    for
       p <- input.pattern
       t <- input.template
     yield buildAxiomsPattern(p, t, log)
@@ -103,7 +107,7 @@ class Algorithm(
       log: Log
   ): Axioms =
 
-    // TODO ??? If this is a return query, nothing to add (EARLY RETURN).
+    // TODO Optimization - If this is a return query, nothing to add (EARLY RETURN) ?
     // if input.isRETURN then return Axioms(Set(), scopes)
 
     // DCA for query template.
@@ -187,7 +191,7 @@ class Algorithm(
           (rhs, o) <- nv.asRoleObjectComponent(input.filters, p)
         yield Subsumption(Existential(p.cinScope(Scope.Out), Top), rhs)
 
-        nps.union(eps) // .union(subsp) // TODO(FIX)
+        nps.union(eps) // .union(subsp) // TODO: Are these needed?
 
     log.debug("CWA(q.H), step 7.", rule7)
 
@@ -287,14 +291,14 @@ class Algorithm(
       // Generate axioms for properties.
       props <- extendProperties(mappingSubs, log)
       // Bonus properties for ECCQ queries (properties).
-      // bonusP <- bonusProperties(log)// TODO(FIX)
+      // bonusP <- bonusProperties(log)// TODO see below
       // Finally, join all axioms inferred here.
       axioms = patternAxioms
         .join(shapeAxioms)
         .join(mappingSubs)
         .join(templateAxioms)
         .join(props)
-    // .join(bonusP)// TODO(FIX)
+    // .join(bonusP)// TODO: Are these needed?
     yield axioms
 
     log.profileEnd("build")
@@ -362,7 +366,6 @@ class Algorithm(
       for these <- shapeProperties
       yield
         val newps: Set[Axiom] = these.flatMap { p =>
-          // TODO review
           Set(
             RoleSubsumption(p.cinScope(Scope.Out), p),
             RoleSubsumption(p, p.cinScope(Scope.Out))
@@ -439,7 +442,7 @@ class Algorithm(
           yield r.union(p)
           all = all.union(current)
           current = canGen.getNext(previous)
-        // TODO: Fix me. This is not safe (might be empty).
+        // TODO: This is not safe (might be empty).
         result.toOption.get
       }
     yield result

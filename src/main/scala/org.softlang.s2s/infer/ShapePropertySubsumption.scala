@@ -27,15 +27,16 @@ class ShapePropertySubsumption(
   // Extension: What about constraints that effectively do not change the result?
 
   def axioms: Set[Axiom] =
-    // TODO: Is this correct?!
     // Notion: Roles (properties) are never 'constrained'.
     if isECCQ then
       patternConstraints.toSet.flatMap { x =>
-          x match
-            case (n, None)    => Set(RoleSubsumption(n, n.inScope(Scope.In)))
-            case (n, Some(c)) =>
-              Set(RoleSubsumption(n, n.inScope(Scope.In)),
-                  RoleSubsumption(n.inScope(Scope.In), n))
+        x match
+          case (n, None) => Set(RoleSubsumption(n, n.inScope(Scope.In)))
+          case (n, Some(c)) =>
+            Set(
+              RoleSubsumption(n, n.inScope(Scope.In)),
+              RoleSubsumption(n.inScope(Scope.In), n)
+            )
       }
     else
       patternConstraints.toSet.flatMap { x =>

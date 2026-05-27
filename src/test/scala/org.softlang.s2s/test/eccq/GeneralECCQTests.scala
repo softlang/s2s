@@ -24,7 +24,6 @@ class GeneralECCQTests extends ValidationSuite("e_general_"):
     Set(
       // This is a useful output shape: Each edge with 'le:observes' has a RHS node that has 'ln:POI'.
       "le:observes ⊑ => ln:POI",
-      // TODO These seem to follow -- incorrectly (?) -- from v_o_name concepts.
       "∃-kn:name.⊤ ⊑ ∀:meta_nte.le:observes",
       "∃-kn:name.⊤ ⊑ ∀:meta_etn.ln:POI",
       // This is sensible, right, but why does it not also hold for POI?

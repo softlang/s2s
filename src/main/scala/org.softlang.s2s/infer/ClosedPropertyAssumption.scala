@@ -22,8 +22,8 @@ class ClosedPropertyAssumption(
 
   val rightScope = targetScope
 
-  // TODO Fix? Correct?
-  val template: Boolean = true // targetScope == Scope.Out
+  val template: Boolean =
+    true // targetScope == Scope.Out (TODO: Always use template?)
 
   private def axiomize(
       all: Set[Concept],

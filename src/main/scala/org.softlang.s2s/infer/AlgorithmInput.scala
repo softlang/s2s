@@ -75,7 +75,6 @@ enum AlgorithmInput:
               case AtomicPattern.VAC(_, GCORE.edge) => false
               case _                                => true
           )
-          // TODO: Tis' correct?
           Right(upt.inScope(Scope.Out))
     // Right(t.inScope(Scope.Out))
 
@@ -99,7 +98,6 @@ enum AlgorithmInput:
               case AtomicPattern.VAC(_, GCORE.edge) => false
               case _                                => true
           )
-          // TODO: Tis' correct?
           Right(upp.inScope(Scope.Med))
     // Right(p.inScope(Scope.Med))
 

@@ -11,7 +11,7 @@ import org.softlang.s2s.query._
 import scala.util.Random
 import scala.annotation.threadUnsafe
 
-// TODO
+// TODO: Shape generator improvments
 //
 // - [ ] Shape Generation
 //   - [ ] Remove 'meta_etn' 'meta_nte' 'meta_node' and 'meta_edge'

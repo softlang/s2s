@@ -28,8 +28,7 @@ object S2S:
       if conf.shapesFile().isEmpty then Set()
       else if conf.shapesFile().contains(".json") then
         JsonLDParser.fromFile(conf.shapesFile())
-      else
-        Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
+      else Source.fromFile(conf.shapesFile()).getLines.filter(_.nonEmpty).toSet
     )
 
     // Handle input errors (for query and shapes files).

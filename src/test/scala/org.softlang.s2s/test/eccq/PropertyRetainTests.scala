@@ -172,7 +172,7 @@ class PropertyRetainTests extends ValidationSuite("e_pret_"):
   // We lack the knowledge that all 'c' must go through 'y', even if some 'x'
   // might also have the 'c' property.
   //
-  // TODO Validation suggest that this case should probably hold.
+  // Validation suggest that this case should probably hold.
   //
   // val q6 = gcore("(x), (y)", "(x), (y)", where = "x.a AND y.c", set = "y.b = 0")
   // entails("6_0", noshapes, q6, Set(
