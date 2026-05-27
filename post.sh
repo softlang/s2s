@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Example request for the server component. 
+# Server must be running (`./server`).
+#
+# Note, that this component of s2s is still in development.
+
 curl --header "Content-Type: application/json" \
     --request POST \
     --data '{"query":"CONSTRUCT (n) MATCH (n) WHERE n:Person"}' \
