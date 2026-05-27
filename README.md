@@ -206,4 +206,17 @@ Another full paper on extensions to this algorithm for [G-CORE](https://doi.org/
 and [ProGS](https://doi.org/10.1007/978-3-030-88361-4_23) shapes is to appear 
 and will be referenced here soon.
 
+```BibTeX
+@article{SeiferHLS26,
+  author       = {Philipp Seifer and
+                  Daniel Hern{\'{a}}ndez and
+                  Ralf L{\"{a}}mmel and
+                  Steffen Staab},
+  title        = {Transforming Shape Schemas with Composable Property-Graph Queries},
+  booktitle    = {accepted for publication},
+  publisher    = {TGDK},
+  year         = {2026},
+}
+```
+
 For external reference, the Git repository is available [here](https://github.com/softlang/s2s).
