@@ -1,6 +1,20 @@
-# Validation Framework
+# Evaluation (Paper1)
 
-This is a validation framework for `s2s`. It uses validation cases that consist of queries, input, and output shapes related by the `s2s` algorithm. For these test cases, the framework generates random input graphs conforming to the input shapes (RDF or property graphs encoded in RDF), executes the CONSTRUCT query (either SPARQL or G-CORE mapped to SPARQL), and finally tests whether the result graph conforms to the given output shapes.
+To run the experiment included with the publication, clone this repository and install all requirements (see also the [README](../README.md)). Then, execute the following command line. Results will be located in the project's root directory. Note that intermediate results are stored, and the experimental run is only finished once the application terminates. To this end, also refer to the live progress report.
+
+```sh
+sbt "runMain org.softlang.s2s.profile"
+```
+
+To customize the setup of the experiment, consider the file [Profile](../src/main/scala/org.softlang.s2s/main/Profile.scala) which includes the setup of the experiment as well as some documentation of the various settings used. Results from the publication (Paper1) can be found in the [evaluation](evaluation) directory.
+
+# Validation Framework (Paper2)
+
+Secondly, we include a validation framework for `s2s`. It uses validation cases that consist of queries, input, and output shapes related by the `s2s` algorithm. For these test cases, the framework generates random input graphs conforming to the input shapes (RDF or property graphs encoded in RDF), executes the CONSTRUCT query (either SPARQL or G-CORE mapped to SPARQL), and finally tests whether the result graph conforms to the given output shapes.
+
+## Replication
+
+To replicate the validation performed in the paper or view the results, there are several tools available. The script `run_validation.sh` will perform the full validation run. Note that this will take a long time (possibly > 24 hours, depending on hardware). The script `run_fail.sh` runs the validation for the validation tools, as described in Paper2 (i.e., runs validation on deliberately false samples). Results for both are included in [results](results/) and [results_should_fail](results_should_fail/). These results can be summarized by invoking `evaluate_all.sh` (or `evaluate_validation.sh` for additional details) and `evaluate_fail.sh`, respectively.
 
 ## Usage
 

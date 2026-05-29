@@ -199,12 +199,14 @@ The full paper: Philipp Seifer, Daniel Hernández, Ralf Lämmel, and Steffen Sta
 }
 ```
 
+We sometimes refer to this as "Paper1" in this documentation.
 An extended version is available on [arXiv](https://arxiv.org/abs/2402.08509). 
 A shorter summary is available as an [extended abstract](https://ceur-ws.org/Vol-3739/abstract-23.pdf) as well.
 
 Another full paper on extensions to this algorithm for [G-CORE](https://doi.org/10.1145/3183713.3190654)
 and [ProGS](https://doi.org/10.1007/978-3-030-88361-4_23) shapes is to appear 
 and will be referenced here soon.
+We sometimes refer to this as "Paper2" in this documentation.
 
 ```BibTeX
 @article{SeiferHLS26,
