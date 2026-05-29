@@ -213,9 +213,7 @@ and will be referenced here soon.
                   Ralf L{\"{a}}mmel and
                   Steffen Staab},
   title        = {Transforming Shape Schemas with Composable Property-Graph Queries},
-  booktitle    = {accepted for publication},
-  publisher    = {TGDK},
-  year         = {2026},
+  year         = {to appear},
 }
 ```
 
