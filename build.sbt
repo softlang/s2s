@@ -2,7 +2,7 @@ import scala.sys.process._
 import sbt._
 import NativePackagerHelper._
 
-val scala3Version = "3.3.6" // LTS
+val scala3Version = "3.3.7" // LTS
 
 lazy val shar = RootProject(uri("https://github.com/pseifer/shar.git"))
 
@@ -19,7 +19,7 @@ lazy val root = project
     maintainer := "pseifer@uni-koblenz.de",
     organization := "org.softlang",
     organizationName := "Softlang, University of Koblenz",
-    version := "1.0.0",
+    version := "2.0.0",
     // Project settings.
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput),
