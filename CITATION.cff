@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+title: From Shapes to Shapes
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - family-names: Seifer
+    given-names: Philipp
+    orcid: 'https://orcid.org/0000-0002-7421-2060'
+  - family-names: Hernández
+    given-names: Daniel
+    orcid: 'https://orcid.org/0000-0002-7896-0875'
+  - family-names: Lämmel
+    given-names: Ralf
+    orcid: 'https://orcid.org/0000-0001-9946-4363'
+  - family-names: Staab
+    given-names: Steffen
+    orcid: 'https://orcid.org/0000-0002-0780-4154'
+identifiers:
+  - type: doi
+    value: 10.18419/DARUS-3977
+repository-code: 'https://github.com/softlang/s2s'
+abstract: >-
+  From Shapes to Shapes: A tool and library for inferring
+  SHACL shapes that validate result graphs of SPARQL
+  CONSTRUCT queries 
+keywords:
+  - semantic-web
+  - ontologies
+  - web-ontology-language
+  - description-logics
+license: MIT
+commit: 967fa9d3cca59421524b076796e5728210b8f170
+version: 2.0.0
+date-released: '2026-05-29'

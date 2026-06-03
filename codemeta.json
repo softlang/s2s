@@ -1,0 +1,103 @@
+{
+    "@context": "https://w3id.org/codemeta/3.0",
+    "applicationCategory": "SoftwareSourceCode,SoftwareApplication",
+    "author": [
+        {
+            "@id": "https://github.com/softlang",
+            "@type": "Organization"
+        },
+        {
+            "affiliation": {
+                "name": "University of Koblenz",
+                "@type": "Organization"
+            },
+            "email": "philipp@seifer.me",
+            "familyName": "Seifer",
+            "givenName": "Philipp",
+            "@id": "https://orcid.org/0000-0002-7421-2060",
+            "@type": "Person"
+        }
+    ],
+    "codeRepository": "https://github.com/softlang/s2s",
+    "dateCreated": "2022-10-19",
+    "dateModified": "2026-05-29",
+    "datePublished": "2024-02-09",
+    "description": "From Shapes to Shapes: A tool and library for inferring SHACL shapes that validate result graphs of SPARQL CONSTRUCT queries",
+    "downloadUrl": "https://github.com/softlang/s2s/releases",
+    "funder": {
+        "name": "University of Koblenz",
+        "@type": "Organization"
+    },
+    "identifier": "https://doi.org/10.18419/DARUS-3977",
+    "license": "https://spdx.org/licenses/MIT",
+    "name": "s2s",
+    "operatingSystem": [
+        "Linux",
+        "Windows",
+        "macOS"
+    ],
+    "programmingLanguage": [
+        "Scala",
+        "Python 3"
+    ],
+    "referencePublication": [
+        {
+            "author": [
+                {
+                    "affiliation": {
+                        "name": "University of Koblenz",
+                        "@type": "Organization"
+                    },
+                    "email": "philipp@seifer.me",
+                    "familyName": "Seifer",
+                    "givenName": "Philipp",
+                    "@id": "https://orcid.org/0000-0002-7421-2060",
+                    "@type": "Person"
+                },
+                {
+                    "affiliation": {
+                        "name": "University of Stuttgart",
+                        "@type": "Organization"
+                    },
+                    "email": "daniel.hernandez@ki.uni-stuttgart.de",
+                    "familyName": "Hernández",
+                    "givenName": "Daniel",
+                    "@id": "https://orcid.org/0000-0002-7896-0875",
+                    "@type": "Person"
+                },
+                {
+                    "affiliation": {
+                        "name": "University of Koblenz",
+                        "@type": "Organization"
+                    },
+                    "email": "laemmel@uni-koblenz.de",
+                    "familyName": "Lämmel",
+                    "givenName": "Ralf",
+                    "@id": "https://orcid.org/0000-0001-9946-4363",
+                    "@type": "Person"
+                },
+                {
+                    "affiliation": {
+                        "name": "University of Stuttgart",
+                        "@type": "Organization"
+                    },
+                    "email": "steffen.staab@ki.uni-stuttgart.de",
+                    "familyName": "Staab",
+                    "givenName": "Steffen",
+                    "@id": "https://orcid.org/0000-0002-0780-4154",
+                    "@type": "Person"
+                }
+            ],
+            "datePublished": "2024",
+            "identifier": "10.1145/3589334.3645550",
+            "name": "From Shapes to Shapes: Inferring SHACL Shapes for Results of SPARQL CONSTRUCT Queries",
+            "@type": "ScholarlyArticle"
+        }
+    ],
+    "releaseNotes": "**Full Changelog**: https://github.com/softlang/s2s/compare/v1.0.0...v2.0.0",
+    "runtimePlatform": "JVM",
+    "version": "v2.0.0",
+    "developmentStatus": "concept",
+    "issueTracker": "https://api.github.com/repos/softlang/s2s/issues",
+    "@type": "SoftwareSourceCode"
+}
