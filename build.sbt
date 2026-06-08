@@ -19,7 +19,7 @@ lazy val root = project
     maintainer := "pseifer@uni-koblenz.de",
     organization := "org.softlang",
     organizationName := "Softlang, University of Koblenz",
-    version := "2.0.0",
+    version := "2.0.1",
     // Project settings.
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput),

@@ -94,9 +94,9 @@
             "@type": "ScholarlyArticle"
         }
     ],
-    "releaseNotes": "**Full Changelog**: https://github.com/softlang/s2s/compare/v1.0.0...v2.0.0",
+    "releaseNotes": "**Full Changelog**: https://github.com/softlang/s2s/compare/v2.0.0...v2.0.1",
     "runtimePlatform": "JVM",
-    "version": "v2.0.0",
+    "version": "v2.0.1",
     "developmentStatus": "concept",
     "issueTracker": "https://api.github.com/repos/softlang/s2s/issues",
     "@type": "SoftwareSourceCode"
